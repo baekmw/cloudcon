@@ -12,6 +12,7 @@ import {
   Check,
   Music,
   TrendingUp,
+  Compass,
 } from 'lucide-react'
 import Poster from '../components/Poster.jsx'
 import StatePill from '../components/StatePill.jsx'
@@ -149,7 +150,6 @@ function CalmHeroHeading() {
   const [isFading, setIsFading] = useState(false)
 
   useEffect(() => {
-    // 4.2초 동안 머물고 부드럽게 전환하여 눈의 피로와 산만함을 없앰
     const timer = setInterval(() => {
       setIsFading(true)
       setTimeout(() => {
@@ -283,7 +283,6 @@ export default function HomePage() {
   const concerts = data?.concerts || []
 
   // Classical fuzzy, abbreviation & full-DB search matching
-  // 정렬 규칙: 임박한 순 정렬, '공연완료'는 항상 맨 아래 배치
   const searchResults = useMemo(() => {
     const needle = q.trim()
     if (!needle) return []
@@ -302,9 +301,6 @@ export default function HomePage() {
       }
     }
 
-    // 1순위: 공연완료 여부 (공연완료는 항상 맨 아래)
-    // 2순위: 임박한 순 (진행중 -> 예정된 공연 시작일 빠른 순)
-    // 3순위: 공연완료 건들은 최근 종료일 내림차순
     return matches.sort((a, b) => {
       const isCompA = a.state === '공연완료' ? 1 : 0
       const isCompB = b.state === '공연완료' ? 1 : 0
@@ -312,19 +308,16 @@ export default function HomePage() {
         return isCompA - isCompB
       }
 
-      // 둘 다 공연완료인 경우: 최근 종료일 순
       if (isCompA === 1) {
         return (b.to || b.from || '').localeCompare(a.to || a.from || '')
       }
 
-      // 진행중 / 예정된 공연: '공연중'이 최우선, 그 다음 시작일(from) 빠른 순 (임박한 순)
       const rankA = a.state === '공연중' ? 0 : 1
       const rankB = b.state === '공연중' ? 0 : 1
       if (rankA !== rankB) {
         return rankA - rankB
       }
 
-      // 시작일 빠른 순
       const fromCompare = (a.from || '').localeCompare(b.from || '')
       if (fromCompare !== 0) return fromCompare
 
@@ -430,21 +423,43 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Landing Minimal Notification Prompt (When not searching) */}
+          {/* 비검색 시 하단 바로가기 카드 (공연 모아보기 & 공연 알림 받기) */}
           {!hasSearch && (
-            <div className="mt-14 w-full text-center">
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+              <Link
+                to="/explore"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl bg-white border border-[#e5e8eb] shadow-xs text-[14px] text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] transition-all group"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-xl bg-[#e8f3ff] text-[#3182f6] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Compass className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="font-bold text-[#191f28]">공연 모아보기</p>
+                    <p className="text-[12px] text-[#8b95a1] truncate">
+                      달력(일정별) · 전국 지도(장소별)로 탐색
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-[#8b95a1] shrink-0 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
               <Link
                 to="/alerts"
-                className="inline-flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-white border border-[#e5e8eb] shadow-sm text-[14px] text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] transition-all group"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl bg-white border border-[#e5e8eb] shadow-xs text-[14px] text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] transition-all group"
               >
-                <div className="h-8 w-8 rounded-xl bg-[#e8f3ff] text-[#3182f6] flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Bell className="h-4 w-4" />
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-xl bg-[#e8f3ff] text-[#3182f6] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Bell className="h-4.5 w-4.5" />
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="font-bold text-[#191f28]">공연 알림 받기</p>
+                    <p className="text-[12px] text-[#8b95a1] truncate">
+                      좋아하는 연주자 새 일정 가장 먼저 받기
+                    </p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="font-semibold text-[#191f28]">공연 알림 받기</p>
-                  <p className="text-[12px] text-[#8b95a1]">좋아하는 연주자의 새 일정이 뜨면 가장 먼저 알려드려요</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-[#8b95a1] ml-2 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="h-4 w-4 text-[#8b95a1] shrink-0 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
           )}
@@ -454,7 +469,7 @@ export default function HomePage() {
       {/* Search Results Section (Only visible when searched) */}
       {hasSearch && (
         <section className="w-full max-w-[760px] animate-in fade-in duration-300">
-          {/* Result Header & State Filters (예정,공연중 탭 삭제됨) */}
+          {/* Result Header & State Filters */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-[#f2f4f6]">
             <div>
               <h2 className="text-[17px] font-bold text-[#191f28]">
@@ -553,7 +568,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* 더보기 버튼 (세부 내역과 동일한 텍스트+화살표 스타일) */}
+          {/* 더보기 버튼 */}
           {hasMore && (
             <div className="mt-5 flex flex-col items-center">
               <button

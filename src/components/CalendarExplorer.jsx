@@ -1,0 +1,247 @@
+import { useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+function toYmdDot(year, month, day) {
+  return `${year}.${String(month + 1).padStart(2, '0')}.${String(day).padStart(2, '0')}`
+}
+
+function parseYmdDot(str) {
+  if (!str) return null
+  const parts = String(str).trim().split('.')
+  if (parts.length < 3) return null
+  const y = Number(parts[0])
+  const m = Number(parts[1]) - 1
+  const d = Number(parts[2])
+  if (Number.isNaN(y) || Number.isNaN(m) || Number.isNaN(d)) return null
+  return { year: y, month: m, day: d }
+}
+
+export default function CalendarExplorer({
+  concerts = [],
+  selectedDate,
+  onSelectDate,
+}) {
+  const today = useMemo(() => new Date(), [])
+  const todayStr = useMemo(
+    () => toYmdDot(today.getFullYear(), today.getMonth(), today.getDate()),
+    [today]
+  )
+
+  const initialParsed = parseYmdDot(selectedDate) || {
+    year: today.getFullYear(),
+    month: today.getMonth(),
+    day: today.getDate(),
+  }
+
+  const [viewYear, setViewYear] = useState(initialParsed.year)
+  const [viewMonth, setViewMonth] = useState(initialParsed.month)
+
+  // 현재 보고 있는 월의 각 날짜별 공연 수 집계
+  const { weeks, monthTotalConcerts } = useMemo(() => {
+    const firstDay = new Date(viewYear, viewMonth, 1)
+    const startWeekday = firstDay.getDay()
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
+
+    const countMap = new Map()
+    const uniqueInMonth = new Set()
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      countMap.set(toYmdDot(viewYear, viewMonth, d), 0)
+    }
+
+    const monthStartStr = toYmdDot(viewYear, viewMonth, 1)
+    const monthEndStr = toYmdDot(viewYear, viewMonth, daysInMonth)
+
+    for (const concert of concerts) {
+      const from = concert.from || ''
+      const to = concert.to || from
+      if (!from) continue
+
+      if (to < monthStartStr || from > monthEndStr) continue
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = toYmdDot(viewYear, viewMonth, d)
+        if (from <= dateStr && dateStr <= to) {
+          countMap.set(dateStr, (countMap.get(dateStr) || 0) + 1)
+          uniqueInMonth.add(concert.id)
+        }
+      }
+    }
+
+    const cells = []
+    for (let i = 0; i < startWeekday; i++) {
+      cells.push(null)
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = toYmdDot(viewYear, viewMonth, d)
+      const weekday = (startWeekday + d - 1) % 7
+      cells.push({
+        day: d,
+        dateStr,
+        weekday,
+        count: countMap.get(dateStr) || 0,
+      })
+    }
+    while (cells.length % 7 !== 0) {
+      cells.push(null)
+    }
+
+    const weekRows = []
+    for (let i = 0; i < cells.length; i += 7) {
+      weekRows.push(cells.slice(i, i + 7))
+    }
+
+    return {
+      weeks: weekRows,
+      monthTotalConcerts: uniqueInMonth.size,
+    }
+  }, [concerts, viewYear, viewMonth])
+
+  function handlePrevMonth() {
+    let nextY = viewYear
+    let nextM = viewMonth - 1
+    if (nextM < 0) {
+      nextM = 11
+      nextY -= 1
+    }
+    setViewYear(nextY)
+    setViewMonth(nextM)
+    onSelectDate(toYmdDot(nextY, nextM, 1))
+  }
+
+  function handleNextMonth() {
+    let nextY = viewYear
+    let nextM = viewMonth + 1
+    if (nextM > 11) {
+      nextM = 0
+      nextY += 1
+    }
+    setViewYear(nextY)
+    setViewMonth(nextM)
+    onSelectDate(toYmdDot(nextY, nextM, 1))
+  }
+
+  return (
+    <div className="w-full rounded-3xl bg-white border border-[#e5e8eb] shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-5 sm:p-7 animate-fade-up">
+      {/* 상단 월 선택 스테퍼 */}
+      <div className="flex items-center justify-between pb-4 border-b border-[#f2f4f6]">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handlePrevMonth}
+            className="p-2 rounded-xl text-[#4e5968] hover:text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer"
+            aria-label="이전 달"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="px-2 text-[18px] sm:text-[20px] font-extrabold text-[#191f28] tabular-nums tracking-tight">
+            {viewYear}년 {viewMonth + 1}월
+          </span>
+          <button
+            type="button"
+            onClick={handleNextMonth}
+            className="p-2 rounded-xl text-[#4e5968] hover:text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer"
+            aria-label="다음 달"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+
+        <span className="text-[13px] text-[#8b95a1]">
+          이달의 공연 <strong className="text-[#191f28] font-semibold tabular-nums">{monthTotalConcerts}</strong>건
+        </span>
+      </div>
+
+      {/* 요일 헤더 */}
+      <div className="grid grid-cols-7 mt-4 pb-2 text-center">
+        {WEEKDAYS.map((dayName, idx) => (
+          <div
+            key={dayName}
+            className={`text-[12px] font-semibold py-1 ${
+              idx === 0
+                ? 'text-[#f04452]'
+                : idx === 6
+                ? 'text-[#3182f6]'
+                : 'text-[#8b95a1]'
+            }`}
+          >
+            {dayName}
+          </div>
+        ))}
+      </div>
+
+      {/* 미니멀 보더리스 날짜 그리드 (주 단위 구분선 + 아래에서 올라오는 페이드인) */}
+      <div
+        key={`${viewYear}-${viewMonth}`}
+        className="divide-y divide-[#f2f4f6]"
+      >
+        {weeks.map((week, wIdx) => (
+          <div
+            key={`week-${wIdx}`}
+            style={{ animationDelay: `${wIdx * 40}ms` }}
+            className="grid grid-cols-7 py-1 sm:py-1.5 animate-fade-up"
+          >
+            {week.map((cell, cIdx) => {
+              if (!cell) {
+                return <div key={`empty-${wIdx}-${cIdx}`} className="h-14 sm:h-16" />
+              }
+
+              const isSelected = cell.dateStr === selectedDate
+              const isToday = cell.dateStr === todayStr
+              const count = cell.count
+              const isSun = cell.weekday === 0
+              const isSat = cell.weekday === 6
+
+              return (
+                <button
+                  key={cell.dateStr}
+                  type="button"
+                  onClick={() => onSelectDate(cell.dateStr)}
+                  className={`group relative h-14 sm:h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-[#e8f3ff]'
+                      : 'hover:bg-[#f2f4f6]/75'
+                  }`}
+                >
+                  {/* 날짜 숫자 */}
+                  <span
+                    className={`inline-flex items-center justify-center h-7 w-7 rounded-full text-[14px] sm:text-[15px] tabular-nums transition-colors ${
+                      isSelected
+                        ? 'bg-[#3182f6] text-white font-bold shadow-xs'
+                        : isToday
+                        ? 'text-[#3182f6] font-extrabold underline decoration-2 underline-offset-4'
+                        : count === 0
+                        ? 'text-[#c2c8cf] font-normal'
+                        : isSun
+                        ? 'text-[#f04452] font-semibold'
+                        : isSat
+                        ? 'text-[#3182f6] font-semibold'
+                        : 'text-[#191f28] font-semibold'
+                    }`}
+                  >
+                    {cell.day}
+                  </span>
+
+                  {/* 총 공연 수 (뱃지 없이 깔끔한 텍스트로만 표시) */}
+                  <span
+                    className={`text-[11px] sm:text-[12px] leading-none tabular-nums transition-colors ${
+                      count === 0
+                        ? 'text-transparent select-none'
+                        : isSelected
+                        ? 'text-[#1b64da] font-bold'
+                        : 'text-[#8b95a1] font-medium group-hover:text-[#4e5968]'
+                    }`}
+                  >
+                    {count > 0 ? `${count}건` : '-'}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
