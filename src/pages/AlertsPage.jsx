@@ -77,7 +77,7 @@ export default function AlertsPage() {
   const [expandedKeyword, setExpandedKeyword] = useState(null)
 
   useEffect(() => {
-    document.title = 'Cloudcon · 이메일 공연 알림'
+    document.title = 'cloudcon · 이메일 공연 알림'
   }, [])
 
   // Mount 시 쿠키(manageToken) 기반 구독 상태 조회 (GET /api/my-keywords)
@@ -290,16 +290,17 @@ export default function AlertsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-[720px] px-6 py-8 sm:py-12 animate-fade-up">
-      {/* 상단 헤더 */}
-      <div className="mb-7">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191f28] tracking-tight break-keep">
-          공연 이메일 알림
-        </h1>
-        <p className="mt-1.5 text-[14px] sm:text-[15px] text-[#6b7684] leading-relaxed break-keep">
-          기다리는 연주자, 곡명, 공연장을 등록해 두시면 새 공연 소식이 올라올 때 이메일로 보내드립니다.
-        </p>
-      </div>
+    <main className="mx-auto max-w-[840px] px-6 py-10 md:py-12 flex flex-col items-center animate-fade-up">
+      <div className="w-full max-w-[800px]">
+        {/* 상단 헤더 (공연 모아보기 페이지와 동일한 레이아웃) */}
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191f28] tracking-tight break-keep">
+            공연 이메일 알림
+          </h1>
+          <p className="mt-1.5 text-[14px] sm:text-[15px] text-[#6b7684] leading-relaxed break-keep">
+            기다리는 연주자, 곡명, 공연장을 등록해 두시면 새 공연 소식이 올라올 때 이메일로 보내드립니다.
+          </p>
+        </div>
 
       {/* 초기 로딩 스켈레톤 */}
       {loadingAuth ? (
@@ -754,6 +755,7 @@ export default function AlertsPage() {
           </Card>
         </div>
       )}
+      </div>
     </main>
   )
 }

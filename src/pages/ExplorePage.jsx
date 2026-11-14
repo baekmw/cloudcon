@@ -192,7 +192,7 @@ export default function ExplorePage() {
   const [selectedVenue, setSelectedVenue] = useState('')
 
   useEffect(() => {
-    document.title = 'Cloudcon · 공연 모아보기'
+    document.title = 'cloudcon · 공연 모아보기'
   }, [])
 
   useEffect(() => {
@@ -284,10 +284,10 @@ export default function ExplorePage() {
       {/* 상단 타이틀 & 직관적인 모드 전환 탭 카드 */}
       <div className="w-full max-w-[800px] mb-7">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191f28] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191f28] tracking-tight break-keep">
             공연 모아보기
           </h1>
-          <p className="mt-1.5 text-[14px] sm:text-[15px] text-[#6b7684]">
+          <p className="mt-1.5 text-[14px] sm:text-[15px] text-[#6b7684] leading-relaxed break-keep">
             달력에서 원하는 날짜의 공연을 찾거나, 전국 지도에서 지역·공연장별 일정을 한눈에 확인해 보세요.
           </p>
         </div>
@@ -445,30 +445,20 @@ export default function ExplorePage() {
           ))}
         </div>
 
-        {/* 페이드아웃 미리보기 카드 (완전 흰색 대신 반투명 블러로 내용물이 은은하게 보이도록 처리) */}
+        {/* 페이드아웃 미리보기 카드 (약 80% 투명도의 흰색 그라데이션 페이드) */}
         {fadingConcert && (
           <div className="relative mt-3 select-none pointer-events-none overflow-hidden rounded-2xl">
             <div
               style={{
                 maskImage:
-                  'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.06) 95%)',
+                  'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.12) 95%)',
                 WebkitMaskImage:
-                  'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.06) 95%)',
+                  'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.12) 95%)',
               }}
             >
               <ConcertCardItem concert={fadingConcert} isFading />
             </div>
-            <div
-              style={{
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
-                maskImage:
-                  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.75) 40%, black 100%)',
-                WebkitMaskImage:
-                  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.75) 40%, black 100%)',
-              }}
-              className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/65 to-[#f9fafb]/92"
-            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/50 to-[#f9fafb]/80" />
           </div>
         )}
 
@@ -489,23 +479,13 @@ export default function ExplorePage() {
           </div>
         )}
 
-        {/* 모아보기 하단 sticky 반투명 블러 페이드 영역 */}
+        {/* 모아보기 하단 sticky 약 80% 흰색 그라데이션 페이드 영역 */}
         {activeList.length > 0 && (
           <div
             aria-hidden="true"
             className="sticky bottom-0 z-20 -mx-6 h-16 sm:h-12 pointer-events-none relative"
           >
-            <div
-              style={{
-                backdropFilter: 'blur(6px)',
-                WebkitBackdropFilter: 'blur(6px)',
-                maskImage:
-                  'linear-gradient(to top, black 0%, black 60%, rgba(0,0,0,0.45) 85%, transparent 100%)',
-                WebkitMaskImage:
-                  'linear-gradient(to top, black 0%, black 60%, rgba(0,0,0,0.45) 85%, transparent 100%)',
-              }}
-              className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,0.95)_0%,rgba(249,250,251,0.84)_48%,rgba(249,250,251,0.5)_78%,rgba(249,250,251,0)_100%)] pointer-events-none"
-            />
+            <div className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,0.82)_0%,rgba(249,250,251,0.68)_45%,rgba(249,250,251,0.35)_75%,rgba(249,250,251,0)_100%)] pointer-events-none" />
           </div>
         )}
       </section>

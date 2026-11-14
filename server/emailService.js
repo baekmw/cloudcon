@@ -23,7 +23,7 @@ export function getAppBaseUrl() {
 
 function getFromEmail() {
   return (
-    process.env.RESEND_FROM_EMAIL || "Cloudcon 클래식 알림 <noreply@cloudcon.app>"
+    process.env.RESEND_FROM_EMAIL || "cloudcon 클래식 알림 <noreply@cloudcon.app>"
   ).trim();
 }
 
@@ -78,13 +78,13 @@ export async function sendVerificationEmail(email, manageToken, keyword = "") {
   const resend = getResendClient();
 
   const subject = keyword
-    ? `[Cloudcon] '${keyword}' 공연 알림 시작을 위해 이메일을 인증해 주세요`
-    : `[Cloudcon] 클래식 공연 알림 이메일 인증 링크`;
+    ? `[cloudcon] '${keyword}' 공연 알림 시작을 위해 이메일을 인증해 주세요`
+    : `[cloudcon] 클래식 공연 알림 이메일 인증 링크`;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e5e8eb; border-radius: 20px; color: #191f28;">
       <div style="margin-bottom: 20px;">
-        <span style="display: inline-block; background-color: #e8f3ff; color: #3182f6; font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px;">Cloudcon 공연 알림</span>
+        <span style="display: inline-block; background-color: #e8f3ff; color: #3182f6; font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px;">cloudcon 공연 알림</span>
       </div>
       <h2 style="font-size: 22px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.4; word-break: keep-all;">
         아래 버튼을 눌러 클래식 공연 알림을 시작하세요
@@ -155,8 +155,8 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
   const firstKeyword = firstItem.matchedKeywords[0] || "관심 키워드";
   const subject =
     matchedItems.length === 1
-      ? `[Cloudcon] '${firstKeyword}' 관련 새 클래식 공연 소식이 도착했어요`
-      : `[Cloudcon] '${firstKeyword}' 외 ${matchedItems.length}건의 새 공연 소식이 도착했어요`;
+      ? `[cloudcon] '${firstKeyword}' 관련 새 클래식 공연 소식이 도착했어요`
+      : `[cloudcon] '${firstKeyword}' 외 ${matchedItems.length}건의 새 공연 소식이 도착했어요`;
 
   const cardsHtml = matchedItems
     .map(({ concert, matchedKeywords }) => {
@@ -194,7 +194,7 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e5e8eb; border-radius: 20px; color: #191f28;">
       <div style="margin-bottom: 16px;">
-        <span style="display: inline-block; background-color: #e8f3ff; color: #3182f6; font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px;">Cloudcon 신규 공연 알림</span>
+        <span style="display: inline-block; background-color: #e8f3ff; color: #3182f6; font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px;">cloudcon 신규 공연 알림</span>
       </div>
       <h2 style="font-size: 21px; font-weight: 800; margin: 0 0 8px 0; line-height: 1.4; word-break: keep-all;">
         기다리시던 클래식 공연 ${matchedItems.length}건이 새로 확인되었습니다

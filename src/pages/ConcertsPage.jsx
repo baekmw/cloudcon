@@ -26,7 +26,7 @@ export default function ConcertsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    document.title = 'Cloudcon · 클래식 공연'
+    document.title = 'cloudcon · 클래식 공연'
   }, [])
 
   useEffect(() => {

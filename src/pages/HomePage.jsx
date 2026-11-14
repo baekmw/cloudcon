@@ -166,9 +166,9 @@ function CalmHeroHeading() {
   }, [phrases.length])
 
   return (
-    <div className="min-h-[2.75rem] sm:min-h-[4rem] md:min-h-[4.5rem] py-1 flex items-center justify-center">
+    <div className="min-h-[3.25rem] sm:min-h-[4.5rem] md:min-h-[5.25rem] py-1 flex items-center justify-center">
       <h1
-        className={`text-[21px] sm:text-4xl md:text-5xl font-extrabold text-[#191f28] tracking-tight leading-snug whitespace-nowrap transition-all duration-500 ease-out ${
+        className={`text-[25px] sm:text-[42px] md:text-[52px] font-extrabold text-[#191f28] tracking-tight leading-snug whitespace-nowrap transition-all duration-500 ease-out ${
           isFading ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'
         }`}
       >
@@ -243,7 +243,7 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    document.title = 'Cloudcon · 클래식 공연 검색'
+    document.title = 'cloudcon · 클래식 공연 검색'
   }, [])
 
   useEffect(() => {
@@ -376,7 +376,7 @@ export default function HomePage() {
         {!hasSearch && (
           <div className="text-center mb-8 sm:mb-10 animate-fade-up">
             <CalmHeroHeading />
-            <p className="mt-3 sm:mt-4 text-[13.5px] sm:text-[16px] text-[#6b7684] font-normal leading-relaxed max-w-[540px] mx-auto break-keep">
+            <p className="mt-3 sm:mt-4 text-[14.5px] sm:text-[17px] text-[#6b7684] font-normal leading-relaxed max-w-[560px] mx-auto break-keep">
               아티스트, 연주곡, 공연장 어디든 편하게 입력해 보세요.<br /> 관련된 모든 클래식 무대를 빠짐없이 찾아드릴게요.
             </p>
           </div>
@@ -589,30 +589,20 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* 그 다음 1건: 완전 흰색이 아닌 반투명 블러 페이드아웃으로 내용물이 은은하게 보이도록 처리 */}
+          {/* 그 다음 1건: 약 80% 투명도의 흰색 그라데이션 페이드아웃 */}
           {fadingConcert && (
             <div className="relative mt-3 select-none pointer-events-none overflow-hidden rounded-2xl">
               <div
                 style={{
                   maskImage:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.06) 95%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.12) 95%)',
                   WebkitMaskImage:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.06) 95%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.12) 95%)',
                 }}
               >
                 <ConcertCardItem concert={fadingConcert} q={q} isFading />
               </div>
-              <div
-                style={{
-                  backdropFilter: 'blur(4px)',
-                  WebkitBackdropFilter: 'blur(4px)',
-                  maskImage:
-                    'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.75) 40%, black 100%)',
-                  WebkitMaskImage:
-                    'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.75) 40%, black 100%)',
-                }}
-                className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/65 to-[#f9fafb]/92"
-              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/50 to-[#f9fafb]/80" />
             </div>
           )}
 
@@ -634,20 +624,12 @@ export default function HomePage() {
           )}
 
           {/* Quick noti CTA sticky at bottom of search results:
-              하단 페이드의 흰색 농도와 블러를 강화하고 스티키 카드의 불투명도·블러를 높여 하단 영역을 확실히 차단 */}
+              스티키 영역 위로 약 80% 흰색 페이드 효과가 부드럽게 올라오도록 처리 */}
           {searchResults.length > 0 && (
-            <div className="sticky bottom-0 z-20 mt-5 -mx-6 px-6 pt-4 pb-14 sm:pb-5 pointer-events-none relative">
+            <div className="sticky bottom-0 z-20 mt-4 -mx-6 px-6 pt-9 pb-14 sm:pb-5 pointer-events-none relative">
               <div
                 aria-hidden="true"
-                style={{
-                  backdropFilter: 'blur(6px)',
-                  WebkitBackdropFilter: 'blur(6px)',
-                  maskImage:
-                    'linear-gradient(to top, black 0%, black 65%, rgba(0,0,0,0.45) 86%, transparent 100%)',
-                  WebkitMaskImage:
-                    'linear-gradient(to top, black 0%, black 65%, rgba(0,0,0,0.45) 86%, transparent 100%)',
-                }}
-                className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,0.95)_0%,rgba(249,250,251,0.86)_48%,rgba(249,250,251,0.55)_78%,rgba(249,250,251,0)_100%)] pointer-events-none"
+                className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,0.82)_0%,rgba(249,250,251,0.75)_48%,rgba(249,250,251,0.45)_75%,rgba(249,250,251,0)_100%)] pointer-events-none"
               />
               <div
                 style={{

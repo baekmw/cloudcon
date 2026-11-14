@@ -95,7 +95,7 @@ export function markAllRead() {
 function notify(item) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
   try {
-    const notification = new Notification('Cloudcon · 새 클래식 공연', {
+    const notification = new Notification('cloudcon · 새 클래식 공연', {
       body: item.body,
       tag: item.id,
     })

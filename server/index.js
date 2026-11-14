@@ -56,5 +56,5 @@ app.use((req, res) => {
 startBatchCron(kopisApi);
 
 app.listen(port, "0.0.0.0", () => {
-  console.log(`[Cloudcon Express] Server listening on http://0.0.0.0:${port}`);
+  console.log(`[cloudcon Express] Server listening on http://0.0.0.0:${port}`);
 });

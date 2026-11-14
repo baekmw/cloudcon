@@ -1,8 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Bell, Compass, Download, Menu, Music2, Search, Share, X } from 'lucide-react'
+import { Bell, Compass, Download, Menu, Search, Share, X } from 'lucide-react'
 import { scanForNewConcerts, useAlerts } from '../lib/alerts.js'
 import { Badge } from './ui/badge.jsx'
+
+function TicketLogo({ className = 'h-5 w-5' }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M4 5.5H20L14.5 12L20 18.5H4"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
 
 function NavItem({ to, children, end, onClick, mobile = false }) {
   return (
@@ -131,13 +150,13 @@ export default function Layout() {
         <div className="relative mx-auto flex max-w-[960px] items-center justify-between gap-4 px-5 sm:px-6 h-12 sm:h-13">
           <NavLink
             to="/"
-            className="flex items-center gap-2 group shrink-0 whitespace-nowrap"
+            className="flex items-center gap-1.5 group shrink-0 whitespace-nowrap"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3182f6] text-white shadow-xs transition-transform group-hover:scale-105 shrink-0">
-              <Music2 className="h-4 w-4" />
+            <div className="flex h-7 w-7 items-center justify-center bg-transparent text-[#3182f6] transition-transform group-hover:scale-105 shrink-0">
+              <TicketLogo className="h-5 w-5" />
             </div>
-            <span className="text-[15.5px] font-bold tracking-tight text-[#191f28]">
-              Cloudcon
+            <span className="text-[16px] font-bold tracking-tight text-[#191f28]">
+              cloudcon
             </span>
           </NavLink>
 
@@ -268,11 +287,11 @@ export default function Layout() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#3182f6] text-white">
-                  <Music2 className="h-5 w-5" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-[#e5e8eb] text-[#3182f6]">
+                  <TicketLogo className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-[16px] font-bold text-[#191f28]">Cloudcon 앱 설치</h3>
+                  <h3 className="text-[16px] font-bold text-[#191f28]">cloudcon 앱 설치</h3>
                   <p className="text-[12px] text-[#6b7684]">iPhone / iPad 홈 화면에 추가</p>
                 </div>
               </div>
@@ -313,7 +332,7 @@ export default function Layout() {
         <div className="mx-auto max-w-[960px] px-6 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[12px] text-[#8b95a1]">
             <p className="font-medium text-[#6b7684]">
-              © {new Date().getFullYear()} Cloudcon. All rights reserved.
+              © {new Date().getFullYear()} cloudcon. All rights reserved.
             </p>
             <p>출처: (재)예술경영지원센터 공연예술통합전산망(KOPIS)</p>
           </div>

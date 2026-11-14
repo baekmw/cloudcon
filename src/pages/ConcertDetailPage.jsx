@@ -266,7 +266,7 @@ export default function ConcertDetailPage() {
   }, [id])
 
   useEffect(() => {
-    if (concert?.title) document.title = `${concert.title} · Cloudcon`
+    if (concert?.title) document.title = `${concert.title} · cloudcon`
   }, [concert])
 
   async function watchPerson(name) {
