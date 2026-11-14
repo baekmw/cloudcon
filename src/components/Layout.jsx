@@ -4,22 +4,22 @@ import { Bell, Compass, Download, Menu, Search, Share, X } from 'lucide-react'
 import { scanForNewConcerts, useAlerts } from '../lib/alerts.js'
 import { Badge } from './ui/badge.jsx'
 
-function TicketLogo({ className = 'h-5 w-5' }) {
+function TicketLogo({ className = 'h-6 w-6', withText = false, whiteBg = false }) {
+  const src = withText
+    ? whiteBg
+      ? '/logos/logo-text-white.svg'
+      : '/logos/logo-text-transparent.svg'
+    : whiteBg
+      ? '/logos/logo-notext-white.svg'
+      : '/logos/logo-notext-transparent.svg'
+
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M4 5.5H20L14.5 12L20 18.5H4"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <img
+      src={src}
+      alt="cloudcon"
+      className={`${className} object-contain select-none`}
+      draggable={false}
+    />
   )
 }
 
@@ -152,8 +152,8 @@ export default function Layout() {
             to="/"
             className="flex items-center gap-1.5 group shrink-0 whitespace-nowrap"
           >
-            <div className="flex h-7 w-7 items-center justify-center bg-transparent text-[#3182f6] transition-transform group-hover:scale-105 shrink-0">
-              <TicketLogo className="h-5 w-5" />
+            <div className="flex h-7 w-7 items-center justify-center bg-transparent transition-transform group-hover:scale-105 shrink-0">
+              <TicketLogo className="h-6 w-6" withText={false} whiteBg={false} />
             </div>
             <span className="text-[16px] font-bold tracking-tight text-[#191f28]">
               cloudcon
@@ -287,8 +287,8 @@ export default function Layout() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-[#e5e8eb] text-[#3182f6]">
-                  <TicketLogo className="h-5 w-5" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[#e5e8eb] overflow-hidden">
+                  <TicketLogo className="h-9 w-9" withText={true} whiteBg={true} />
                 </div>
                 <div>
                   <h3 className="text-[16px] font-bold text-[#191f28]">cloudcon 앱 설치</h3>

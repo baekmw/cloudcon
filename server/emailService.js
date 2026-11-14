@@ -81,10 +81,16 @@ export async function sendVerificationEmail(email, manageToken, keyword = "") {
     ? `[cloudcon] '${keyword}' 공연 알림 시작을 위해 이메일을 인증해 주세요`
     : `[cloudcon] 클래식 공연 알림 이메일 인증 링크`;
 
+  const logoUrl = `${baseUrl}/logos/logo-notext-transparent.png`;
+
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e5e8eb; border-radius: 20px; color: #191f28;">
-      <div style="margin-bottom: 20px;">
-        <span style="display: inline-block; background-color: #e8f3ff; color: #3182f6; font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px;">cloudcon 공연 알림</span>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid #f2f4f6;">
+        <a href="${baseUrl}" style="display: inline-flex; align-items: center; text-decoration: none; color: #191f28;">
+          <img src="${logoUrl}" alt="cloudcon" width="28" height="28" style="display: inline-block; vertical-align: middle; margin-right: 6px; border: 0;" />
+          <span style="font-size: 18px; font-weight: 800; letter-spacing: -0.03em; color: #191f28; vertical-align: middle;">cloudcon</span>
+        </a>
+        <span style="display: inline-block; background-color: #e8f3ff; color: #3182f6; font-weight: 700; font-size: 12px; padding: 5px 11px; border-radius: 999px;">공연 알림 인증</span>
       </div>
       <h2 style="font-size: 22px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.4; word-break: keep-all;">
         아래 버튼을 눌러 클래식 공연 알림을 시작하세요
@@ -191,10 +197,16 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
     })
     .join("");
 
+  const logoUrl = `${baseUrl}/logos/logo-notext-transparent.png`;
+
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e5e8eb; border-radius: 20px; color: #191f28;">
-      <div style="margin-bottom: 16px;">
-        <span style="display: inline-block; background-color: #e8f3ff; color: #3182f6; font-weight: 700; font-size: 13px; padding: 6px 12px; border-radius: 999px;">cloudcon 신규 공연 알림</span>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid #f2f4f6;">
+        <a href="${baseUrl}" style="display: inline-flex; align-items: center; text-decoration: none; color: #191f28;">
+          <img src="${logoUrl}" alt="cloudcon" width="28" height="28" style="display: inline-block; vertical-align: middle; margin-right: 6px; border: 0;" />
+          <span style="font-size: 18px; font-weight: 800; letter-spacing: -0.03em; color: #191f28; vertical-align: middle;">cloudcon</span>
+        </a>
+        <span style="display: inline-block; background-color: #e8f3ff; color: #3182f6; font-weight: 700; font-size: 12px; padding: 5px 11px; border-radius: 999px;">신규 공연 알림</span>
       </div>
       <h2 style="font-size: 21px; font-weight: 800; margin: 0 0 8px 0; line-height: 1.4; word-break: keep-all;">
         기다리시던 클래식 공연 ${matchedItems.length}건이 새로 확인되었습니다

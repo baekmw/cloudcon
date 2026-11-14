@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" fill="#ffffff"/>
+  <defs>
+    <mask id="ticket-cutout-text-white">
+      <rect width="512" height="512" fill="white"/>
+      <rect x="274" y="120" width="16" height="31" fill="black"/>
+      <rect x="274" y="168" width="16" height="31" fill="black"/>
+      <rect x="274" y="216" width="16" height="31" fill="black"/>
+      <rect x="274" y="264" width="16" height="31" fill="black"/>
+      <rect x="274" y="312" width="16" height="31" fill="black"/>
+      <rect x="274" y="360" width="16" height="31" fill="black"/>
+      <text x="38" y="226" fill="black" font-family="Pretendard, 'Segoe UI', -apple-system, sans-serif" font-weight="800" font-size="82" letter-spacing="-1">cloud</text>
+      <text x="38" y="326" fill="black" font-family="Pretendard, 'Segoe UI', -apple-system, sans-serif" font-weight="800" font-size="82" letter-spacing="-1">con</text>
+    </mask>
+  </defs>
+  <path d="M0 112.6H425V189.4A66.6 66.6 0 0 0 425 322.6V399.4H0Z" fill="#3182f6" mask="url(#ticket-cutout-text-white)"/>
+</svg>

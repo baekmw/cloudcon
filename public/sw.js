@@ -1,8 +1,10 @@
-const CACHE_NAME = "cloudcon-pwa-v3";
+const CACHE_NAME = "cloudcon-pwa-v4";
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
   "/favicon.svg",
+  "/logos/logo-notext-transparent.svg",
+  "/logos/logo-text-white.svg",
   "/pwa-192x192.png",
   "/pwa-512x512.png",
   "/apple-touch-icon.png"
