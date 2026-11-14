@@ -11,6 +11,7 @@ import {
   sendConcertAlertEmail,
   sleep,
 } from "./emailService.js";
+import { matchConcertClassical } from "../src/lib/classical.js";
 
 const GEMINI_SLEEP_MS = 4000; // Rate Limit 방어용 호출 간 4초 sleep
 
@@ -59,11 +60,14 @@ export function buildConcertSearchPool(concert, programs = []) {
 }
 
 /**
- * 단일 공연이 특정 키워드와 매칭되는지 검사 (공백 제거 후 단순 includes)
+ * 단일 공연이 특정 키워드와 매칭되는지 검사 (검색 엔진과 동일한 매칭 + 공백 제거 단순 includes)
  */
 export function doesConcertMatchKeyword(concert, programs, keyword) {
   const cleanKw = normalizeCompact(keyword);
   if (!cleanKw) return false;
+  if (matchConcertClassical(concert, keyword, programs).matched) {
+    return true;
+  }
   const pool = buildConcertSearchPool(concert, programs);
   return pool.includes(cleanKw);
 }

@@ -37,9 +37,7 @@ export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [isIosInstallable, setIsIosInstallable] = useState(false)
-  const [isSamsungBrowser, setIsSamsungBrowser] = useState(false)
   const [showIosGuide, setShowIosGuide] = useState(false)
-  const [showSamsungGuide, setShowSamsungGuide] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
   const location = useLocation()
 
@@ -48,7 +46,7 @@ export default function Layout() {
     setMobileMenuOpen(false)
   }, [location.pathname, location.search])
 
-  // PWA 설치 프롬프트 및 iOS / 삼성 인터넷 감지
+  // PWA 설치 프롬프트 및 iOS 홈 화면 추가 감지
   useEffect(() => {
     const standalone =
       window.matchMedia?.('(display-mode: standalone)').matches ||
@@ -60,12 +58,8 @@ export default function Layout() {
 
     const ua = window.navigator.userAgent || ''
     const isIos = /iPad|iPhone|iPod/.test(ua) && !window.MSStream
-    const isSamsung = /SamsungBrowser/i.test(ua)
     if (isIos) {
       setIsIosInstallable(true)
-    }
-    if (isSamsung) {
-      setIsSamsungBrowser(true)
     }
 
     const onBeforeInstallPrompt = (e) => {
@@ -76,7 +70,6 @@ export default function Layout() {
       setIsInstalled(true)
       setDeferredPrompt(null)
       setShowIosGuide(false)
-      setShowSamsungGuide(false)
     }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
@@ -87,39 +80,20 @@ export default function Layout() {
     }
   }, [])
 
-  const canInstallPwa =
-    !isInstalled && (Boolean(deferredPrompt) || isIosInstallable || isSamsungBrowser)
-
-  const triggerNativeInstallPrompt = async () => {
-    if (!deferredPrompt) return
-    deferredPrompt.prompt()
-    try {
-      const choice = await deferredPrompt.userChoice
-      if (choice?.outcome === 'accepted') {
-        setDeferredPrompt(null)
-        setShowSamsungGuide(false)
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  const handleOpenInChrome = () => {
-    const scheme = window.location.protocol.replace(':', '') || 'http'
-    const intentUrl = `intent://${window.location.host}${window.location.pathname}${window.location.search}#Intent;scheme=${scheme};package=com.android.chrome;end`
-    window.location.href = intentUrl
-  }
+  const canInstallPwa = !isInstalled && (Boolean(deferredPrompt) || isIosInstallable)
 
   const handleInstallClick = async () => {
     setMobileMenuOpen(false)
-    // 삼성 인터넷은 자체 WebAPK 패키저가 구형 Android SDK 타겟으로 패키징하여
-    // Android 14+에서 "이전 버전의 Android에 맞게 개발됨" 경고를 띄우므로 전용 안내 모달을 표시
-    if (isSamsungBrowser) {
-      setShowSamsungGuide(true)
-      return
-    }
     if (deferredPrompt) {
-      await triggerNativeInstallPrompt()
+      deferredPrompt.prompt()
+      try {
+        const choice = await deferredPrompt.userChoice
+        if (choice?.outcome === 'accepted') {
+          setDeferredPrompt(null)
+        }
+      } catch {
+        // ignore
+      }
       return
     }
     if (isIosInstallable) {
@@ -282,71 +256,6 @@ export default function Layout() {
           )}
         </div>
       </header>
-
-      {showSamsungGuide && (
-        <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-xs p-4"
-          onClick={() => setShowSamsungGuide(false)}
-        >
-          <div
-            className="w-full max-w-[390px] rounded-2xl bg-white p-6 shadow-xl space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#3182f6] text-white">
-                  <Music2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-[16px] font-bold text-[#191f28]">Cloudcon 앱 설치</h3>
-                  <p className="text-[12px] text-[#6b7684]">갤럭시 홈 화면에 경고 없이 추가하기</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSamsungGuide(false)}
-                className="h-8 w-8 flex items-center justify-center rounded-lg text-[#8b95a1] hover:bg-[#f2f4f6] cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="rounded-xl bg-[#f9fafb] p-4 space-y-2.5 text-[13px] text-[#333d4b] leading-relaxed break-keep">
-              <p className="flex items-start gap-2">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e8f3ff] text-[11px] font-bold text-[#3182f6]">1</span>
-                <span>
-                  브라우저 우측 하단 <strong>메뉴(≡)</strong> 버튼을 누른 뒤 <strong>&lsquo;현재 페이지 추가&rsquo; &rarr; &lsquo;홈 화면&rsquo;</strong>을 누르면 버전 경고 없이 즉시 추가됩니다.
-                </span>
-              </p>
-              <p className="flex items-start gap-2">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e8f3ff] text-[11px] font-bold text-[#3182f6]">2</span>
-                <span>
-                  또는 <strong>Chrome 브라우저</strong>에서 열면 최신 Android 규격으로 바로 설치할 수 있습니다.
-                </span>
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={handleOpenInChrome}
-                className="w-full rounded-xl bg-[#3182f6] py-3 text-[14px] font-semibold text-white hover:bg-[#1b64da] transition-colors cursor-pointer"
-              >
-                Chrome에서 열어서 바로 설치하기
-              </button>
-              {deferredPrompt && (
-                <button
-                  type="button"
-                  onClick={triggerNativeInstallPrompt}
-                  className="w-full rounded-xl bg-[#f2f4f6] py-2.5 text-[13px] font-medium text-[#4e5968] hover:bg-[#e5e8eb] transition-colors cursor-pointer"
-                >
-                  삼성 브라우저 기본 설치창 열기 (세부정보 &rarr; 무시하고 설치)
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {showIosGuide && (
         <div

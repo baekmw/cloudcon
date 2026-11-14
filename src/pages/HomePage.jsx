@@ -25,14 +25,17 @@ import { matchConcertClassical } from '../lib/classical.js'
 const PAGE_SIZE = 20
 
 const POPULAR_KEYWORDS = [
-  '베9',
-  '조성진',
-  '임윤찬',
-  '라피협2',
-  '차피협',
+  '베토벤',
+  '모차르트',
+  '쇼팽',
+  '라흐마니노프',
+  '차이콥스키',
+  '브람스',
+  '말러',
   '예술의전당',
-  '신세계',
+  '롯데콘서트홀',
   '사계',
+  '신세계',
 ]
 
 function matchesState(concert, filter) {
@@ -367,11 +370,11 @@ export default function HomePage() {
   const remainingCount = searchResults.length - visibleCount
 
   return (
-    <main className="mx-auto max-w-[800px] px-6 py-12 md:py-20 flex flex-col items-center">
+    <main className="mx-auto max-w-[800px] px-6 py-12 md:py-20 flex flex-col items-center animate-fade-up">
       {/* Toss style Hero & Search Area */}
       <div className={`w-full flex flex-col items-center transition-all duration-300 ${hasSearch ? 'mb-8' : 'my-auto py-8 sm:py-12'}`}>
         {!hasSearch && (
-          <div className="text-center mb-8 sm:mb-10 animate-in fade-in duration-500">
+          <div className="text-center mb-8 sm:mb-10 animate-fade-up">
             <CalmHeroHeading />
             <p className="mt-3 sm:mt-4 text-[13.5px] sm:text-[16px] text-[#6b7684] font-normal leading-relaxed max-w-[540px] mx-auto break-keep">
               아티스트, 연주곡, 공연장 어디든 편하게 입력해 보세요.<br /> 관련된 모든 클래식 무대를 빠짐없이 찾아드릴게요.
@@ -503,7 +506,7 @@ export default function HomePage() {
 
       {/* Search Results Section (Only visible when searched) */}
       {hasSearch && (
-        <section className="w-full max-w-[760px] animate-in fade-in duration-300">
+        <section className="w-full max-w-[760px] animate-fade-up">
           {/* Result Header & State Filters */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-[#f2f4f6]">
             <div>

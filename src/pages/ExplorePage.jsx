@@ -280,7 +280,7 @@ export default function ExplorePage() {
   }, [selectedRegion])
 
   return (
-    <main className="mx-auto max-w-[840px] px-6 py-10 md:py-12 flex flex-col items-center">
+    <main className="mx-auto max-w-[840px] px-6 py-10 md:py-12 flex flex-col items-center animate-fade-up">
       {/* 상단 타이틀 & 직관적인 모드 전환 탭 카드 */}
       <div className="w-full max-w-[800px] mb-7">
         <div className="mb-6">
