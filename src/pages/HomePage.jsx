@@ -596,33 +596,35 @@ export default function HomePage() {
 
           {/* Quick noti CTA sticky at bottom of search results */}
           {searchResults.length > 0 && (
-            <div className="sticky bottom-4 z-20 mt-8 p-4 rounded-2xl bg-white/95 backdrop-blur-md border border-[#e5e8eb] shadow-[0_4px_24px_rgba(0,0,0,0.08)] flex flex-col sm:flex-row items-center justify-between gap-3 transition-all">
-              <div className="text-[14px]">
-                <span className="font-semibold text-[#191f28]">'{q}'</span> 관련 새 공연이 올라오면 알림을 받을까요?
+            <div className="sticky bottom-0 z-20 mt-6 -mx-2 px-2 pt-8 pb-14 sm:pb-5 pointer-events-none bg-gradient-to-t from-[#f9fafb] via-[#f9fafb]/85 to-transparent">
+              <div className="pointer-events-auto px-4 py-3.5 rounded-2xl bg-white/70 backdrop-blur-[4px] border border-[#e5e8eb]/80 shadow-[0_4px_20px_rgba(25,31,40,0.06)] flex flex-row items-center justify-between gap-3 transition-all">
+                <div className="text-[13px] sm:text-[14px] text-[#333d4b] leading-snug break-keep text-left min-w-0 flex-1">
+                  <span className="font-bold text-[#191f28]">'{q}'</span> 관련 새 공연이 올라오면 알림을 받을까요?
+                </div>
+                <Button
+                  variant={isTargetRegistered ? 'outline' : 'default'}
+                  size="sm"
+                  onClick={() => handleCreateAlert(q)}
+                  disabled={isTargetRegistered}
+                  className={`rounded-xl font-semibold gap-1.5 shrink-0 whitespace-nowrap transition-all ${
+                    isTargetRegistered
+                      ? 'bg-[#e8faf3]/90 text-[#03b26c] border-[#03b26c]/30 hover:bg-[#e8faf3] cursor-default'
+                      : 'bg-[#3182f6] text-white hover:bg-[#1b64da]'
+                  }`}
+                >
+                  {isTargetRegistered ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-[#03b26c] shrink-0" />
+                      <span>{wasJustAdded ? '알림 등록 완료' : '이미 알림 등록됨'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bell className="h-3.5 w-3.5 shrink-0" />
+                      <span>알림 받기</span>
+                    </>
+                  )}
+                </Button>
               </div>
-              <Button
-                variant={isTargetRegistered ? 'outline' : 'default'}
-                size="sm"
-                onClick={() => handleCreateAlert(q)}
-                disabled={isTargetRegistered}
-                className={`rounded-xl font-semibold gap-1.5 shrink-0 transition-all ${
-                  isTargetRegistered
-                    ? 'bg-[#e8faf3] text-[#03b26c] border-[#03b26c]/30 hover:bg-[#e8faf3] cursor-default'
-                    : 'bg-[#3182f6] text-white hover:bg-[#1b64da]'
-                }`}
-              >
-                {isTargetRegistered ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 text-[#03b26c]" />
-                    {wasJustAdded ? '알림 등록 완료' : '이미 알림 등록됨'}
-                  </>
-                ) : (
-                  <>
-                    <Bell className="h-3.5 w-3.5" />
-                    알림 받기
-                  </>
-                )}
-              </Button>
             </div>
           )}
         </section>
