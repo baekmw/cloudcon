@@ -1,55 +1,80 @@
 @import "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css";
 @import 'tailwindcss';
 
+:root {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+
+  /* 4-Color Core Theme Variables */
+  --theme-white: #ffffff;
+  --theme-light: #d4d4d4;
+  --theme-mid: #b3b3b3;
+  --theme-dark: #2b2b2b;
+
+  /* Semantic Derived Variables */
+  --bg-base: var(--theme-white);
+  --bg-subtle: #f5f5f5;
+  --bg-muted: #ebebeb;
+  --border-base: var(--theme-light);
+  --border-subtle: #e5e5e5;
+  --text-primary: var(--theme-dark);
+  --text-secondary: #666666;
+  --text-muted: var(--theme-mid);
+  --accent-primary: var(--theme-dark);
+  --accent-hover: #171717;
+  --accent-soft: #f0f0f0;
+}
+
 @theme {
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 
-  /* Toss & shadcn neutral palette */
-  --color-background: #ffffff;
-  --color-foreground: #191f28;
+  /* Core Theme Palette */
+  --color-theme-white: #ffffff;
+  --color-theme-light: #d4d4d4;
+  --color-theme-mid: #b3b3b3;
+  --color-theme-dark: #2b2b2b;
 
-  --color-muted: #f2f4f6;
-  --color-muted-foreground: #8b95a1;
+  /* Monochrome Design System Tokens */
+  --color-background: #ffffff;
+  --color-foreground: #2b2b2b;
+
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #b3b3b3;
 
   --color-card: #ffffff;
-  --color-card-foreground: #191f28;
+  --color-card-foreground: #2b2b2b;
 
   --color-popover: #ffffff;
-  --color-popover-foreground: #191f28;
+  --color-popover-foreground: #2b2b2b;
 
-  --color-border: #e5e8eb;
-  --color-input: #e5e8eb;
+  --color-border: #d4d4d4;
+  --color-input: #d4d4d4;
 
-  /* Toss Blue Primary */
-  --color-primary: #3182f6;
+  /* Primary (#2b2b2b replacing Toss Blue) */
+  --color-primary: #2b2b2b;
   --color-primary-foreground: #ffffff;
-  --color-primary-hover: #1b64da;
-  --color-primary-light: #e8f3ff;
+  --color-primary-hover: #171717;
+  --color-primary-light: #f0f0f0;
 
-  --color-secondary: #f2f4f6;
-  --color-secondary-foreground: #333d4b;
+  --color-secondary: #f0f0f0;
+  --color-secondary-foreground: #2b2b2b;
 
-  --color-accent: #f2f4f6;
-  --color-accent-foreground: #191f28;
+  --color-accent: #f0f0f0;
+  --color-accent-foreground: #2b2b2b;
 
-  --color-destructive: #f04452;
+  --color-destructive: #2b2b2b;
   --color-destructive-foreground: #ffffff;
 
-  --color-ring: #3182f6;
+  --color-ring: #2b2b2b;
 
-  /* State colors */
-  --color-success: #03b26c;
-  --color-amber: #b86e00;
-}
-
-:root {
-  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  /* State colors harmonized to monochrome */
+  --color-success: #2b2b2b;
+  --color-amber: #666666;
 }
 
 body {
   margin: 0;
-  background-color: #f9fafb;
-  color: var(--color-foreground);
+  background-color: var(--theme-white);
+  color: var(--theme-dark);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -58,15 +83,15 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Text selection (scrap/drag selection) in soft sky blue */
+/* Text selection in theme light gray */
 ::selection {
-  background-color: #cce5ff;
-  color: #191f28;
+  background-color: var(--theme-light);
+  color: var(--theme-dark);
 }
 
 ::-moz-selection {
-  background-color: #cce5ff;
-  color: #191f28;
+  background-color: var(--theme-light);
+  color: var(--theme-dark);
 }
 
 button,

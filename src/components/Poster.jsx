@@ -5,7 +5,7 @@ export default function Poster({ src, title, className = '' }) {
 
   if (!src || failed) {
     return (
-      <div className={`grid place-items-center bg-line-light text-ink-tertiary ${className}`}>
+      <div className={`grid place-items-center bg-[var(--bg-subtle)] text-[var(--theme-mid)] ${className}`}>
         <svg viewBox="0 0 64 64" className="h-10 w-10" aria-hidden="true">
           <path
             fill="currentColor"

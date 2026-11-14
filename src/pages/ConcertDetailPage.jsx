@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, ChevronDown, ChevronUp, ExternalLink, Bell, Calendar, MapPin, Check, Ticket } from 'lucide-react'
 import Poster from '../components/Poster.jsx'
 import StatePill from '../components/StatePill.jsx'
@@ -16,8 +16,8 @@ function Fact({ label, value }) {
   if (!value) return null
   return (
     <div className="grid grid-cols-[minmax(4.25rem,max-content)_1fr] gap-3 py-2.5 text-[14px]">
-      <dt className="font-medium text-[#8b95a1] shrink-0 whitespace-nowrap">{label}</dt>
-      <dd className="min-w-0 whitespace-pre-wrap text-[#191f28] break-keep">{value}</dd>
+      <dt className="font-medium text-[var(--theme-mid)] shrink-0 whitespace-nowrap">{label}</dt>
+      <dd className="min-w-0 whitespace-pre-wrap text-[var(--theme-dark)] break-keep">{value}</dd>
     </div>
   )
 }
@@ -108,11 +108,11 @@ function StorySection({ story }) {
   if (!story) return null
 
   return (
-    <Card className="mt-6 border-[#e5e8eb] overflow-hidden">
+    <Card className="mt-6 border-[var(--theme-light)] overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-[17px]">프로그램 소개</CardTitle>
       </CardHeader>
-      <CardContent className="text-[14px] leading-relaxed text-[#4e5968] pt-0">
+      <CardContent className="text-[14px] leading-relaxed text-[var(--text-secondary)] pt-0">
         <div
           ref={contentRef}
           className={`relative transition-all duration-300 ${
@@ -123,15 +123,15 @@ function StorySection({ story }) {
 
           {!expanded && isLong && (
             <>
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent via-white/80 to-white pointer-events-none" />
-              <div className="absolute inset-x-0 bottom-1 flex justify-center z-10">
+              <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.75)_45%,#ffffff_82%,#ffffff_100%)] pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-2 flex justify-center z-10">
                 <button
                   type="button"
                   onClick={() => setExpanded(true)}
-                  className="inline-flex items-center gap-1 text-[13px] font-medium text-[#8b95a1] hover:text-[#4e5968] transition-colors cursor-pointer py-1 px-3"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-white)] border border-[var(--theme-light)] px-5 py-2 text-[13.5px] font-bold text-[var(--theme-dark)] shadow-[0_4px_14px_rgba(43,43,43,0.08)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)] transition-all cursor-pointer"
                 >
                   <span>소개 더보기</span>
-                  <ChevronDown className="h-3.5 w-3.5" />
+                  <ChevronDown className="h-4 w-4" />
                 </button>
               </div>
             </>
@@ -139,17 +139,17 @@ function StorySection({ story }) {
         </div>
 
         {expanded && isLong && (
-          <div className="mt-2.5 flex justify-center">
+          <div className="mt-3 flex justify-center">
             <button
               type="button"
               onClick={() => {
                 setExpanded(false)
                 contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
               }}
-              className="inline-flex items-center gap-1 text-[13px] font-medium text-[#8b95a1] hover:text-[#4e5968] transition-colors cursor-pointer py-1 px-3"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-white)] border border-[var(--theme-light)] px-5 py-2 text-[13.5px] font-bold text-[var(--theme-dark)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)] transition-all cursor-pointer"
             >
               <span>소개 접기</span>
-              <ChevronUp className="h-3.5 w-3.5" />
+              <ChevronUp className="h-4 w-4" />
             </button>
           </div>
         )}
@@ -190,7 +190,7 @@ function DetailImages({ images = [] }) {
               src={url}
               alt=""
               onLoad={checkHeight}
-              className="w-full rounded-2xl border border-[#e5e8eb]"
+              className="w-full rounded-2xl border border-[var(--theme-light)]"
               referrerPolicy="no-referrer"
             />
           ))}
@@ -199,15 +199,15 @@ function DetailImages({ images = [] }) {
         {/* 점진적으로 흐려지는 그라데이션 및 더보기 버튼 */}
         {!expanded && isLong && (
           <>
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent via-white/80 to-white pointer-events-none" />
-            <div className="absolute inset-x-0 bottom-2 flex justify-center z-10">
+            <div className="absolute inset-x-0 bottom-0 h-36 bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.75)_45%,#ffffff_82%,#ffffff_100%)] pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-3 flex justify-center z-10">
               <button
                 type="button"
                 onClick={() => setExpanded(true)}
-                className="inline-flex items-center gap-1 text-[13px] font-medium text-[#8b95a1] hover:text-[#4e5968] transition-colors cursor-pointer py-1 px-3"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-white)] border border-[var(--theme-light)] px-5 py-2.5 text-[14px] font-bold text-[var(--theme-dark)] shadow-[0_6px_18px_rgba(43,43,43,0.10)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)] transition-all cursor-pointer"
               >
                 <span>상세 이미지 더보기</span>
-                <ChevronDown className="h-3.5 w-3.5" />
+                <ChevronDown className="h-4 w-4" />
               </button>
             </div>
           </>
@@ -215,17 +215,17 @@ function DetailImages({ images = [] }) {
       </div>
 
       {expanded && isLong && (
-        <div className="mt-2.5 flex justify-center">
+        <div className="mt-3 flex justify-center">
           <button
             type="button"
             onClick={() => {
               setExpanded(false)
               containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
             }}
-            className="inline-flex items-center gap-1 text-[13px] font-medium text-[#8b95a1] hover:text-[#4e5968] transition-colors cursor-pointer py-1 px-3"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-white)] border border-[var(--theme-light)] px-5 py-2.5 text-[14px] font-bold text-[var(--theme-dark)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)] transition-all cursor-pointer"
           >
             <span>상세 이미지 접기</span>
-            <ChevronUp className="h-3.5 w-3.5" />
+            <ChevronUp className="h-4 w-4" />
           </button>
         </div>
       )}
@@ -307,11 +307,11 @@ export default function ConcertDetailPage() {
   if (error) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <p className="text-[15px] text-[#f04452] font-semibold">{error}</p>
+        <p className="text-[15px] text-[var(--theme-dark)] font-semibold">{error}</p>
         <button
           type="button"
           onClick={handleGoBack}
-          className="mt-4 inline-flex items-center gap-1 text-[14px] font-medium text-[#3182f6] cursor-pointer hover:underline"
+          className="mt-4 inline-flex items-center gap-1 text-[14px] font-medium text-[var(--theme-dark)] cursor-pointer hover:underline"
         >
           <ChevronLeft className="h-4 w-4" /> 검색으로 돌아가기
         </button>
@@ -322,8 +322,8 @@ export default function ConcertDetailPage() {
   if (!concert) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-24 text-center">
-        <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[#3182f6] border-t-transparent" />
-        <p className="mt-3 text-[14px] text-[#8b95a1]">공연 정보를 불러오는 중...</p>
+        <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[var(--theme-dark)] border-t-transparent" />
+        <p className="mt-3 text-[14px] text-[var(--theme-mid)]">공연 정보를 불러오는 중...</p>
       </main>
     )
   }
@@ -332,11 +332,11 @@ export default function ConcertDetailPage() {
 
   return (
     <main className="mx-auto max-w-[960px] px-6 py-6 sm:py-8">
-      {/* Back Button (Non-sticky: scrolls away naturally) */}
+      {/* Back Button */}
       <button
         type="button"
         onClick={handleGoBack}
-        className="inline-flex items-center gap-1 text-[14px] font-medium text-[#6b7684] hover:text-[#191f28] mb-6 transition-colors whitespace-nowrap cursor-pointer"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-[var(--text-secondary)] hover:text-[var(--theme-dark)] mb-6 transition-colors whitespace-nowrap cursor-pointer"
       >
         <ChevronLeft className="h-4 w-4 shrink-0" /> 검색으로 돌아가기
       </button>
@@ -344,7 +344,7 @@ export default function ConcertDetailPage() {
       <div className="grid gap-8 md:grid-cols-[280px_1fr] items-start">
         {/* Sticky Left Column: Poster, Booking & Alert */}
         <div className="md:sticky md:top-20 md:self-start space-y-3">
-          <div className="overflow-hidden rounded-2xl bg-white border border-[#e5e8eb] shadow-sm">
+          <div className="overflow-hidden rounded-2xl bg-[var(--theme-white)] border border-[var(--theme-light)] shadow-xs">
             <Poster
               src={concert.poster}
               title={concert.title}
@@ -360,24 +360,24 @@ export default function ConcertDetailPage() {
                   href={ticket.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-center gap-1.5 rounded-xl border border-[#e5e8eb] bg-white px-3 py-2.5 text-[13px] font-semibold text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] hover:bg-[#f8fafc] whitespace-nowrap transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-[var(--theme-light)] bg-[var(--theme-white)] px-3 py-2.5 text-[13px] font-semibold text-[var(--theme-dark)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)] whitespace-nowrap transition-all shadow-[0_1px_2px_rgba(43,43,43,0.03)]"
                 >
-                  <Ticket className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
+                  <Ticket className="h-3.5 w-3.5 text-[var(--theme-mid)] shrink-0" />
                   <span className="truncate">{ticket.name} 예매하기</span>
-                  <ExternalLink className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
+                  <ExternalLink className="h-3.5 w-3.5 text-[var(--theme-mid)] shrink-0" />
                 </a>
               ))}
             </div>
           )}
 
           {/* Quick Alert from this concert */}
-          <Card className="border-[#3182f6]/30 bg-white shadow-sm overflow-hidden">
+          <Card className="border-[var(--theme-light)] bg-[var(--theme-white)] shadow-xs overflow-hidden">
             <CardHeader className="p-3.5 pb-2">
-              <CardTitle className="text-[14px] flex items-center gap-1.5 font-bold text-[#191f28] whitespace-nowrap">
-                <Bell className="h-4 w-4 text-[#3182f6] shrink-0" />
+              <CardTitle className="text-[14px] flex items-center gap-1.5 font-bold text-[var(--theme-dark)] whitespace-nowrap">
+                <Bell className="h-4 w-4 text-[var(--theme-dark)] shrink-0" />
                 이 공연으로 알림 받기
               </CardTitle>
-              <p className="text-[11px] text-[#8b95a1] leading-tight break-keep">
+              <p className="text-[11px] text-[var(--theme-mid)] leading-tight break-keep">
                 새 공연이 등록되면 알려드려요
               </p>
             </CardHeader>
@@ -389,7 +389,7 @@ export default function ConcertDetailPage() {
                       key={name}
                       type="button"
                       onClick={() => watchPerson(name)}
-                      className="px-2 py-1 rounded-lg border border-[#e5e8eb] bg-[#f9fafb] text-[11px] font-medium text-[#4e5968] hover:border-[#3182f6] hover:text-[#3182f6] whitespace-nowrap shrink-0 transition-all cursor-pointer"
+                      className="px-2 py-1 rounded-lg border border-[var(--theme-light)] bg-[var(--bg-subtle)] text-[11px] font-medium text-[var(--text-secondary)] hover:border-[var(--theme-dark)] hover:text-[var(--theme-dark)] whitespace-nowrap shrink-0 transition-all cursor-pointer"
                     >
                       + {name}
                     </button>
@@ -402,7 +402,7 @@ export default function ConcertDetailPage() {
                   value={song}
                   onChange={(e) => setSong(e.target.value)}
                   placeholder="곡 이름 등록 (예: 월광)"
-                  className="bg-white h-8 text-[12px] px-2.5"
+                  className="bg-[var(--theme-white)] h-8 text-[12px] px-2.5"
                 />
                 <Button type="submit" size="sm" className="shrink-0 font-semibold h-8 text-[12px] px-2.5">
                   등록
@@ -410,7 +410,7 @@ export default function ConcertDetailPage() {
               </form>
 
               {notice && (
-                <p className="mt-2 flex items-center gap-1 text-[11px] text-[#03b26c] font-medium animate-in fade-in">
+                <p className="mt-2 flex items-center gap-1 text-[11px] text-[var(--theme-dark)] font-medium animate-in fade-in">
                   <Check className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{notice}</span>
                 </p>
@@ -428,29 +428,29 @@ export default function ConcertDetailPage() {
             {concert.openRun && <Badge variant="amber">오픈런</Badge>}
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2.5 text-[12px] sm:text-[13px] text-[#6b7684] mb-2.5 whitespace-nowrap overflow-hidden">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 text-[12px] sm:text-[13px] text-[var(--text-secondary)] mb-2.5 whitespace-nowrap overflow-hidden">
             <span className="inline-flex items-center gap-1 min-w-0">
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-[#8b95a1]" />
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--theme-mid)]" />
               <span className="truncate">{concert.venue} · {concert.area}</span>
             </span>
-            <span className="shrink-0 text-[#8b95a1]">·</span>
+            <span className="shrink-0 text-[var(--theme-mid)]">·</span>
             <span className="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
-              <Calendar className="h-3.5 w-3.5 shrink-0 text-[#8b95a1]" />
+              <Calendar className="h-3.5 w-3.5 shrink-0 text-[var(--theme-mid)]" />
               <span>{formatPeriod(concert.from, concert.to)}</span>
             </span>
           </div>
 
-          {/* Normal Title (Non-sticky, no background layer) */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#191f28] leading-tight">
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--theme-dark)] leading-tight">
             {concert.title}
           </h1>
 
           {/* Facts Card */}
-          <Card className="mt-6 border-[#e5e8eb] overflow-hidden">
+          <Card className="mt-6 border-[var(--theme-light)] overflow-hidden">
             <CardHeader className="pb-3">
               <CardTitle className="text-[17px]">공연 정보</CardTitle>
             </CardHeader>
-            <CardContent className="px-5 pb-4 pt-0 divide-y divide-[#f2f4f6]">
+            <CardContent className="px-5 pb-4 pt-0 divide-y divide-[var(--theme-light)]/50">
               <Fact label="출연" value={concert.cast} />
               <Fact label="제작진" value={concert.crew} />
               {(() => {
@@ -480,7 +480,7 @@ export default function ConcertDetailPage() {
           {/* Detail Images with fading overflow & expand button */}
           <DetailImages images={concert.images || []} />
 
-          <p className="mt-8 text-[12px] text-[#8b95a1]">KOPIS 식별번호: {concert.id}</p>
+          <p className="mt-8 text-[12px] text-[var(--theme-mid)]">KOPIS 식별번호: {concert.id}</p>
         </article>
       </div>
     </main>
