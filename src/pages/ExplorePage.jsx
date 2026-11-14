@@ -71,14 +71,14 @@ function ConcertCardItem({ concert, isFading = false }) {
       to={`/concerts/${concert.id}`}
       tabIndex={isFading ? -1 : 0}
       aria-hidden={isFading ? 'true' : undefined}
-      className={`group flex gap-4 p-4 rounded-2xl bg-[var(--theme-white)] border border-[var(--theme-light)] transition-all items-start ${
+      className={`group flex gap-4 p-4 rounded-2xl bg-white border border-[#e5e8eb] transition-all items-start ${
         isFading
           ? 'pointer-events-none'
-          : 'hover:border-[var(--theme-dark)] hover:shadow-[0_4px_16px_rgba(43,43,43,0.08)] cursor-pointer'
+          : 'hover:border-[#3182f6] hover:shadow-[0_4px_16px_rgba(49,130,246,0.08)] cursor-pointer'
       }`}
     >
       {/* Poster */}
-      <div className="w-20 sm:w-24 shrink-0 aspect-[3/4] overflow-hidden rounded-xl bg-[var(--bg-subtle)] self-start relative">
+      <div className="w-20 sm:w-24 shrink-0 aspect-[3/4] overflow-hidden rounded-xl bg-[#f2f4f6] self-start relative">
         <Poster
           src={concert.poster}
           title={concert.title}
@@ -91,20 +91,20 @@ function ConcertCardItem({ concert, isFading = false }) {
         <div>
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <StatePill state={concert.state} />
-            <span className="text-[12px] text-[var(--theme-mid)] whitespace-nowrap shrink-0">
+            <span className="text-[12px] text-[#8b95a1] whitespace-nowrap shrink-0">
               {concert.genre || '클래식'}
             </span>
           </div>
-          <h3 className="text-[16px] sm:text-[17px] font-bold text-[var(--theme-dark)] group-hover:underline underline-offset-4 transition-colors line-clamp-2 leading-snug break-keep">
+          <h3 className="text-[16px] sm:text-[17px] font-bold text-[#191f28] group-hover:text-[#3182f6] transition-colors line-clamp-2 leading-snug break-keep">
             {concert.title}
           </h3>
         </div>
 
         {/* Program List Preview on Card */}
         {Array.isArray(concert.programs) && concert.programs.length > 0 && (
-          <div className="mt-2.5 rounded-xl bg-[var(--bg-subtle)] p-2.5 border border-[var(--theme-light)]/60">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-[var(--theme-mid)] mb-1.5">
-              <span className="flex items-center gap-1 text-[var(--theme-dark)] whitespace-nowrap">
+          <div className="mt-2.5 rounded-xl bg-[#f8fafc] p-2.5 border border-[#edf2f7]">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-[#8b95a1] mb-1.5">
+              <span className="flex items-center gap-1 text-[#3182f6] whitespace-nowrap">
                 <Music className="h-3 w-3 shrink-0" />
                 진행 프로그램 ({concert.programs.length}곡)
               </span>
@@ -113,19 +113,19 @@ function ConcertCardItem({ concert, isFading = false }) {
               {concert.programs.slice(0, 3).map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-baseline gap-1.5 text-[12px] min-w-0 whitespace-nowrap text-[var(--text-secondary)]"
+                  className="flex items-baseline gap-1.5 text-[12px] min-w-0 whitespace-nowrap text-[#4e5968]"
                 >
-                  <span className="shrink-0 font-semibold text-[var(--theme-dark)]">
+                  <span className="shrink-0 font-medium text-[#191f28]">
                     {item.composerShort || item.composerKo || item.composer}
                   </span>
-                  <span className="shrink-0 text-[var(--theme-mid)]">·</span>
-                  <span className="truncate text-[var(--text-secondary)]">
+                  <span className="shrink-0 text-[#8b95a1]">·</span>
+                  <span className="truncate text-[#6b7684]">
                     {item.titleKo || item.title}
                   </span>
                 </div>
               ))}
               {concert.programs.length > 3 && (
-                <p className="text-[11px] text-[var(--theme-mid)] pt-0.5 whitespace-nowrap">
+                <p className="text-[11px] text-[#8b95a1] pt-0.5 whitespace-nowrap">
                   외 {concert.programs.length - 3}곡 더보기...
                 </p>
               )}
@@ -133,13 +133,13 @@ function ConcertCardItem({ concert, isFading = false }) {
           </div>
         )}
 
-        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[12px] sm:text-[13px] text-[var(--text-secondary)] min-w-0">
+        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[12px] sm:text-[13px] text-[#6b7684] min-w-0">
           <span className="flex items-center gap-1 min-w-0 whitespace-nowrap">
-            <MapPin className="h-3.5 w-3.5 text-[var(--theme-mid)] shrink-0" />
+            <MapPin className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
             <span className="truncate">{concert.venue} · {concert.area}</span>
           </span>
           <span className="flex items-center gap-1 shrink-0 whitespace-nowrap">
-            <Calendar className="h-3.5 w-3.5 text-[var(--theme-mid)] shrink-0" />
+            <Calendar className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
             <span>{formatPeriod(concert.from, concert.to)}</span>
           </span>
         </div>
@@ -154,21 +154,21 @@ function SearchSkeletonCards() {
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="flex gap-4 p-4 rounded-2xl bg-[var(--theme-white)] border border-[var(--theme-light)] animate-pulse items-start"
+          className="flex gap-4 p-4 rounded-2xl bg-white border border-[#e5e8eb] animate-pulse items-start"
         >
-          <div className="w-20 sm:w-24 shrink-0 aspect-[3/4] rounded-xl bg-[var(--bg-subtle)]" />
+          <div className="w-20 sm:w-24 shrink-0 aspect-[3/4] rounded-xl bg-[#f2f4f6]" />
           <div className="flex flex-1 flex-col justify-between min-w-0 self-stretch py-0.5">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <div className="h-5 w-14 rounded-full bg-[var(--bg-subtle)]" />
-                <div className="h-4 w-12 rounded-md bg-[var(--bg-subtle)]" />
+                <div className="h-5 w-14 rounded-full bg-[#f2f4f6]" />
+                <div className="h-4 w-12 rounded-md bg-[#f2f4f6]" />
               </div>
-              <div className="h-5 w-4/5 rounded-md bg-[var(--theme-light)]/80 mb-2" />
-              <div className="h-4 w-1/2 rounded-md bg-[var(--theme-light)]/50" />
+              <div className="h-5 w-4/5 rounded-md bg-[#e5e8eb]/80 mb-2" />
+              <div className="h-4 w-1/2 rounded-md bg-[#e5e8eb]/50" />
             </div>
-            <div className="mt-3 rounded-xl bg-[var(--bg-subtle)] p-2.5 border border-[var(--theme-light)]/50 space-y-1.5">
-              <div className="h-3 w-28 rounded bg-[var(--theme-light)]/70" />
-              <div className="h-3.5 w-3/4 rounded bg-[var(--theme-light)]/50" />
+            <div className="mt-3 rounded-xl bg-[#f8fafc] p-2.5 border border-[#edf2f7] space-y-1.5">
+              <div className="h-3 w-28 rounded bg-[#e5e8eb]/70" />
+              <div className="h-3.5 w-3/4 rounded bg-[#e5e8eb]/50" />
             </div>
           </div>
         </div>
@@ -227,6 +227,18 @@ export default function ExplorePage() {
 
   const concerts = data?.concerts || []
 
+  const todayConcertCount = useMemo(() => {
+    let count = 0
+    for (const c of concerts) {
+      const from = c.from || ''
+      const to = c.to || from
+      if (from && from <= todayStr && todayStr <= to) {
+        count += 1
+      }
+    }
+    return count
+  }, [concerts, todayStr])
+
   const dateResults = useMemo(() => {
     if (!selectedDate) return []
     const filtered = concerts.filter((c) => {
@@ -272,10 +284,10 @@ export default function ExplorePage() {
       {/* 상단 타이틀 & 직관적인 모드 전환 탭 카드 */}
       <div className="w-full max-w-[800px] mb-7">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--theme-dark)] tracking-tight break-keep">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191f28] tracking-tight break-keep">
             공연 모아보기
           </h1>
-          <p className="mt-1.5 text-[14px] sm:text-[15px] text-[var(--text-secondary)] leading-relaxed break-keep">
+          <p className="mt-1.5 text-[14px] sm:text-[15px] text-[#6b7684] leading-relaxed break-keep">
             달력에서 원하는 날짜의 공연을 찾거나, 전국 지도에서 지역·공연장별 일정을 한눈에 확인해 보세요.
           </p>
         </div>
@@ -287,20 +299,20 @@ export default function ExplorePage() {
             onClick={() => handleSwitchMode('calendar')}
             className={`group relative flex items-center justify-center gap-2 sm:gap-2.5 py-3 sm:py-3.5 px-3 sm:px-4 rounded-2xl border transition-all cursor-pointer ${
               mode === 'calendar'
-                ? 'bg-[var(--bg-subtle)] border-[var(--theme-dark)] ring-2 ring-[#2b2b2b]/10 shadow-xs'
-                : 'bg-[var(--theme-white)] border-[var(--theme-light)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)]/60'
+                ? 'bg-[#e8f3ff]/75 border-[#3182f6] ring-2 ring-[#3182f6]/15 shadow-xs'
+                : 'bg-white border-[#e5e8eb] hover:border-[#3182f6]/60 hover:bg-[#f8fbff]'
             }`}
           >
             <div
               className={`h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                 mode === 'calendar'
-                  ? 'bg-[var(--theme-dark)] text-[var(--theme-white)] shadow-xs'
-                  : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] group-hover:bg-[var(--theme-dark)] group-hover:text-[var(--theme-white)]'
+                  ? 'bg-[#3182f6] text-white shadow-xs'
+                  : 'bg-[#f2f4f6] text-[#4e5968] group-hover:bg-[#e8f3ff] group-hover:text-[#3182f6]'
               }`}
             >
               <CalendarDays className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </div>
-            <span className="text-[14px] sm:text-[15px] font-bold text-[var(--theme-dark)] whitespace-nowrap">
+            <span className="text-[14px] sm:text-[15px] font-bold text-[#191f28] whitespace-nowrap">
               일정별로 보기
             </span>
           </button>
@@ -310,20 +322,20 @@ export default function ExplorePage() {
             onClick={() => handleSwitchMode('map')}
             className={`group relative flex items-center justify-center gap-2 sm:gap-2.5 py-3 sm:py-3.5 px-3 sm:px-4 rounded-2xl border transition-all cursor-pointer ${
               mode === 'map'
-                ? 'bg-[var(--bg-subtle)] border-[var(--theme-dark)] ring-2 ring-[#2b2b2b]/10 shadow-xs'
-                : 'bg-[var(--theme-white)] border-[var(--theme-light)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)]/60'
+                ? 'bg-[#e8f3ff]/75 border-[#3182f6] ring-2 ring-[#3182f6]/15 shadow-xs'
+                : 'bg-white border-[#e5e8eb] hover:border-[#3182f6]/60 hover:bg-[#f8fbff]'
             }`}
           >
             <div
               className={`h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                 mode === 'map'
-                  ? 'bg-[var(--theme-dark)] text-[var(--theme-white)] shadow-xs'
-                  : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] group-hover:bg-[var(--theme-dark)] group-hover:text-[var(--theme-white)]'
+                  ? 'bg-[#3182f6] text-white shadow-xs'
+                  : 'bg-[#f2f4f6] text-[#4e5968] group-hover:bg-[#e8f3ff] group-hover:text-[#3182f6]'
               }`}
             >
               <MapIcon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </div>
-            <span className="text-[14px] sm:text-[15px] font-bold text-[var(--theme-dark)] whitespace-nowrap">
+            <span className="text-[14px] sm:text-[15px] font-bold text-[#191f28] whitespace-nowrap">
               장소별로 보기
             </span>
           </button>
@@ -353,9 +365,9 @@ export default function ExplorePage() {
         )}
 
         {/* 선택된 조건의 공연 목록 헤더 & 상태 필터 */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-[var(--theme-light)]/70">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-[#f2f4f6]">
           <div>
-            <h2 className="text-[17px] font-bold text-[var(--theme-dark)] flex flex-wrap items-center gap-2 break-keep">
+            <h2 className="text-[17px] font-bold text-[#191f28] flex flex-wrap items-center gap-2 break-keep">
               {mode === 'calendar' ? (
                 <span className="whitespace-nowrap">{formatKoreanDateLabel(selectedDate)} 공연 일정</span>
               ) : (
@@ -364,13 +376,13 @@ export default function ExplorePage() {
                   {selectedVenue ? ` · ${selectedVenue}` : ''} 클래식 공연
                 </span>
               )}
-              <span className="text-[14px] font-normal text-[var(--theme-mid)] whitespace-nowrap shrink-0">
+              <span className="text-[14px] font-normal text-[#8b95a1] whitespace-nowrap shrink-0">
                 {activeList.length}건
               </span>
             </h2>
           </div>
 
-          <div className="flex items-center gap-1 bg-[var(--bg-subtle)] p-1 rounded-xl border border-[var(--theme-light)]/60 self-start sm:self-auto">
+          <div className="flex items-center gap-1 bg-[#f2f4f6] p-1 rounded-xl self-start sm:self-auto">
             {[
               ['all', '전체'],
               ['공연중', '공연중'],
@@ -383,8 +395,8 @@ export default function ExplorePage() {
                 onClick={() => handleStateChange(key)}
                 className={`px-3 py-1 text-[13px] font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                   state === key
-                    ? 'bg-[var(--theme-dark)] text-[var(--theme-white)] shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--theme-dark)]'
+                    ? 'bg-white text-[#191f28] shadow-sm'
+                    : 'text-[#6b7684] hover:text-[#191f28]'
                 }`}
               >
                 {label}
@@ -400,24 +412,24 @@ export default function ExplorePage() {
         {!loading && activeList.length === 0 && (
           <Card className="py-12 px-6 text-center border-dashed">
             <CardContent className="flex flex-col items-center p-0">
-              <div className="h-12 w-12 rounded-2xl bg-[var(--bg-subtle)] text-[var(--theme-mid)] flex items-center justify-center mb-3">
+              <div className="h-12 w-12 rounded-2xl bg-[#f2f4f6] text-[#8b95a1] flex items-center justify-center mb-3">
                 <AlertCircle className="h-6 w-6" />
               </div>
               {mode === 'calendar' ? (
                 <>
-                  <h3 className="text-[17px] font-bold text-[var(--theme-dark)]">
+                  <h3 className="text-[17px] font-bold text-[#191f28]">
                     선택한 날짜에 예정된 공연이 없어요
                   </h3>
-                  <p className="mt-1 text-[14px] text-[var(--theme-mid)] max-w-sm">
+                  <p className="mt-1 text-[14px] text-[#8b95a1] max-w-sm">
                     달력에서 공연 건수가 표시된 다른 날짜를 클릭해 보세요.
                   </p>
                 </>
               ) : (
                 <>
-                  <h3 className="text-[17px] font-bold text-[var(--theme-dark)]">
+                  <h3 className="text-[17px] font-bold text-[#191f28]">
                     선택한 지역·공연장에 해당하는 공연이 없어요
                   </h3>
-                  <p className="mt-1 text-[14px] text-[var(--theme-mid)] max-w-sm">
+                  <p className="mt-1 text-[14px] text-[#8b95a1] max-w-sm">
                     지도에서 다른 지역을 선택하거나 전국 전체 보기로 전환해 보세요.
                   </p>
                 </>
@@ -433,42 +445,47 @@ export default function ExplorePage() {
           ))}
         </div>
 
-        {/* 페이드아웃 미리보기 카드 (아랫부분 완전 불투명 흰색) + 흐려지는 경계 위에 위치한 더보기 버튼 */}
-        {hasMore && (
-          <div className="relative mt-3">
-            {fadingConcert && (
-              <div className="relative select-none pointer-events-none overflow-hidden rounded-2xl">
-                <ConcertCardItem concert={fadingConcert} isFading />
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0)_0%,rgba(255,255,255,0.72)_45%,#ffffff_78%,#ffffff_100%)]"
-                />
-              </div>
-            )}
-
-            <div className="relative z-10 -mt-20 sm:-mt-22 pt-2 pb-2 flex flex-col items-center">
-              <button
-                type="button"
-                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--theme-white)] border border-[var(--theme-light)] px-6 py-3 text-[14.5px] sm:text-[15px] font-bold text-[var(--theme-dark)] shadow-[0_6px_20px_rgba(43,43,43,0.10)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)] active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <span>더보기 ({Math.min(PAGE_SIZE, remainingCount)}건 더보기)</span>
-                <ChevronDown className="h-4.5 w-4.5" />
-              </button>
-              <p className="mt-2 text-[12px] font-medium text-[var(--theme-mid)]">
-                전체 {activeList.length}건 중 {visibleCount}건 표시 중
-              </p>
+        {/* 페이드아웃 미리보기 카드 (약 80% 투명도의 흰색 그라데이션 페이드) */}
+        {fadingConcert && (
+          <div className="relative mt-3 select-none pointer-events-none overflow-hidden rounded-2xl">
+            <div
+              style={{
+                maskImage:
+                  'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.12) 95%)',
+                WebkitMaskImage:
+                  'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.12) 95%)',
+              }}
+            >
+              <ConcertCardItem concert={fadingConcert} isFading />
             </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/50 to-[#f9fafb]/80" />
           </div>
         )}
 
-        {/* 모아보기 하단 sticky 완전 불투명 흰색 시작 그라데이션 페이드 영역 */}
+        {/* 더보기 버튼 */}
+        {hasMore && (
+          <div className="mt-5 flex flex-col items-center">
+            <button
+              type="button"
+              onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+              className="inline-flex items-center gap-1 text-[13px] font-medium text-[#8b95a1] hover:text-[#4e5968] transition-colors cursor-pointer py-1.5 px-3"
+            >
+              <span>더보기 ({Math.min(PAGE_SIZE, remainingCount)}건 더보기)</span>
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            <p className="mt-1 text-[12px] text-[#8b95a1]/80">
+              전체 {activeList.length}건 중 {visibleCount}건 표시 중
+            </p>
+          </div>
+        )}
+
+        {/* 모아보기 하단 sticky 약 80% 흰색 그라데이션 페이드 영역 */}
         {activeList.length > 0 && (
           <div
             aria-hidden="true"
             className="sticky bottom-0 z-20 -mx-6 h-16 sm:h-12 pointer-events-none relative"
           >
-            <div className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,#ffffff_0%,#ffffff_38%,rgba(255,255,255,0.8)_68%,rgba(255,255,255,0)_100%)] pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,0.82)_0%,rgba(249,250,251,0.68)_45%,rgba(249,250,251,0.35)_75%,rgba(249,250,251,0)_100%)] pointer-events-none" />
           </div>
         )}
       </section>

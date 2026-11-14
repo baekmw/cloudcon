@@ -63,13 +63,13 @@ export default function ProgramList({
   )
 
   return (
-    <Card className="mt-6 border-[var(--theme-light)] overflow-hidden">
+    <Card className="mt-6 border-[#e5e8eb] overflow-hidden">
       <CardHeader className="pb-3 flex flex-row flex-wrap items-center justify-between gap-2">
         <CardTitle className="text-[17px] whitespace-nowrap shrink-0">진행 프로그램</CardTitle>
 
         {/* Alert Feedback Toast */}
         {alertNotice && (
-          <div className="p-2.5 rounded-xl bg-[var(--bg-subtle)] text-[var(--theme-dark)] border border-[var(--theme-light)] text-[12px] font-medium flex items-center gap-1.5 animate-in fade-in break-keep">
+          <div className="p-2.5 rounded-xl bg-[#e8faf3] text-[#03b26c] border border-[#03b26c]/20 text-[12px] font-medium flex items-center gap-1.5 animate-in fade-in break-keep">
             <Check className="h-3.5 w-3.5 shrink-0" />
             <span>{alertNotice}</span>
           </div>
@@ -79,7 +79,7 @@ export default function ProgramList({
       <CardContent className="pt-0">
         {loadingAI ? (
           /* Sleek Program Skeleton */
-          <div className="divide-y divide-[var(--theme-light)]/50">
+          <div className="divide-y divide-[#f2f4f6]">
             {[1, 2, 3].map((n) => (
               <div
                 key={n}
@@ -87,51 +87,51 @@ export default function ProgramList({
               >
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-5 rounded bg-[var(--bg-subtle)]" />
-                    <div className="h-3.5 w-24 rounded bg-[var(--bg-subtle)]" />
+                    <div className="h-4 w-5 rounded bg-[#f2f4f6]" />
+                    <div className="h-3.5 w-24 rounded bg-[#f2f4f6]" />
                   </div>
-                  <div className="h-5 w-3/4 rounded-md bg-[var(--theme-light)]/70" />
-                  <div className="h-3.5 w-1/2 rounded bg-[var(--bg-subtle)]" />
+                  <div className="h-5 w-3/4 rounded-md bg-[#e5e8eb]/80" />
+                  <div className="h-3.5 w-1/2 rounded bg-[#f2f4f6]" />
                 </div>
-                <div className="h-7 w-14 rounded-lg bg-[var(--bg-subtle)] shrink-0" />
+                <div className="h-7 w-14 rounded-lg bg-[#f2f4f6] shrink-0" />
               </div>
             ))}
           </div>
         ) : validPrograms.length === 0 ? (
-          <div className="py-6 text-center text-[var(--theme-mid)] text-[13px]">
+          <div className="py-6 text-center text-[#8b95a1] text-[13px]">
             포스터 및 상세 이미지를 참조해 주세요.
           </div>
         ) : (
-          <div className="divide-y divide-[var(--theme-light)]/50">
+          <div className="divide-y divide-[#f2f4f6]">
             {validPrograms.map((track, idx) => (
               <div
                 key={track.id || idx}
-                className="py-4 flex items-start justify-between gap-3 first:pt-1 last:pb-1 px-2.5 -mx-2.5 rounded-xl transition-colors hover:bg-[var(--bg-subtle)]"
+                className="py-4 flex items-start justify-between gap-3 first:pt-1 last:pb-1 px-2.5 -mx-2.5 rounded-xl transition-colors hover:bg-[#f9fafb]/80"
               >
                 <div className="min-w-0 flex-1">
                   {/* 작곡가 정보: 작고 은은하게 */}
-                  <div className="flex items-center gap-1.5 text-[11px] text-[var(--theme-mid)] font-medium mb-1">
-                    <span className="inline-flex h-4 min-w-[1.25rem] px-1 items-center justify-center rounded bg-[var(--bg-subtle)] text-[10px] font-bold text-[var(--text-secondary)]">
+                  <div className="flex items-center gap-1.5 text-[11px] text-[#8b95a1] font-medium mb-1">
+                    <span className="inline-flex h-4 min-w-[1.25rem] px-1 items-center justify-center rounded bg-[#f2f4f6] text-[10px] font-bold text-[#8b95a1]">
                       {String(idx + 1).padStart(2, '0')}
                     </span>
                     <span className="truncate">
                       {track.composerShort || track.composerKo || track.composer}
                     </span>
                     {track.composer && track.composer !== (track.composerShort || track.composerKo) && (
-                      <span className="text-[11px] text-[var(--theme-mid)] hidden sm:inline truncate">
+                      <span className="text-[11px] text-[#8b95a1]/70 hidden sm:inline truncate">
                         · {track.composer}
                       </span>
                     )}
                   </div>
 
                   {/* 곡 제목: 굵고 선명하게 부각 */}
-                  <h4 className="text-[15px] sm:text-[16px] font-extrabold text-[var(--theme-dark)] leading-snug tracking-tight break-keep">
+                  <h4 className="text-[15px] sm:text-[16px] font-extrabold text-[#191f28] leading-snug tracking-tight break-keep">
                     {track.titleKo || track.title}
                   </h4>
 
                   {/* 원어 원제 */}
                   {track.title && track.title !== track.titleKo && (
-                    <p className="mt-0.5 text-[12px] text-[var(--theme-mid)] leading-relaxed break-keep">
+                    <p className="mt-0.5 text-[12px] text-[#8b95a1] leading-relaxed break-keep">
                       {track.title}
                     </p>
                   )}
@@ -141,7 +141,7 @@ export default function ProgramList({
                 <button
                   type="button"
                   onClick={() => handleWatchSong(track.titleKo || track.title)}
-                  className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[var(--theme-dark)] border border-[var(--theme-light)] bg-[var(--theme-white)] hover:bg-[var(--theme-dark)] hover:text-[var(--theme-white)] hover:border-[var(--theme-dark)] rounded-lg transition-colors cursor-pointer mt-0.5"
+                  className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#3182f6] hover:bg-[#e8f3ff] rounded-lg transition-colors cursor-pointer mt-0.5"
                 >
                   <Bell className="h-3 w-3 shrink-0" />
                   곡 알림

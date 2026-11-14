@@ -3,17 +3,12 @@ import { cn } from '../../lib/utils'
 
 const buttonVariants = {
   variant: {
-    default:
-      'bg-[var(--theme-dark)] text-[var(--theme-white)] hover:bg-[var(--accent-hover)] shadow-xs',
-    destructive:
-      'bg-[var(--theme-dark)] text-[var(--theme-white)] hover:bg-[var(--accent-hover)] shadow-xs',
-    outline:
-      'border border-[var(--theme-light)] bg-[var(--theme-white)] text-[var(--theme-dark)] hover:bg-[var(--bg-subtle)] hover:border-[var(--theme-dark)]',
-    secondary:
-      'bg-[var(--bg-subtle)] text-[var(--theme-dark)] hover:bg-[var(--theme-light)]/50',
-    ghost:
-      'hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--theme-dark)]',
-    link: 'text-[var(--theme-dark)] underline-offset-4 hover:underline',
+    default: 'bg-[#3182f6] text-white hover:bg-[#1b64da] shadow-sm',
+    destructive: 'bg-[#f04452] text-white hover:bg-[#d93442] shadow-sm',
+    outline: 'border border-[#e5e8eb] bg-white text-[#333d4b] hover:bg-[#f2f4f6]',
+    secondary: 'bg-[#f2f4f6] text-[#333d4b] hover:bg-[#e5e8eb]',
+    ghost: 'hover:bg-[#f2f4f6] text-[#4e5968] hover:text-[#191f28]',
+    link: 'text-[#3182f6] underline-offset-4 hover:underline',
   },
   size: {
     default: 'h-11 px-4 py-2 text-[14px]',

@@ -294,467 +294,467 @@ export default function AlertsPage() {
       <div className="w-full max-w-[800px]">
         {/* 상단 헤더 (공연 모아보기 페이지와 동일한 레이아웃) */}
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--theme-dark)] tracking-tight break-keep">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191f28] tracking-tight break-keep">
             공연 이메일 알림
           </h1>
-          <p className="mt-1.5 text-[14px] sm:text-[15px] text-[var(--text-secondary)] leading-relaxed break-keep">
+          <p className="mt-1.5 text-[14px] sm:text-[15px] text-[#6b7684] leading-relaxed break-keep">
             기다리는 연주자, 곡명, 공연장을 등록해 두시면 새 공연 소식이 올라올 때 이메일로 보내드립니다.
           </p>
         </div>
 
-        {/* 초기 로딩 스켈레톤 */}
-        {loadingAuth ? (
-          <Card className="border-[var(--theme-light)] shadow-xs">
-            <CardContent className="p-6 sm:p-8 space-y-4 animate-pulse">
-              <div className="h-6 w-48 rounded-lg bg-[var(--bg-subtle)]" />
-              <div className="h-4 w-72 rounded-md bg-[var(--bg-subtle)]" />
-              <div className="h-11 w-full rounded-xl bg-[var(--bg-subtle)]" />
-              <div className="h-11 w-full rounded-xl bg-[var(--bg-subtle)]" />
-            </CardContent>
-          </Card>
-        ) : !authenticated ? (
-          /* =========================================================
-             1. Unauthenticated (401): 새 알림 신청하기 / 내 알림 목록 보기 탭
-             ========================================================= */
-          <div className="space-y-5 animate-fade-up">
-            {/* 상단 탭 전환: 새 알림 신청 vs 내 알림 목록 보기 */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setUnauthTab('subscribe')
-                  setFormError('')
-                  setVerificationSent(false)
-                }}
-                className={`group flex items-center justify-center gap-2 py-3 px-3 rounded-2xl border transition-all cursor-pointer ${
+      {/* 초기 로딩 스켈레톤 */}
+      {loadingAuth ? (
+        <Card className="border-[#e5e8eb] shadow-xs">
+          <CardContent className="p-6 sm:p-8 space-y-4 animate-pulse">
+            <div className="h-6 w-48 rounded-lg bg-[#f2f4f6]" />
+            <div className="h-4 w-72 rounded-md bg-[#f2f4f6]" />
+            <div className="h-11 w-full rounded-xl bg-[#f2f4f6]" />
+            <div className="h-11 w-full rounded-xl bg-[#f2f4f6]" />
+          </CardContent>
+        </Card>
+      ) : !authenticated ? (
+        /* =========================================================
+           1. Unauthenticated (401): 새 알림 신청하기 / 내 알림 목록 보기 탭
+           ========================================================= */
+        <div className="space-y-5 animate-fade-up">
+          {/* 상단 탭 전환: 새 알림 신청 vs 내 알림 목록 보기 */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                setUnauthTab('subscribe')
+                setFormError('')
+                setVerificationSent(false)
+              }}
+              className={`group flex items-center justify-center gap-2 py-3 px-3 rounded-2xl border transition-all cursor-pointer ${
+                unauthTab === 'subscribe'
+                  ? 'bg-[#e8f3ff]/75 border-[#3182f6] ring-2 ring-[#3182f6]/15 shadow-xs'
+                  : 'bg-white border-[#e5e8eb] hover:border-[#3182f6]/60 hover:bg-[#f8fbff]'
+              }`}
+            >
+              <div
+                className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                   unauthTab === 'subscribe'
-                    ? 'bg-[var(--bg-subtle)] border-[var(--theme-dark)] ring-2 ring-[#2b2b2b]/10 shadow-xs'
-                    : 'bg-[var(--theme-white)] border-[var(--theme-light)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)]/60'
+                    ? 'bg-[#3182f6] text-white shadow-xs'
+                    : 'bg-[#f2f4f6] text-[#4e5968] group-hover:bg-[#e8f3ff] group-hover:text-[#3182f6]'
                 }`}
               >
-                <div
-                  className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                    unauthTab === 'subscribe'
-                      ? 'bg-[var(--theme-dark)] text-[var(--theme-white)] shadow-xs'
-                      : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] group-hover:bg-[var(--theme-dark)] group-hover:text-[var(--theme-white)]'
-                  }`}
-                >
-                  <Bell className="h-4 w-4" />
-                </div>
-                <span className="text-[14px] sm:text-[15px] font-bold text-[var(--theme-dark)] whitespace-nowrap">
-                  새 알림 신청하기
-                </span>
-              </button>
+                <Bell className="h-4 w-4" />
+              </div>
+              <span className="text-[14px] sm:text-[15px] font-bold text-[#191f28] whitespace-nowrap">
+                새 알림 신청하기
+              </span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setUnauthTab('view')
-                  setFormError('')
-                  setVerificationSent(false)
-                }}
-                className={`group flex items-center justify-center gap-2 py-3 px-3 rounded-2xl border transition-all cursor-pointer ${
+            <button
+              type="button"
+              onClick={() => {
+                setUnauthTab('view')
+                setFormError('')
+                setVerificationSent(false)
+              }}
+              className={`group flex items-center justify-center gap-2 py-3 px-3 rounded-2xl border transition-all cursor-pointer ${
+                unauthTab === 'view'
+                  ? 'bg-[#e8f3ff]/75 border-[#3182f6] ring-2 ring-[#3182f6]/15 shadow-xs'
+                  : 'bg-white border-[#e5e8eb] hover:border-[#3182f6]/60 hover:bg-[#f8fbff]'
+              }`}
+            >
+              <div
+                className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                   unauthTab === 'view'
-                    ? 'bg-[var(--bg-subtle)] border-[var(--theme-dark)] ring-2 ring-[#2b2b2b]/10 shadow-xs'
-                    : 'bg-[var(--theme-white)] border-[var(--theme-light)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)]/60'
+                    ? 'bg-[#3182f6] text-white shadow-xs'
+                    : 'bg-[#f2f4f6] text-[#4e5968] group-hover:bg-[#e8f3ff] group-hover:text-[#3182f6]'
                 }`}
               >
-                <div
-                  className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                    unauthTab === 'view'
-                      ? 'bg-[var(--theme-dark)] text-[var(--theme-white)] shadow-xs'
-                      : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] group-hover:bg-[var(--theme-dark)] group-hover:text-[var(--theme-white)]'
-                  }`}
-                >
-                  <ListChecks className="h-4 w-4" />
-                </div>
-                <span className="text-[14px] sm:text-[15px] font-bold text-[var(--theme-dark)] whitespace-nowrap">
-                  내 알림 목록 보기
-                </span>
-              </button>
-            </div>
+                <ListChecks className="h-4 w-4" />
+              </div>
+              <span className="text-[14px] sm:text-[15px] font-bold text-[#191f28] whitespace-nowrap">
+                내 알림 목록 보기
+              </span>
+            </button>
+          </div>
 
-            <Card className="border-[var(--theme-light)] shadow-[0_2px_12px_rgba(43,43,43,0.03)] overflow-hidden">
-              <CardHeader className="p-6 sm:p-7 pb-3">
-                <div className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[var(--theme-dark)] bg-[var(--bg-subtle)] border border-[var(--theme-light)]/75 px-3 py-1 rounded-full w-fit mb-2 whitespace-nowrap">
-                  {unauthTab === 'view' ? (
-                    <>
-                      <ListChecks className="h-3.5 w-3.5 shrink-0" />
-                      내 알림 목록 조회 · 관리
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="h-3.5 w-3.5 shrink-0" />
-                      무료 이메일 소식 받기
-                    </>
-                  )}
-                </div>
-                <CardTitle className="text-[19px] sm:text-[21px] font-extrabold text-[var(--theme-dark)] break-keep">
-                  {unauthTab === 'view'
-                    ? '등록해 둔 내 알림 목록을 불러올까요?'
-                    : '어떤 클래식 무대를 기다리시나요?'}
-                </CardTitle>
-                <p className="text-[13.5px] text-[var(--text-secondary)] leading-relaxed break-keep">
-                  {unauthTab === 'view'
-                    ? '알림을 신청했던 이메일 주소를 입력하시면, 클릭 한 번으로 이 기기에서 내 알림 목록을 보고 편집할 수 있는 인증 링크를 보내드려요.'
-                    : '별도의 복잡한 절차 없이 이메일 주소와 키워드만 입력하면 새 공연 오픈 시 메일로 알려드려요.'}
-                </p>
-              </CardHeader>
+          <Card className="border-[#e5e8eb] shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
+            <CardHeader className="p-6 sm:p-7 pb-3">
+              <div className="inline-flex items-center gap-1.5 text-[12px] font-bold text-[#3182f6] bg-[#e8f3ff] px-3 py-1 rounded-full w-fit mb-2 whitespace-nowrap">
+                {unauthTab === 'view' ? (
+                  <>
+                    <ListChecks className="h-3.5 w-3.5 shrink-0" />
+                    내 알림 목록 조회 · 관리
+                  </>
+                ) : (
+                  <>
+                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                    무료 이메일 소식 받기
+                  </>
+                )}
+              </div>
+              <CardTitle className="text-[19px] sm:text-[21px] font-extrabold text-[#191f28] break-keep">
+                {unauthTab === 'view'
+                  ? '등록해 둔 내 알림 목록을 불러올까요?'
+                  : '어떤 클래식 무대를 기다리시나요?'}
+              </CardTitle>
+              <p className="text-[13.5px] text-[#6b7684] leading-relaxed break-keep">
+                {unauthTab === 'view'
+                  ? '알림을 신청했던 이메일 주소를 입력하시면, 클릭 한 번으로 이 기기에서 내 알림 목록을 보고 편집할 수 있는 인증 링크를 보내드려요.'
+                  : '별도의 복잡한 절차 없이 이메일 주소와 키워드만 입력하면 새 공연 오픈 시 메일로 알려드려요.'}
+              </p>
+            </CardHeader>
 
-              <CardContent className="p-6 sm:p-7 pt-2">
-                <form onSubmit={handleSubscribeSubmit} className="space-y-4">
+            <CardContent className="p-6 sm:p-7 pt-2">
+              <form onSubmit={handleSubscribeSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="sub-email"
+                    className="block text-[13px] font-semibold text-[#333d4b] mb-1.5"
+                  >
+                    {unauthTab === 'view' ? '등록한 이메일 주소' : '받을 이메일 주소'}
+                  </label>
+                  <Input
+                    id="sub-email"
+                    type="email"
+                    required
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="name@example.com"
+                    className="h-12 text-[15px]"
+                  />
+                </div>
+
+                {unauthTab === 'subscribe' && (
                   <div>
                     <label
-                      htmlFor="sub-email"
-                      className="block text-[13px] font-semibold text-[var(--theme-dark)] mb-1.5"
+                      htmlFor="sub-keyword"
+                      className="block text-[13px] font-semibold text-[#333d4b] mb-1.5"
                     >
-                      {unauthTab === 'view' ? '등록한 이메일 주소' : '받을 이메일 주소'}
+                      알림 받을 키워드 (작곡가 · 연주자 · 곡명 · 공연장)
                     </label>
                     <Input
-                      id="sub-email"
-                      type="email"
+                      id="sub-keyword"
+                      type="text"
                       required
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      placeholder="name@example.com"
+                      value={keywordInput}
+                      onChange={(e) => setKeywordInput(e.target.value)}
+                      placeholder="예: 베토벤, 모차르트, 쇼팽, 예술의전당"
                       className="h-12 text-[15px]"
                     />
-                  </div>
 
-                  {unauthTab === 'subscribe' && (
-                    <div>
-                      <label
-                        htmlFor="sub-keyword"
-                        className="block text-[13px] font-semibold text-[var(--theme-dark)] mb-1.5"
-                      >
-                        알림 받을 키워드 (작곡가 · 연주자 · 곡명 · 공연장)
-                      </label>
-                      <Input
-                        id="sub-keyword"
-                        type="text"
-                        required
-                        value={keywordInput}
-                        onChange={(e) => setKeywordInput(e.target.value)}
-                        placeholder="예: 베토벤, 모차르트, 쇼팽, 예술의전당"
-                        className="h-12 text-[15px]"
-                      />
-
-                      {/* 추천 키워드 빠른 입력 */}
-                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                        <span className="text-[11.5px] font-semibold text-[var(--theme-mid)] mr-1 whitespace-nowrap">
-                          자주 찾는 키워드
-                        </span>
-                        {SUGGESTED_KEYWORDS.map((word) => (
-                          <button
-                            key={word}
-                            type="button"
-                            onClick={() => setKeywordInput(word)}
-                            className={`text-[12px] px-2.5 py-1 rounded-full border whitespace-nowrap shrink-0 transition-all cursor-pointer ${
-                              keywordInput === word
-                                ? 'bg-[var(--theme-dark)] text-[var(--theme-white)] border-[var(--theme-dark)]'
-                                : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] border-[var(--theme-light)] hover:border-[var(--theme-dark)] hover:text-[var(--theme-dark)]'
-                            }`}
-                          >
-                            + {word}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {formError && (
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--theme-dark)] text-[var(--theme-dark)] text-[13px] font-medium flex items-center gap-2 break-keep">
-                      <AlertCircle className="h-4 w-4 shrink-0" />
-                      <span>{formError}</span>
-                    </div>
-                  )}
-
-                  <Button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full h-12 rounded-xl text-[15px] font-bold shadow-xs"
-                  >
-                    {submitting
-                      ? '전송 중...'
-                      : unauthTab === 'view'
-                      ? '내 알림 목록 확인 링크 메일로 받기'
-                      : '이메일로 공연 알림 받기'}
-                  </Button>
-                </form>
-
-                {/* 인증 링크 발송 완료 안내 */}
-                {verificationSent && (
-                  <div className="mt-5 p-4 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--theme-light)] text-[var(--theme-dark)] animate-fade-up">
-                    <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-full bg-[var(--theme-dark)] text-[var(--theme-white)] flex items-center justify-center shrink-0 mt-0.5">
-                        <Mail className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[14.5px] font-bold text-[var(--theme-dark)] break-keep">
-                          {unauthTab === 'view'
-                            ? '이메일로 내 알림 목록 연결 링크를 보냈습니다.'
-                            : '이메일로 인증 링크를 보냈습니다. 링크를 클릭하면 알림이 시작됩니다.'}
-                        </p>
-                        <p className="mt-1 text-[12.5px] text-[var(--text-secondary)] leading-relaxed break-keep">
-                          메일함({emailInput})에서 링크를 누르면 이 기기에서 곧바로 내 알림 목록 전체를 확인하고 편집할 수 있습니다.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 이미 인증된 이메일에 키워드가 즉시 추가된 경우 안내 */}
-                {instantAddedMessage && (
-                  <div className="mt-5 p-4 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--theme-light)] text-[var(--theme-dark)] animate-fade-up">
-                    <div className="flex items-start gap-2.5">
-                      <Check className="h-5 w-5 text-[var(--theme-dark)] shrink-0 mt-0.5" />
-                      <div className="min-w-0 space-y-2">
-                        <p className="text-[14px] font-bold text-[var(--theme-dark)] break-keep">
-                          {instantAddedMessage}
-                        </p>
+                    {/* 추천 키워드 빠른 입력 */}
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11.5px] font-semibold text-[#8b95a1] mr-1 whitespace-nowrap">
+                        자주 찾는 키워드
+                      </span>
+                      {SUGGESTED_KEYWORDS.map((word) => (
                         <button
+                          key={word}
                           type="button"
-                          onClick={handleRequestManageLink}
-                          className="text-[12.5px] font-semibold text-[var(--theme-dark)] underline underline-offset-4 cursor-pointer"
+                          onClick={() => setKeywordInput(word)}
+                          className={`text-[12px] px-2.5 py-1 rounded-full border whitespace-nowrap shrink-0 transition-all cursor-pointer ${
+                            keywordInput === word
+                              ? 'bg-[#3182f6] text-white border-[#3182f6]'
+                              : 'bg-[#f9fafb] text-[#4e5968] border-[#e5e8eb] hover:border-[#3182f6]/50 hover:text-[#191f28]'
+                          }`}
                         >
-                          이 기기에서 내 알림 목록 전체 보기 · 편집 링크 메일로 받기 &rarr;
+                          + {word}
                         </button>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          /* =========================================================
-             2. Authenticated (GET /api/my-keywords 성공 시):
-                "{email}님이 받고 있는 알림" + 내 알림 목록(매칭 공연 미리보기 및 개별 삭제) + 새 키워드 추가 폼
-             ========================================================= */
-          <div className="space-y-6 animate-fade-up">
-            {/* 상단 구독자 상태 카드 & 기기에서 연결 해제 */}
-            <Card className="border-[var(--theme-light)] shadow-[0_2px_12px_rgba(43,43,43,0.03)]">
-              <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="h-11 w-11 rounded-2xl bg-[var(--theme-dark)] text-[var(--theme-white)] flex items-center justify-center shrink-0">
-                    <Bell className="h-5 w-5" />
+
+                {formError && (
+                  <div className="p-3.5 rounded-xl bg-[#fff0f1] border border-[#f04452]/20 text-[#f04452] text-[13px] font-medium flex items-center gap-2 break-keep">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{formError}</span>
                   </div>
-                  <div className="min-w-0">
-                    <h2 className="text-[17px] sm:text-[19px] font-extrabold text-[var(--theme-dark)] break-all sm:break-keep">
-                      {userEmail}님이 받고 있는 알림
-                    </h2>
-                    <p className="text-[12.5px] text-[var(--theme-mid)] mt-0.5 break-keep">
-                      매일 오전 9시·오후 6시에 새로 등록된 공연을 확인해 메일로 보내드립니다.
-                    </p>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full h-12 rounded-xl text-[15px] font-bold shadow-xs"
+                >
+                  {submitting
+                    ? '전송 중...'
+                    : unauthTab === 'view'
+                    ? '내 알림 목록 확인 링크 메일로 받기'
+                    : '이메일로 공연 알림 받기'}
+                </Button>
+              </form>
+
+              {/* 인증 링크 발송 완료 안내 */}
+              {verificationSent && (
+                <div className="mt-5 p-4 rounded-2xl bg-[#e8f3ff]/80 border border-[#3182f6]/30 text-[#191f28] animate-fade-up">
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-full bg-[#3182f6] text-white flex items-center justify-center shrink-0 mt-0.5">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[14.5px] font-bold text-[#191f28] break-keep">
+                        {unauthTab === 'view'
+                          ? '이메일로 내 알림 목록 연결 링크를 보냈습니다.'
+                          : '이메일로 인증 링크를 보냈습니다. 링크를 클릭하면 알림이 시작됩니다.'}
+                      </p>
+                      <p className="mt-1 text-[12.5px] text-[#4e5968] leading-relaxed break-keep">
+                        메일함({emailInput})에서 링크를 누르면 이 기기에서 곧바로 내 알림 목록 전체를 확인하고 편집할 수 있습니다.
+                      </p>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                <button
-                  type="button"
-                  onClick={handleDisconnect}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--theme-light)] bg-[var(--theme-white)] text-[12.5px] font-semibold text-[var(--text-secondary)] hover:text-[var(--theme-dark)] hover:border-[var(--theme-dark)] hover:bg-[var(--bg-subtle)] whitespace-nowrap shrink-0 transition-all self-start sm:self-auto cursor-pointer"
-                >
-                  <Unplug className="h-3.5 w-3.5 shrink-0" />
-                  기기에서 연결 해제
-                </button>
-              </CardContent>
-            </Card>
-
-            {/* 내 알림 목록 (등록된 키워드 + 키워드별 현재 매칭 공연 보기) */}
-            <Card className="border-[var(--theme-light)] shadow-xs">
-              <CardHeader className="p-5 sm:p-6 pb-3 flex flex-row items-center justify-between">
-                <CardTitle className="text-[16px] font-bold text-[var(--theme-dark)] flex items-center gap-1.5 whitespace-nowrap">
-                  <ListChecks className="h-4.5 w-4.5 text-[var(--theme-dark)] shrink-0" />
-                  <span>내 알림 목록</span>
-                  <span className="ml-1 text-[14px] font-semibold text-[var(--theme-mid)]">
-                    {keywords.length}개
-                  </span>
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent className="p-5 sm:p-6 pt-0">
-                {keywords.length === 0 ? (
-                  <div className="py-10 text-center border border-dashed border-[var(--theme-light)] rounded-2xl bg-[var(--bg-subtle)]/60">
-                    <Bell className="h-7 w-7 text-[var(--theme-mid)] mx-auto mb-2" />
-                    <p className="text-[14.5px] font-semibold text-[var(--theme-dark)]">
-                      현재 등록된 알림 키워드가 없습니다
-                    </p>
-                    <p className="mt-1 text-[12.5px] text-[var(--theme-mid)]">
-                      아래 입력창에서 소식을 받고 싶은 작곡가, 연주자, 곡명을 추가해 보세요.
-                    </p>
+              {/* 이미 인증된 이메일에 키워드가 즉시 추가된 경우 안내 */}
+              {instantAddedMessage && (
+                <div className="mt-5 p-4 rounded-2xl bg-[#e8faf3] border border-[#03b26c]/30 text-[#191f28] animate-fade-up">
+                  <div className="flex items-start gap-2.5">
+                    <Check className="h-5 w-5 text-[#03b26c] shrink-0 mt-0.5" />
+                    <div className="min-w-0 space-y-2">
+                      <p className="text-[14px] font-bold text-[#03b26c] break-keep">
+                        {instantAddedMessage}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleRequestManageLink}
+                        className="text-[12.5px] font-semibold text-[#3182f6] hover:underline cursor-pointer"
+                      >
+                        이 기기에서 내 알림 목록 전체 보기 · 편집 링크 메일로 받기 &rarr;
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <ul className="divide-y divide-[var(--theme-light)]/60 border border-[var(--theme-light)] rounded-2xl overflow-hidden bg-[var(--theme-white)]">
-                    {keywords.map((kw) => {
-                      const matchedConcerts = matchedByKeyword[kw] || []
-                      const isExpanded = expandedKeyword === kw
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        /* =========================================================
+           2. Authenticated (GET /api/my-keywords 성공 시):
+              "{email}님이 받고 있는 알림" + 내 알림 목록(매칭 공연 미리보기 및 개별 삭제) + 새 키워드 추가 폼
+           ========================================================= */
+        <div className="space-y-6 animate-fade-up">
+          {/* 상단 구독자 상태 카드 & 기기에서 연결 해제 */}
+          <Card className="border-[#e5e8eb] shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+            <CardContent className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="h-11 w-11 rounded-2xl bg-[#e8f3ff] text-[#3182f6] flex items-center justify-center shrink-0">
+                  <Bell className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-[17px] sm:text-[19px] font-extrabold text-[#191f28] break-all sm:break-keep">
+                    {userEmail}님이 받고 있는 알림
+                  </h2>
+                  <p className="text-[12.5px] text-[#8b95a1] mt-0.5 break-keep">
+                    매일 오전 9시·오후 6시에 새로 등록된 공연을 확인해 메일로 보내드립니다.
+                  </p>
+                </div>
+              </div>
 
-                      return (
-                        <li key={kw} className="transition-colors">
-                          <div className="flex items-center justify-between gap-2 px-4 py-3.5 hover:bg-[var(--bg-subtle)]">
+              <button
+                type="button"
+                onClick={handleDisconnect}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#e5e8eb] bg-white text-[12.5px] font-semibold text-[#6b7684] hover:text-[#f04452] hover:border-[#f04452]/40 hover:bg-[#fff0f1]/50 whitespace-nowrap shrink-0 transition-all self-start sm:self-auto cursor-pointer"
+              >
+                <Unplug className="h-3.5 w-3.5 shrink-0" />
+                기기에서 연결 해제
+              </button>
+            </CardContent>
+          </Card>
+
+          {/* 내 알림 목록 (등록된 키워드 + 키워드별 현재 매칭 공연 보기) */}
+          <Card className="border-[#e5e8eb] shadow-xs">
+            <CardHeader className="p-5 sm:p-6 pb-3 flex flex-row items-center justify-between">
+              <CardTitle className="text-[16px] font-bold text-[#191f28] flex items-center gap-1.5 whitespace-nowrap">
+                <ListChecks className="h-4.5 w-4.5 text-[#3182f6] shrink-0" />
+                <span>내 알림 목록</span>
+                <span className="ml-1 text-[14px] font-semibold text-[#3182f6]">
+                  {keywords.length}개
+                </span>
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="p-5 sm:p-6 pt-0">
+              {keywords.length === 0 ? (
+                <div className="py-10 text-center border border-dashed border-[#e5e8eb] rounded-2xl bg-[#f9fafb]/60">
+                  <Bell className="h-7 w-7 text-[#b0b8c1] mx-auto mb-2" />
+                  <p className="text-[14.5px] font-semibold text-[#4e5968]">
+                    현재 등록된 알림 키워드가 없습니다
+                  </p>
+                  <p className="mt-1 text-[12.5px] text-[#8b95a1]">
+                    아래 입력창에서 소식을 받고 싶은 작곡가, 연주자, 곡명을 추가해 보세요.
+                  </p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-[#f2f4f6] border border-[#f2f4f6] rounded-2xl overflow-hidden bg-white">
+                  {keywords.map((kw) => {
+                    const matchedConcerts = matchedByKeyword[kw] || []
+                    const isExpanded = expandedKeyword === kw
+
+                    return (
+                      <li key={kw} className="transition-colors">
+                        <div className="flex items-center justify-between gap-2 px-4 py-3.5 hover:bg-[#f9fafb]">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedKeyword(isExpanded ? null : kw)
+                            }
+                            className="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer"
+                          >
+                            <span className="h-2 w-2 rounded-full bg-[#3182f6] shrink-0" />
+                            <span className="text-[15px] font-bold text-[#191f28] truncate">
+                              {kw}
+                            </span>
+                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11.5px] font-semibold bg-[#e8f3ff] text-[#3182f6] shrink-0 whitespace-nowrap">
+                              공연 {matchedConcerts.length}건
+                              <ChevronDown
+                                className={`h-3 w-3 transition-transform ${
+                                  isExpanded ? 'rotate-180' : ''
+                                }`}
+                              />
+                            </span>
+                          </button>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Link
+                              to={`/?q=${encodeURIComponent(kw)}`}
+                              className="inline-flex items-center gap-0.5 px-2.5 py-1.5 rounded-xl text-[12px] font-semibold text-[#4e5968] hover:text-[#3182f6] hover:bg-[#e8f3ff]/60 whitespace-nowrap transition-colors"
+                            >
+                              <span>검색</span>
+                              <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                            </Link>
                             <button
                               type="button"
-                              onClick={() =>
-                                setExpandedKeyword(isExpanded ? null : kw)
-                              }
-                              className="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer"
+                              disabled={deletingKeyword === kw}
+                              onClick={() => handleDeleteKeyword(kw)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[12px] font-semibold text-[#8b95a1] hover:text-[#f04452] hover:bg-[#fff0f1] whitespace-nowrap shrink-0 transition-colors cursor-pointer"
+                              aria-label={`${kw} 알림 삭제`}
                             >
-                              <span className="h-2 w-2 rounded-full bg-[var(--theme-dark)] shrink-0" />
-                              <span className="text-[15px] font-bold text-[var(--theme-dark)] truncate">
-                                {kw}
-                              </span>
-                              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11.5px] font-semibold bg-[var(--bg-subtle)] border border-[var(--theme-light)] text-[var(--theme-dark)] shrink-0 whitespace-nowrap">
-                                공연 {matchedConcerts.length}건
-                                <ChevronDown
-                                  className={`h-3 w-3 transition-transform ${
-                                    isExpanded ? 'rotate-180' : ''
-                                  }`}
-                                />
-                              </span>
+                              <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                              <span>{deletingKeyword === kw ? '삭제 중' : '삭제'}</span>
                             </button>
-
-                            <div className="flex items-center gap-1 shrink-0">
-                              <Link
-                                to={`/?q=${encodeURIComponent(kw)}`}
-                                className="inline-flex items-center gap-0.5 px-2.5 py-1.5 rounded-xl text-[12px] font-semibold text-[var(--text-secondary)] hover:text-[var(--theme-dark)] hover:bg-[var(--theme-light)]/50 whitespace-nowrap transition-colors"
-                              >
-                                <span>검색</span>
-                                <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                              </Link>
-                              <button
-                                type="button"
-                                disabled={deletingKeyword === kw}
-                                onClick={() => handleDeleteKeyword(kw)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[12px] font-semibold text-[var(--theme-mid)] hover:text-[var(--theme-dark)] hover:bg-[var(--theme-light)]/50 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
-                                aria-label={`${kw} 알림 삭제`}
-                              >
-                                <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                                <span>{deletingKeyword === kw ? '삭제 중' : '삭제'}</span>
-                              </button>
-                            </div>
                           </div>
+                        </div>
 
-                          {isExpanded && (
-                            <div className="px-4 pb-4 pt-1 bg-[var(--bg-subtle)] border-t border-[var(--theme-light)]/60 space-y-2 animate-fade-up">
-                              {matchedConcerts.length === 0 ? (
-                                <p className="text-[12.5px] text-[var(--theme-mid)] py-2">
-                                  현재 진행·예정인 &lsquo;{kw}&rsquo; 관련 공연이 없습니다. 새 공연이 등록되면 이메일로 바로 알려드릴게요.
-                                </p>
-                              ) : (
-                                <>
-                                  <div className="space-y-1.5">
-                                    {matchedConcerts.slice(0, 5).map((concert) => (
-                                      <Link
-                                        key={concert.id}
-                                        to={`/concerts/${concert.id}`}
-                                        className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[var(--theme-white)] border border-[var(--theme-light)] hover:border-[var(--theme-dark)] transition-all group"
-                                      >
-                                        <div className="min-w-0 flex-1">
-                                          <div className="flex items-center gap-1.5 mb-1">
-                                            <StatePill state={concert.state} />
-                                            <span className="text-[12px] font-bold text-[var(--theme-dark)] truncate group-hover:underline">
-                                              {concert.title}
-                                            </span>
-                                          </div>
-                                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-[var(--text-secondary)]">
-                                            <span className="flex items-center gap-1 truncate">
-                                              <MapPin className="h-3 w-3 text-[var(--theme-mid)] shrink-0" />
-                                              {concert.venue}
-                                            </span>
-                                            <span className="flex items-center gap-1 shrink-0">
-                                              <Calendar className="h-3 w-3 text-[var(--theme-mid)] shrink-0" />
-                                              {formatPeriod(concert.from, concert.to)}
-                                            </span>
-                                          </div>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-[var(--theme-mid)] group-hover:text-[var(--theme-dark)] shrink-0" />
-                                      </Link>
-                                    ))}
-                                  </div>
-                                  {matchedConcerts.length > 5 && (
+                        {isExpanded && (
+                          <div className="px-4 pb-4 pt-1 bg-[#f9fafb]/80 border-t border-[#f2f4f6] space-y-2 animate-fade-up">
+                            {matchedConcerts.length === 0 ? (
+                              <p className="text-[12.5px] text-[#8b95a1] py-2">
+                                현재 진행·예정인 &lsquo;{kw}&rsquo; 관련 공연이 없습니다. 새 공연이 등록되면 이메일로 바로 알려드릴게요.
+                              </p>
+                            ) : (
+                              <>
+                                <div className="space-y-1.5">
+                                  {matchedConcerts.slice(0, 5).map((concert) => (
                                     <Link
-                                      to={`/?q=${encodeURIComponent(kw)}`}
-                                      className="block text-center text-[12px] font-semibold text-[var(--theme-dark)] hover:underline pt-1"
+                                      key={concert.id}
+                                      to={`/concerts/${concert.id}`}
+                                      className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-[#e5e8eb] hover:border-[#3182f6] transition-all group"
                                     >
-                                      외 {matchedConcerts.length - 5}건의 공연 전체 보기 &rarr;
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                          <StatePill state={concert.state} />
+                                          <span className="text-[12px] font-bold text-[#191f28] truncate group-hover:text-[#3182f6]">
+                                            {concert.title}
+                                          </span>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-[#6b7684]">
+                                          <span className="flex items-center gap-1 truncate">
+                                            <MapPin className="h-3 w-3 text-[#8b95a1] shrink-0" />
+                                            {concert.venue}
+                                          </span>
+                                          <span className="flex items-center gap-1 shrink-0">
+                                            <Calendar className="h-3 w-3 text-[#8b95a1] shrink-0" />
+                                            {formatPeriod(concert.from, concert.to)}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <ChevronRight className="h-4 w-4 text-[#8b95a1] group-hover:text-[#3182f6] shrink-0" />
                                     </Link>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* 새 키워드 추가 폼 */}
-            <Card className="border-[var(--theme-light)] shadow-xs">
-              <CardHeader className="p-5 sm:p-6 pb-3">
-                <CardTitle className="text-[16px] font-bold text-[var(--theme-dark)] flex items-center gap-1.5">
-                  <Plus className="h-4 w-4 text-[var(--theme-dark)] shrink-0" />
-                  새 알림 키워드 추가
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-5 sm:p-6 pt-0">
-                <form onSubmit={(e) => handleAddKeyword(e)} className="flex gap-2">
-                  <Input
-                    type="text"
-                    value={newKeywordInput}
-                    onChange={(e) => setNewKeywordInput(e.target.value)}
-                    placeholder="예: 베토벤, 모차르트, 쇼팽, 예술의전당"
-                    className="h-11 text-[14.5px]"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={addingKeyword}
-                    className="h-11 px-5 rounded-xl font-semibold whitespace-nowrap shrink-0"
-                  >
-                    {addingKeyword ? '추가 중...' : '추가하기'}
-                  </Button>
-                </form>
-
-                {/* 빠른 추천 키워드 */}
-                <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[var(--theme-mid)] mr-1 whitespace-nowrap">
-                    <Sparkles className="h-3 w-3 text-[var(--theme-dark)] shrink-0" />
-                    추천 키워드
-                  </span>
-                  {SUGGESTED_KEYWORDS.filter((w) => !keywords.includes(w)).map(
-                    (word) => (
-                      <button
-                        key={word}
-                        type="button"
-                        disabled={addingKeyword}
-                        onClick={() => handleAddKeyword(null, word)}
-                        className="text-[12px] px-2.5 py-1 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--theme-light)] hover:border-[var(--theme-dark)] hover:text-[var(--theme-dark)] whitespace-nowrap shrink-0 transition-all cursor-pointer"
-                      >
-                        + {word}
-                      </button>
+                                  ))}
+                                </div>
+                                {matchedConcerts.length > 5 && (
+                                  <Link
+                                    to={`/?q=${encodeURIComponent(kw)}`}
+                                    className="block text-center text-[12px] font-semibold text-[#3182f6] hover:underline pt-1"
+                                  >
+                                    외 {matchedConcerts.length - 5}건의 공연 전체 보기 &rarr;
+                                  </Link>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </li>
                     )
-                  )}
-                </div>
+                  })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
 
-                {manageNotice && (
-                  <p className="mt-3 flex items-center gap-1.5 text-[13px] font-medium text-[var(--theme-dark)] animate-fade-up">
-                    <Check className="h-4 w-4 shrink-0" />
-                    <span>{manageNotice}</span>
-                  </p>
-                )}
+          {/* 새 키워드 추가 폼 */}
+          <Card className="border-[#e5e8eb] shadow-xs">
+            <CardHeader className="p-5 sm:p-6 pb-3">
+              <CardTitle className="text-[16px] font-bold text-[#191f28] flex items-center gap-1.5">
+                <Plus className="h-4 w-4 text-[#3182f6] shrink-0" />
+                새 알림 키워드 추가
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 sm:p-6 pt-0">
+              <form onSubmit={(e) => handleAddKeyword(e)} className="flex gap-2">
+                <Input
+                  type="text"
+                  value={newKeywordInput}
+                  onChange={(e) => setNewKeywordInput(e.target.value)}
+                  placeholder="예: 베토벤, 모차르트, 쇼팽, 예술의전당"
+                  className="h-11 text-[14.5px]"
+                />
+                <Button
+                  type="submit"
+                  disabled={addingKeyword}
+                  className="h-11 px-5 rounded-xl font-semibold whitespace-nowrap shrink-0"
+                >
+                  {addingKeyword ? '추가 중...' : '추가하기'}
+                </Button>
+              </form>
 
-                {manageError && (
-                  <p className="mt-3 flex items-center gap-1.5 text-[13px] font-medium text-[var(--theme-dark)] animate-fade-up">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <span>{manageError}</span>
-                  </p>
+              {/* 빠른 추천 키워드 */}
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[#8b95a1] mr-1 whitespace-nowrap">
+                  <Sparkles className="h-3 w-3 text-[#3182f6] shrink-0" />
+                  추천 키워드
+                </span>
+                {SUGGESTED_KEYWORDS.filter((w) => !keywords.includes(w)).map(
+                  (word) => (
+                    <button
+                      key={word}
+                      type="button"
+                      disabled={addingKeyword}
+                      onClick={() => handleAddKeyword(null, word)}
+                      className="text-[12px] px-2.5 py-1 rounded-full bg-[#f9fafb] text-[#4e5968] border border-[#e5e8eb] hover:border-[#3182f6] hover:text-[#3182f6] whitespace-nowrap shrink-0 transition-all cursor-pointer"
+                    >
+                      + {word}
+                    </button>
+                  )
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
+              </div>
+
+              {manageNotice && (
+                <p className="mt-3 flex items-center gap-1.5 text-[13px] font-medium text-[#03b26c] animate-fade-up">
+                  <Check className="h-4 w-4 shrink-0" />
+                  <span>{manageNotice}</span>
+                </p>
+              )}
+
+              {manageError && (
+                <p className="mt-3 flex items-center gap-1.5 text-[13px] font-medium text-[#f04452] animate-fade-up">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{manageError}</span>
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
       </div>
     </main>
   )
