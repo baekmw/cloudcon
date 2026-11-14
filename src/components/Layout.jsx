@@ -4,14 +4,14 @@ import { Bell, Compass, Download, Menu, Search, Share, X } from 'lucide-react'
 import { scanForNewConcerts, useAlerts } from '../lib/alerts.js'
 import { Badge } from './ui/badge.jsx'
 
-function TicketLogo({ className = 'h-6 w-6', withText = false, whiteBg = false }) {
-  const src = withText
+function TicketLogo({ className = 'h-6 w-6', filled = false, whiteBg = false }) {
+  const src = filled
     ? whiteBg
-      ? '/logos/logo-text-white.svg'
-      : '/logos/logo-text-transparent.svg'
+      ? '/logos/logo-fill-white.svg'
+      : '/logos/logo-fill-transparent.svg'
     : whiteBg
-      ? '/logos/logo-notext-white.svg'
-      : '/logos/logo-notext-transparent.svg'
+      ? '/logos/logo-stroke-white.svg'
+      : '/logos/logo-stroke-transparent.svg'
 
   return (
     <img
@@ -153,7 +153,7 @@ export default function Layout() {
             className="flex items-center gap-1.5 group shrink-0 whitespace-nowrap"
           >
             <div className="flex h-7 w-7 items-center justify-center bg-transparent transition-transform group-hover:scale-105 shrink-0">
-              <TicketLogo className="h-6 w-6" withText={false} whiteBg={false} />
+              <TicketLogo className="h-6 w-6" filled={false} whiteBg={false} />
             </div>
             <span className="text-[16px] font-bold tracking-tight text-[#191f28]">
               cloudcon
@@ -288,7 +288,7 @@ export default function Layout() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[#e5e8eb] overflow-hidden">
-                  <TicketLogo className="h-9 w-9" withText={true} whiteBg={true} />
+                  <TicketLogo className="h-9 w-9" filled={false} whiteBg={true} />
                 </div>
                 <div>
                   <h3 className="text-[16px] font-bold text-[#191f28]">cloudcon 앱 설치</h3>

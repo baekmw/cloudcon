@@ -81,7 +81,7 @@ export async function sendVerificationEmail(email, manageToken, keyword = "") {
     ? `[cloudcon] '${keyword}' 공연 알림 시작을 위해 이메일을 인증해 주세요`
     : `[cloudcon] 클래식 공연 알림 이메일 인증 링크`;
 
-  const logoUrl = `${baseUrl}/logos/logo-notext-transparent.png`;
+  const logoUrl = `${baseUrl}/logos/logo-stroke-transparent.png`;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e5e8eb; border-radius: 20px; color: #191f28;">
@@ -197,7 +197,7 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
     })
     .join("");
 
-  const logoUrl = `${baseUrl}/logos/logo-notext-transparent.png`;
+  const logoUrl = `${baseUrl}/logos/logo-stroke-transparent.png`;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e5e8eb; border-radius: 20px; color: #191f28;">

@@ -589,47 +589,47 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* 그 다음 1건: 약 80% 투명도의 흰색 그라데이션 페이드아웃 */}
+          {/* 그 다음 1건: 하단이 완전 불투명해지는 흰색 그라데이션 페이드아웃 */}
           {fadingConcert && (
             <div className="relative mt-3 select-none pointer-events-none overflow-hidden rounded-2xl">
               <div
                 style={{
                   maskImage:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.12) 95%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 48%, rgba(0,0,0,0) 85%)',
                   WebkitMaskImage:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.12) 95%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 48%, rgba(0,0,0,0) 85%)',
                 }}
               >
                 <ConcertCardItem concert={fadingConcert} q={q} isFading />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/50 to-[#f9fafb]/80" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/80 to-[#f9fafb]" />
             </div>
           )}
 
-          {/* 더보기 버튼 */}
+          {/* 더보기 버튼: 텍스트 크기 확대 & 그라데이션 중간쯤에 위치 */}
           {hasMore && (
-            <div className="mt-5 flex flex-col items-center">
+            <div className="relative z-10 -mt-20 sm:-mt-24 pb-2 flex flex-col items-center">
               <button
                 type="button"
                 onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-                className="inline-flex items-center gap-1 text-[13px] font-medium text-[#8b95a1] hover:text-[#4e5968] transition-colors cursor-pointer py-1.5 px-3"
+                className="inline-flex items-center gap-1.5 text-[15px] sm:text-[16px] font-semibold text-[#6b7684] hover:text-[#191f28] transition-colors cursor-pointer py-1.5 px-3"
               >
                 <span>더보기 ({Math.min(PAGE_SIZE, remainingCount)}건 더보기)</span>
-                <ChevronDown className="h-3.5 w-3.5" />
+                <ChevronDown className="h-4 w-4" />
               </button>
-              <p className="mt-1 text-[12px] text-[#8b95a1]/80">
+              <p className="mt-1 text-[12.5px] text-[#8b95a1]">
                 전체 {searchResults.length}건 중 {visibleCount}건 표시 중
               </p>
             </div>
           )}
 
           {/* Quick noti CTA sticky at bottom of search results:
-              스티키 영역 위로 약 80% 흰색 페이드 효과가 부드럽게 올라오도록 처리 */}
+              하단부는 완전 불투명한 흰색으로 차단하고 위로 부드럽게 흐려지는 페이드 */}
           {searchResults.length > 0 && (
             <div className="sticky bottom-0 z-20 mt-4 -mx-6 px-6 pt-9 pb-14 sm:pb-5 pointer-events-none relative">
               <div
                 aria-hidden="true"
-                className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,0.82)_0%,rgba(249,250,251,0.75)_48%,rgba(249,250,251,0.45)_75%,rgba(249,250,251,0)_100%)] pointer-events-none"
+                className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,1)_0%,rgba(249,250,251,0.96)_48%,rgba(249,250,251,0.55)_76%,rgba(249,250,251,0)_100%)] pointer-events-none"
               />
               <div
                 style={{
