@@ -11,11 +11,35 @@ export const LEGACY_PROGRAMS_CACHE_PATH = path.join(
   "programs_cache.json"
 );
 
-// Ensure data directory exists
-try {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-} catch {
-  // ignore
+/**
+ * 서버 부팅 시 data 디렉터리(fs.mkdirSync(..., { recursive: true }))와
+ * subscribers.json, programs_cache.json 파일이 존재하지 않으면
+ * 빈 객체({})로 자동 생성하는 초기화 함수
+ */
+export function initDataStorage() {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+
+    if (!fs.existsSync(SUBSCRIBERS_PATH)) {
+      writeJsonAtomic(SUBSCRIBERS_PATH, {});
+      console.log(`[Storage] Created initial ${SUBSCRIBERS_PATH} with {}`);
+    }
+
+    if (!fs.existsSync(PROGRAMS_CACHE_PATH)) {
+      // Legacy 경로에 기존 캐시가 남아있다면 마이그레이션하고, 없으면 빈 객체({})로 생성
+      const legacyData = fs.existsSync(LEGACY_PROGRAMS_CACHE_PATH)
+        ? readJsonSafe(LEGACY_PROGRAMS_CACHE_PATH, {})
+        : {};
+      const initialCache =
+        legacyData && typeof legacyData === "object" && !Array.isArray(legacyData)
+          ? legacyData
+          : {};
+      writeJsonAtomic(PROGRAMS_CACHE_PATH, initialCache);
+      console.log(`[Storage] Created initial ${PROGRAMS_CACHE_PATH}`);
+    }
+  } catch (err) {
+    console.error("[Storage] Failed to initialize data storage:", err.message);
+  }
 }
 
 /**
@@ -90,10 +114,14 @@ export function readJsonSafe(filePath, defaultValue = {}) {
   return typeof defaultValue === "function" ? defaultValue() : { ...defaultValue };
 }
 
+// 서버 부팅(모듈 로드) 시 자동 초기화 실행
+initDataStorage();
+
 /**
  * Subscribers storage helpers (`server/data/subscribers.json`)
  */
 export function loadSubscribers() {
+  initDataStorage();
   const data = readJsonSafe(SUBSCRIBERS_PATH, {});
   if (!data || typeof data !== "object" || Array.isArray(data)) {
     return {};

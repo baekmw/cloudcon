@@ -1,12 +1,14 @@
 import express from "express";
 import { createApiRouter } from "./apiRouter.js";
 import { startBatchCron } from "./batchCron.js";
+import { initDataStorage } from "./storage.js";
 
 export function kopisPlugin(serviceKey) {
   let app = null;
 
   const attach = (server) => {
     if (!app) {
+      initDataStorage();
       app = express();
       app.set("trust proxy", 1);
 

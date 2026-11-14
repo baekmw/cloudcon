@@ -27,7 +27,10 @@ dist-ssr
 *.sw?
 
 # Server runtime data & JSON caches
+server/data/
 server/data/*.json
 server/data/**/*.json
 server/data/*.tmp
 server/data/**/*.tmp
+subscribers.json
+programs_cache.json
