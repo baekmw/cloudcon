@@ -126,30 +126,30 @@ export default function CalendarExplorer({
   return (
     <div className="w-full rounded-3xl bg-white border border-[#e5e8eb] shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-5 sm:p-7 animate-fade-up">
       {/* 상단 월 선택 스테퍼 */}
-      <div className="flex items-center justify-between pb-4 border-b border-[#f2f4f6]">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between gap-2 pb-4 border-b border-[#f2f4f6]">
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="p-2 rounded-xl text-[#4e5968] hover:text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-[#4e5968] hover:text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer shrink-0"
             aria-label="이전 달"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <span className="px-2 text-[18px] sm:text-[20px] font-extrabold text-[#191f28] tabular-nums tracking-tight">
+          <span className="px-1.5 sm:px-2 text-[17px] sm:text-[20px] font-extrabold text-[#191f28] tabular-nums tracking-tight whitespace-nowrap shrink-0">
             {viewYear}년 {viewMonth + 1}월
           </span>
           <button
             type="button"
             onClick={handleNextMonth}
-            className="p-2 rounded-xl text-[#4e5968] hover:text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-[#4e5968] hover:text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer shrink-0"
             aria-label="다음 달"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
 
-        <span className="text-[13px] text-[#8b95a1]">
+        <span className="text-[12px] sm:text-[13px] text-[#8b95a1] whitespace-nowrap shrink-0">
           이달의 공연 <strong className="text-[#191f28] font-semibold tabular-nums">{monthTotalConcerts}</strong>건
         </span>
       </div>
@@ -226,7 +226,7 @@ export default function CalendarExplorer({
 
                   {/* 총 공연 수 (뱃지 없이 깔끔한 텍스트로만 표시) */}
                   <span
-                    className={`text-[11px] sm:text-[12px] leading-none tabular-nums transition-colors ${
+                    className={`text-[11px] sm:text-[12px] leading-none tabular-nums whitespace-nowrap transition-colors ${
                       count === 0
                         ? 'text-transparent select-none'
                         : isSelected

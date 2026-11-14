@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Search,
   X,
@@ -18,8 +18,8 @@ import Poster from '../components/Poster.jsx'
 import StatePill from '../components/StatePill.jsx'
 import { Button } from '../components/ui/button.jsx'
 import { Card, CardContent } from '../components/ui/card.jsx'
-import { getConcerts } from '../lib/api.js'
-import { addWatch, useAlerts } from '../lib/alerts.js'
+import { getConcerts, addMyKeyword } from '../lib/api.js'
+import { useAlerts } from '../lib/alerts.js'
 import { formatPeriod } from '../lib/format.js'
 import { matchConcertClassical } from '../lib/classical.js'
 
@@ -67,14 +67,16 @@ function ConcertCardItem({ concert, q, isFading = false }) {
         <div>
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <StatePill state={concert.state} />
-            <span className="text-[12px] text-[#8b95a1]">{concert.genre || '클래식'}</span>
+            <span className="text-[12px] text-[#8b95a1] whitespace-nowrap shrink-0">
+              {concert.genre || '클래식'}
+            </span>
             {concert.matchReason && (
-              <span className="text-[11px] font-medium text-[#3182f6] bg-[#e8f3ff] px-2 py-0.5 rounded-md truncate max-w-[240px]">
+              <span className="text-[11px] font-medium text-[#3182f6] bg-[#e8f3ff] px-2 py-0.5 rounded-md truncate max-w-[200px] sm:max-w-[240px] whitespace-nowrap">
                 {concert.matchReason}
               </span>
             )}
           </div>
-          <h3 className="text-[16px] sm:text-[17px] font-bold text-[#191f28] group-hover:text-[#3182f6] transition-colors line-clamp-2 leading-snug">
+          <h3 className="text-[16px] sm:text-[17px] font-bold text-[#191f28] group-hover:text-[#3182f6] transition-colors line-clamp-2 leading-snug break-keep">
             {concert.title}
           </h3>
         </div>
@@ -83,8 +85,8 @@ function ConcertCardItem({ concert, q, isFading = false }) {
         {Array.isArray(concert.programs) && concert.programs.length > 0 && (
           <div className="mt-2.5 rounded-xl bg-[#f8fafc] p-2.5 border border-[#edf2f7]">
             <div className="flex items-center justify-between text-[11px] font-semibold text-[#8b95a1] mb-1.5">
-              <span className="flex items-center gap-1 text-[#3182f6]">
-                <Music className="h-3 w-3" />
+              <span className="flex items-center gap-1 text-[#3182f6] whitespace-nowrap">
+                <Music className="h-3 w-3 shrink-0" />
                 진행 프로그램 ({concert.programs.length}곡)
               </span>
             </div>
@@ -99,14 +101,14 @@ function ConcertCardItem({ concert, q, isFading = false }) {
                 return (
                   <div
                     key={idx}
-                    className={`flex items-baseline gap-1.5 text-[12px] truncate ${
+                    className={`flex items-baseline gap-1.5 text-[12px] min-w-0 whitespace-nowrap ${
                       isMatched ? 'text-[#3182f6] font-semibold' : 'text-[#4e5968]'
                     }`}
                   >
                     <span className="shrink-0 font-medium text-[#191f28]">
                       {item.composerShort || item.composerKo || item.composer}
                     </span>
-                    <span className="text-[#8b95a1]">·</span>
+                    <span className="shrink-0 text-[#8b95a1]">·</span>
                     <span className="truncate text-[#6b7684]">
                       {item.titleKo || item.title}
                     </span>
@@ -114,7 +116,7 @@ function ConcertCardItem({ concert, q, isFading = false }) {
                 )
               })}
               {concert.programs.length > 3 && (
-                <p className="text-[11px] text-[#8b95a1] pt-0.5">
+                <p className="text-[11px] text-[#8b95a1] pt-0.5 whitespace-nowrap">
                   외 {concert.programs.length - 3}곡 더보기...
                 </p>
               )}
@@ -122,14 +124,14 @@ function ConcertCardItem({ concert, q, isFading = false }) {
           </div>
         )}
 
-        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[13px] text-[#6b7684]">
-          <span className="flex items-center gap-1 truncate">
+        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[12px] sm:text-[13px] text-[#6b7684] min-w-0">
+          <span className="flex items-center gap-1 min-w-0 whitespace-nowrap">
             <MapPin className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
-            {concert.venue} · {concert.area}
+            <span className="truncate">{concert.venue} · {concert.area}</span>
           </span>
-          <span className="flex items-center gap-1 shrink-0">
-            <Calendar className="h-3.5 w-3.5 text-[#8b95a1]" />
-            {formatPeriod(concert.from, concert.to)}
+          <span className="flex items-center gap-1 shrink-0 whitespace-nowrap">
+            <Calendar className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
+            <span>{formatPeriod(concert.from, concert.to)}</span>
           </span>
         </div>
       </div>
@@ -162,9 +164,9 @@ function CalmHeroHeading() {
   }, [phrases.length])
 
   return (
-    <div className="min-h-[3.25rem] sm:min-h-[4rem] md:min-h-[4.5rem] py-1 flex items-center justify-center">
+    <div className="min-h-[2.75rem] sm:min-h-[4rem] md:min-h-[4.5rem] py-1 flex items-center justify-center">
       <h1
-        className={`text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#191f28] tracking-tight leading-snug transition-all duration-500 ease-out ${
+        className={`text-[21px] sm:text-4xl md:text-5xl font-extrabold text-[#191f28] tracking-tight leading-snug whitespace-nowrap transition-all duration-500 ease-out ${
           isFading ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'
         }`}
       >
@@ -211,6 +213,7 @@ function SearchSkeletonCards() {
 }
 
 export default function HomePage() {
+  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''
   const state = params.get('state') || 'all'
@@ -272,12 +275,18 @@ export default function HomePage() {
     }
   }
 
-  function handleCreateAlert(keyword) {
+  async function handleCreateAlert(keyword) {
     const target = (keyword || inputValue || q).trim()
     if (!target) return
-    addWatch('artist', target)
-    setRegisteredKeys((prev) => new Set([...prev, target.toLowerCase()]))
-    setJustAddedTarget(target.toLowerCase())
+    try {
+      await addMyKeyword(target)
+      setRegisteredKeys((prev) => new Set([...prev, target.toLowerCase()]))
+      setJustAddedTarget(target.toLowerCase())
+    } catch (err) {
+      if (err.status === 401) {
+        navigate(`/alerts?q=${encodeURIComponent(target)}`)
+      }
+    }
   }
 
   const concerts = data?.concerts || []
@@ -347,12 +356,12 @@ export default function HomePage() {
   return (
     <main className="mx-auto max-w-[800px] px-6 py-12 md:py-20 flex flex-col items-center">
       {/* Toss style Hero & Search Area */}
-      <div className={`w-full flex flex-col items-center transition-all duration-300 ${hasSearch ? 'mb-8' : 'my-auto py-12'}`}>
+      <div className={`w-full flex flex-col items-center transition-all duration-300 ${hasSearch ? 'mb-8' : 'my-auto py-8 sm:py-12'}`}>
         {!hasSearch && (
           <div className="text-center mb-8 sm:mb-10 animate-in fade-in duration-500">
             <CalmHeroHeading />
-            <p className="mt-3.5 sm:mt-4 text-[15px] sm:text-[16px] text-[#6b7684] font-normal leading-relaxed max-w-[540px] mx-auto">
-              아티스트, 연주곡, 공연장 어디든 편하게 입력해 보세요.<br className="hidden sm:inline" /> 관련된 모든 클래식 무대를 빠짐없이 찾아드릴게요.
+            <p className="mt-3 sm:mt-4 text-[13.5px] sm:text-[16px] text-[#6b7684] font-normal leading-relaxed max-w-[540px] mx-auto break-keep">
+              아티스트, 연주곡, 공연장 어디든 편하게 입력해 보세요.<br /> 관련된 모든 클래식 무대를 빠짐없이 찾아드릴게요.
             </p>
           </div>
         )}
@@ -360,7 +369,7 @@ export default function HomePage() {
         {/* Minimal Toss-style Search Bar */}
         <div className="w-full max-w-[640px]">
           <div className="relative group">
-            <div className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[#8b95a1] group-focus-within:text-[#3182f6] transition-colors">
+            <div className="pointer-events-none absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-[#8b95a1] group-focus-within:text-[#3182f6] transition-colors">
               <Search className="h-5 w-5" />
             </div>
             <input
@@ -378,14 +387,14 @@ export default function HomePage() {
                 }
               }}
               placeholder="예: 베9, 라피협2, 조성진, 모차르트"
-              className="w-full h-15 rounded-2xl bg-white border border-[#e5e8eb] pl-13 pr-24 text-[17px] text-[#191f28] placeholder-[#8b95a1] shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus:outline-none focus:border-[#3182f6] focus:ring-4 focus:ring-[#3182f6]/10 transition-all"
+              className="w-full h-14 sm:h-15 rounded-2xl bg-white border border-[#e5e8eb] pl-11 sm:pl-13 pr-22 sm:pr-24 text-[15px] sm:text-[17px] text-[#191f28] placeholder-[#8b95a1] shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus:outline-none focus:border-[#3182f6] focus:ring-4 focus:ring-[#3182f6]/10 transition-all"
             />
-            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            <div className="absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
               {inputValue && (
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="p-1.5 rounded-full text-[#8b95a1] hover:text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer"
+                  className="p-1.5 rounded-full text-[#8b95a1] hover:text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer shrink-0"
                   aria-label="검색어 지우기"
                 >
                   <X className="h-4 w-4" />
@@ -394,7 +403,7 @@ export default function HomePage() {
               <Button
                 size="sm"
                 onClick={() => handleSearch(inputValue)}
-                className="rounded-xl px-3.5 h-10 font-semibold"
+                className="rounded-xl px-3.5 h-10 font-semibold whitespace-nowrap shrink-0"
               >
                 검색
               </Button>
@@ -403,8 +412,8 @@ export default function HomePage() {
 
           {/* Quick Keyword Chips */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#8b95a1] mr-1">
-              <TrendingUp className="h-3.5 w-3.5 text-[#3182f6]" />
+            <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#8b95a1] mr-1 whitespace-nowrap shrink-0">
+              <TrendingUp className="h-3.5 w-3.5 text-[#3182f6] shrink-0" />
               추천 검색어
             </span>
             {POPULAR_KEYWORDS.map((word) => (
@@ -412,7 +421,7 @@ export default function HomePage() {
                 key={word}
                 type="button"
                 onClick={() => handleSearch(word)}
-                className={`text-[13px] font-medium px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`text-[13px] font-medium px-3 py-1 rounded-full whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                   q === word
                     ? 'bg-[#3182f6] text-white shadow-sm'
                     : 'bg-white text-[#4e5968] border border-[#e5e8eb] hover:bg-[#f2f4f6] hover:text-[#191f28]'
@@ -425,7 +434,7 @@ export default function HomePage() {
 
           {/* 비검색 시 하단 바로가기 카드 (공연 모아보기 & 공연 알림 받기) */}
           {!hasSearch && (
-            <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+            <div className="mt-10 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
               <Link
                 to="/explore"
                 className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl bg-white border border-[#e5e8eb] shadow-xs text-[14px] text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] transition-all group"
@@ -435,7 +444,7 @@ export default function HomePage() {
                     <Compass className="h-4.5 w-4.5" />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="font-bold text-[#191f28]">공연 모아보기</p>
+                    <p className="font-bold text-[#191f28] whitespace-nowrap">공연 모아보기</p>
                     <p className="text-[12px] text-[#8b95a1] truncate">
                       달력(일정별) · 전국 지도(장소별)로 탐색
                     </p>
@@ -453,7 +462,7 @@ export default function HomePage() {
                     <Bell className="h-4.5 w-4.5" />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="font-bold text-[#191f28]">공연 알림 받기</p>
+                    <p className="font-bold text-[#191f28] whitespace-nowrap">공연 알림 받기</p>
                     <p className="text-[12px] text-[#8b95a1] truncate">
                       좋아하는 연주자 새 일정 가장 먼저 받기
                     </p>
@@ -472,9 +481,9 @@ export default function HomePage() {
           {/* Result Header & State Filters */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-[#f2f4f6]">
             <div>
-              <h2 className="text-[17px] font-bold text-[#191f28]">
+              <h2 className="text-[17px] font-bold text-[#191f28] break-keep">
                 '{q}' 검색 결과
-                <span className="ml-2 text-[14px] font-normal text-[#8b95a1]">
+                <span className="ml-2 text-[14px] font-normal text-[#8b95a1] whitespace-nowrap">
                   {searchResults.length}건
                 </span>
               </h2>
@@ -492,7 +501,7 @@ export default function HomePage() {
                   key={key}
                   type="button"
                   onClick={() => handleStateChange(key)}
-                  className={`px-3 py-1 text-[13px] font-semibold rounded-lg transition-all cursor-pointer ${
+                  className={`px-3 py-1 text-[13px] font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                     state === key
                       ? 'bg-white text-[#191f28] shadow-sm'
                       : 'text-[#6b7684] hover:text-[#191f28]'

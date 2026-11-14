@@ -8,8 +8,7 @@ import { Button } from '../components/ui/button.jsx'
 import { Input } from '../components/ui/input.jsx'
 import { Badge } from '../components/ui/badge.jsx'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card.jsx'
-import { getConcert } from '../lib/api.js'
-import { addWatch } from '../lib/alerts.js'
+import { getConcert, addMyKeyword } from '../lib/api.js'
 import { formatPeriod } from '../lib/format.js'
 import { splitPeople, cleanArtistName } from '../lib/match.js'
 
@@ -18,7 +17,7 @@ function Fact({ label, value }) {
   return (
     <div className="grid grid-cols-[minmax(4.25rem,max-content)_1fr] gap-3 py-2.5 text-[14px]">
       <dt className="font-medium text-[#8b95a1] shrink-0 whitespace-nowrap">{label}</dt>
-      <dd className="min-w-0 whitespace-pre-wrap text-[#191f28]">{value}</dd>
+      <dd className="min-w-0 whitespace-pre-wrap text-[#191f28] break-keep">{value}</dd>
     </div>
   )
 }
@@ -270,23 +269,38 @@ export default function ConcertDetailPage() {
     if (concert?.title) document.title = `${concert.title} · Cloudcon`
   }, [concert])
 
-  function watchPerson(name) {
+  async function watchPerson(name) {
     const cleanName = cleanArtistName(name) || name
-    const result = addWatch('artist', cleanName)
-    setNotice(result.ok ? `'${cleanName}' 알림이 등록되었습니다!` : result.error)
-    setTimeout(() => setNotice(''), 3500)
+    try {
+      await addMyKeyword(cleanName)
+      setNotice(`'${cleanName}' 이메일 알림이 등록되었습니다!`)
+      setTimeout(() => setNotice(''), 3500)
+    } catch (err) {
+      if (err.status === 401) {
+        navigate(`/alerts?q=${encodeURIComponent(cleanName)}`)
+      } else {
+        setNotice(err.message || '알림 등록 실패')
+        setTimeout(() => setNotice(''), 3500)
+      }
+    }
   }
 
-  function watchSong(event) {
+  async function watchSong(event) {
     event.preventDefault()
-    const result = addWatch('song', song)
-    if (result.ok) {
+    const target = song.trim()
+    if (!target) return
+    try {
+      await addMyKeyword(target)
       setSong('')
-      setNotice(`'${result.watch.query}' 곡 알림이 등록되었습니다!`)
+      setNotice(`'${target}' 곡 이메일 알림이 등록되었습니다!`)
       setTimeout(() => setNotice(''), 3500)
-    } else {
-      setNotice(result.error)
-      setTimeout(() => setNotice(''), 3500)
+    } catch (err) {
+      if (err.status === 401) {
+        navigate(`/alerts?q=${encodeURIComponent(target)}`)
+      } else {
+        setNotice(err.message || '알림 등록 실패')
+        setTimeout(() => setNotice(''), 3500)
+      }
     }
   }
 
@@ -322,9 +336,9 @@ export default function ConcertDetailPage() {
       <button
         type="button"
         onClick={handleGoBack}
-        className="inline-flex items-center gap-1 text-[14px] font-medium text-[#6b7684] hover:text-[#191f28] mb-6 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1 text-[14px] font-medium text-[#6b7684] hover:text-[#191f28] mb-6 transition-colors whitespace-nowrap cursor-pointer"
       >
-        <ChevronLeft className="h-4 w-4" /> 검색으로 돌아가기
+        <ChevronLeft className="h-4 w-4 shrink-0" /> 검색으로 돌아가기
       </button>
 
       <div className="grid gap-8 md:grid-cols-[280px_1fr] items-start">
@@ -346,11 +360,11 @@ export default function ConcertDetailPage() {
                   href={ticket.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-center gap-1.5 rounded-xl border border-[#e5e8eb] bg-white px-3 py-2.5 text-[13px] font-semibold text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] hover:bg-[#f8fafc] transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-[#e5e8eb] bg-white px-3 py-2.5 text-[13px] font-semibold text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] hover:bg-[#f8fafc] whitespace-nowrap transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
                 >
-                  <Ticket className="h-3.5 w-3.5 text-[#8b95a1]" />
-                  <span>{ticket.name} 예매하기</span>
-                  <ExternalLink className="h-3.5 w-3.5 text-[#8b95a1]" />
+                  <Ticket className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
+                  <span className="truncate">{ticket.name} 예매하기</span>
+                  <ExternalLink className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
                 </a>
               ))}
             </div>
@@ -359,11 +373,11 @@ export default function ConcertDetailPage() {
           {/* Quick Alert from this concert */}
           <Card className="border-[#3182f6]/30 bg-white shadow-sm overflow-hidden">
             <CardHeader className="p-3.5 pb-2">
-              <CardTitle className="text-[14px] flex items-center gap-1.5 font-bold text-[#191f28]">
-                <Bell className="h-4 w-4 text-[#3182f6]" />
+              <CardTitle className="text-[14px] flex items-center gap-1.5 font-bold text-[#191f28] whitespace-nowrap">
+                <Bell className="h-4 w-4 text-[#3182f6] shrink-0" />
                 이 공연으로 알림 받기
               </CardTitle>
-              <p className="text-[11px] text-[#8b95a1] leading-tight">
+              <p className="text-[11px] text-[#8b95a1] leading-tight break-keep">
                 새 공연이 등록되면 알려드려요
               </p>
             </CardHeader>
@@ -375,7 +389,7 @@ export default function ConcertDetailPage() {
                       key={name}
                       type="button"
                       onClick={() => watchPerson(name)}
-                      className="px-2 py-1 rounded-lg border border-[#e5e8eb] bg-[#f9fafb] text-[11px] font-medium text-[#4e5968] hover:border-[#3182f6] hover:text-[#3182f6] transition-all cursor-pointer"
+                      className="px-2 py-1 rounded-lg border border-[#e5e8eb] bg-[#f9fafb] text-[11px] font-medium text-[#4e5968] hover:border-[#3182f6] hover:text-[#3182f6] whitespace-nowrap shrink-0 transition-all cursor-pointer"
                     >
                       + {name}
                     </button>
@@ -408,18 +422,21 @@ export default function ConcertDetailPage() {
         {/* Concert Details */}
         <article className="min-w-0">
           {/* Metadata badges & info above Title */}
-          <div className="flex flex-wrap items-center gap-y-1.5 gap-x-2.5 text-[13px] text-[#8b95a1] mb-2.5">
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
             <StatePill state={concert.state} />
             {concert.visit && <Badge variant="secondary">내한</Badge>}
             {concert.openRun && <Badge variant="amber">오픈런</Badge>}
-            <span className="flex items-center gap-1 text-[#6b7684]">
-              <MapPin className="h-3.5 w-3.5 text-[#8b95a1]" />
-              {concert.venue} · {concert.area}
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2.5 text-[12px] sm:text-[13px] text-[#6b7684] mb-2.5 whitespace-nowrap overflow-hidden">
+            <span className="inline-flex items-center gap-1 min-w-0">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-[#8b95a1]" />
+              <span className="truncate">{concert.venue} · {concert.area}</span>
             </span>
-            <span>·</span>
-            <span className="flex items-center gap-1 text-[#6b7684]">
-              <Calendar className="h-3.5 w-3.5 text-[#8b95a1]" />
-              {formatPeriod(concert.from, concert.to)}
+            <span className="shrink-0 text-[#8b95a1]">·</span>
+            <span className="inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
+              <Calendar className="h-3.5 w-3.5 shrink-0 text-[#8b95a1]" />
+              <span>{formatPeriod(concert.from, concert.to)}</span>
             </span>
           </div>
 

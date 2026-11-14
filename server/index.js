@@ -1,74 +1,44 @@
-import 'dotenv/config'
-import http from 'node:http'
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { kopisPlugin } from './plugin.js'
+import "dotenv/config";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import express from "express";
+import cookieParser from "cookie-parser";
+import { createApiRouter } from "./apiRouter.js";
+import { startBatchCron } from "./batchCron.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const distDir = path.resolve(__dirname, '../dist')
-const port = Number(process.env.PORT || 4000)
-const serviceKey = process.env.KOPIS_API_KEY || ''
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const distDir = path.resolve(__dirname, "../dist");
+const port = Number(process.env.PORT || 4000);
+const serviceKey = process.env.KOPIS_API_KEY || "";
 
-const plugin = kopisPlugin(serviceKey)
+const app = express();
+app.set("trust proxy", 1);
 
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.ico': 'image/x-icon',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
+app.use(cookieParser());
+app.use(express.json());
+
+// Mount Express API Router (/api/subscribe, /api/verify, /api/my-keywords, /api/disconnect, /api/concerts, ...)
+const { router, kopisApi } = createApiRouter(serviceKey);
+app.use("/api", router);
+
+// Serve static frontend files in production
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir));
 }
 
-let apiMiddleware = null
-plugin.configureServer({
-  middlewares: {
-    use(fn) {
-      apiMiddleware = fn
-    },
-  },
-})
-
-const server = http.createServer((req, res) => {
-  const serveStaticOrSpa = () => {
-    const urlPath = (req.url || '/').split('?')[0]
-    const safePath = path.normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[\/\\])+/, '')
-    let filePath = path.join(distDir, safePath)
-
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      const ext = path.extname(filePath).toLowerCase()
-      res.statusCode = 200
-      res.setHeader('Content-Type', MIME_TYPES[ext] || 'application/octet-stream')
-      fs.createReadStream(filePath).pipe(res)
-      return
-    }
-
-    const indexHtml = path.join(distDir, 'index.html')
-    if (fs.existsSync(indexHtml)) {
-      res.statusCode = 200
-      res.setHeader('Content-Type', 'text/html; charset=utf-8')
-      fs.createReadStream(indexHtml).pipe(res)
-      return
-    }
-
-    res.statusCode = 404
-    res.end('Not found')
+// SPA Fallback
+app.use((req, res) => {
+  const indexHtml = path.join(distDir, "index.html");
+  if (fs.existsSync(indexHtml)) {
+    return res.sendFile(indexHtml);
   }
+  return res.status(404).send("Build not found. Run `npm run build` first.");
+});
 
-  if (apiMiddleware) {
-    apiMiddleware(req, res, serveStaticOrSpa)
-  } else {
-    serveStaticOrSpa()
-  }
-})
+// Start 09:00 / 18:00 KST Batch & Email Queue Scheduler
+startBatchCron(kopisApi);
 
-server.listen(port, '0.0.0.0', () => {
-  console.log(`[Cloudcon] Server listening on http://0.0.0.0:${port}`)
-})
+app.listen(port, "0.0.0.0", () => {
+  console.log(`[Cloudcon Express] Server listening on http://0.0.0.0:${port}`);
+});

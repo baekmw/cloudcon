@@ -1,7 +1,9 @@
 async function readJson(response) {
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || 'KOPIS 요청에 실패했습니다.')
+    const error = new Error(data.error || '요청 처리에 실패했습니다.')
+    error.status = response.status
+    throw error
   }
   return data
 }
@@ -27,4 +29,69 @@ export function fetchConcertProgram(id, { forceAI = false, apiKey = '' } = {}) {
 export function findMatches(kind, query) {
   const params = new URLSearchParams({ kind, q: query })
   return fetch(`/api/matches?${params}`).then(readJson)
+}
+
+/**
+ * 이메일 + 키워드 알림 구독 신청 (POST /api/subscribe)
+ */
+export function subscribeKeyword({ email, keyword, sendMagicLink = false }) {
+  return fetch('/api/subscribe', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, keyword, sendMagicLink }),
+  }).then(readJson)
+}
+
+/**
+ * 현재 기기의 쿠키(manageToken) 기반 구독 정보 조회 (GET /api/my-keywords)
+ */
+export async function getMyKeywords() {
+  const response = await fetch('/api/my-keywords', {
+    method: 'GET',
+    credentials: 'include',
+  })
+  if (response.status === 401) {
+    return { authenticated: false, email: '', keywords: [] }
+  }
+  const data = await readJson(response)
+  return {
+    authenticated: true,
+    email: data.email || '',
+    keywords: Array.isArray(data.keywords) ? data.keywords : [],
+  }
+}
+
+/**
+ * 인증된 기기에서 새 키워드 추가 (POST /api/my-keywords)
+ */
+export function addMyKeyword(keyword) {
+  return fetch('/api/my-keywords', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ keyword }),
+  }).then(readJson)
+}
+
+/**
+ * 인증된 기기에서 키워드 개별 삭제 (DELETE /api/my-keywords)
+ */
+export function deleteMyKeyword(keyword) {
+  return fetch('/api/my-keywords', {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ keyword }),
+  }).then(readJson)
+}
+
+/**
+ * 기기에서 연결 해제 (POST /api/disconnect)
+ */
+export function disconnectDevice() {
+  return fetch('/api/disconnect', {
+    method: 'POST',
+    credentials: 'include',
+  }).then(readJson)
 }

@@ -111,20 +111,20 @@ export default function MapExplorer({
     <div className="w-full rounded-3xl bg-white border border-[#e5e8eb] shadow-[0_2px_12px_rgba(0,0,0,0.03)] p-4 sm:p-6 animate-fade-up">
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#f2f4f6]">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-start sm:items-center gap-2.5 min-w-0">
           <div className="h-9 w-9 rounded-xl bg-[#e8f3ff] text-[#3182f6] flex items-center justify-center shrink-0">
             <Compass className="h-5 w-5" />
           </div>
-          <div>
-            <h3 className="text-[16px] sm:text-[17px] font-extrabold text-[#191f28] flex items-center gap-2">
-              대한민국 전국 클래식 공연 지도
+          <div className="min-w-0">
+            <h3 className="text-[15px] sm:text-[17px] font-extrabold text-[#191f28] flex flex-wrap items-center gap-2 break-keep">
+              <span className="whitespace-nowrap">대한민국 전국 클래식 공연 지도</span>
               {selectedRegion !== 'all' && (
-                <span className="text-[12px] font-bold px-2.5 py-0.5 rounded-full bg-[#3182f6] text-white">
+                <span className="text-[12px] font-bold px-2.5 py-0.5 rounded-full bg-[#3182f6] text-white whitespace-nowrap shrink-0">
                   {activeRegionObj?.names[0] || selectedRegion}
                 </span>
               )}
             </h3>
-            <p className="text-[12px] text-[#8b95a1]">
+            <p className="text-[12px] text-[#8b95a1] break-keep">
               지도 위의 지역을 클릭하거나 우측에서 지역·공연장을 선택해 보세요
             </p>
           </div>
@@ -137,9 +137,9 @@ export default function MapExplorer({
               onSelectRegion('all')
               onSelectVenue('')
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold bg-[#f2f4f6] text-[#4e5968] hover:text-[#191f28] hover:bg-[#e5e8eb] transition-colors self-start sm:self-auto cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold bg-[#f2f4f6] text-[#4e5968] hover:text-[#191f28] hover:bg-[#e5e8eb] whitespace-nowrap shrink-0 transition-colors self-start sm:self-auto cursor-pointer"
           >
-            <RotateCcw className="h-3.5 w-3.5" />
+            <RotateCcw className="h-3.5 w-3.5 shrink-0" />
             전국 전체 보기
           </button>
         )}
@@ -312,11 +312,11 @@ export default function MapExplorer({
         <div className="md:col-span-5 flex flex-col justify-between self-stretch space-y-5">
           <div>
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[13px] font-bold text-[#191f28] flex items-center gap-1.5">
-                <MapPin className="h-4 w-4 text-[#3182f6]" />
+              <span className="text-[13px] font-bold text-[#191f28] flex items-center gap-1.5 whitespace-nowrap">
+                <MapPin className="h-4 w-4 text-[#3182f6] shrink-0" />
                 지역 선택
               </span>
-              <span className="text-[12px] text-[#8b95a1]">
+              <span className="text-[12px] text-[#8b95a1] whitespace-nowrap shrink-0">
                 전체 {concerts.length}건
               </span>
             </div>
@@ -328,15 +328,15 @@ export default function MapExplorer({
                   onSelectRegion('all')
                   onSelectVenue('')
                 }}
-                className={`px-2.5 py-2 rounded-xl text-[12px] font-bold flex items-center justify-between transition-all cursor-pointer border ${
+                className={`px-2.5 py-2 rounded-xl text-[12px] font-bold flex items-center justify-between gap-1 whitespace-nowrap transition-all cursor-pointer border ${
                   selectedRegion === 'all'
                     ? 'bg-[#3182f6] text-white border-[#3182f6] shadow-xs'
                     : 'bg-[#f9fafb] text-[#4e5968] border-[#e5e8eb] hover:border-[#3182f6]/50 hover:text-[#191f28]'
                 }`}
               >
-                <span>전국</span>
+                <span className="whitespace-nowrap">전국</span>
                 <span
-                  className={`text-[11px] tabular-nums ${
+                  className={`text-[11px] tabular-nums whitespace-nowrap ${
                     selectedRegion === 'all' ? 'text-white/90' : 'text-[#8b95a1]'
                   }`}
                 >
@@ -356,7 +356,7 @@ export default function MapExplorer({
                       onSelectRegion(next)
                       onSelectVenue('')
                     }}
-                    className={`px-2.5 py-2 rounded-xl text-[12px] font-semibold flex items-center justify-between transition-all cursor-pointer border ${
+                    className={`px-2.5 py-2 rounded-xl text-[12px] font-semibold flex items-center justify-between gap-1 whitespace-nowrap transition-all cursor-pointer border ${
                       active
                         ? 'bg-[#3182f6] text-white border-[#3182f6] shadow-xs'
                         : count > 0
@@ -364,9 +364,9 @@ export default function MapExplorer({
                         : 'bg-[#f9fafb] text-[#b0b8c1] border-transparent hover:bg-[#f2f4f6]'
                     }`}
                   >
-                    <span>{region.short}</span>
+                    <span className="whitespace-nowrap">{region.short}</span>
                     <span
-                      className={`text-[11px] font-bold tabular-nums ${
+                      className={`text-[11px] font-bold tabular-nums whitespace-nowrap ${
                         active
                           ? 'text-white'
                           : count > 0
@@ -384,9 +384,9 @@ export default function MapExplorer({
 
           {/* 해당 지역의 대표 공연장 빠른 필터 */}
           <div className="rounded-2xl bg-[#f9fafb] border border-[#f2f4f6] p-3.5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] font-bold text-[#4e5968] flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5 text-[#3182f6]" />
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[12px] font-bold text-[#4e5968] flex items-center gap-1.5 whitespace-nowrap">
+                <Building2 className="h-3.5 w-3.5 text-[#3182f6] shrink-0" />
                 {selectedRegion === 'all'
                   ? '전국 주요 공연장'
                   : `${activeRegionObj?.short || selectedRegion} 주요 공연장`}
@@ -395,7 +395,7 @@ export default function MapExplorer({
                 <button
                   type="button"
                   onClick={() => onSelectVenue('')}
-                  className="text-[11px] font-semibold text-[#3182f6] hover:underline cursor-pointer"
+                  className="text-[11px] font-semibold text-[#3182f6] hover:underline whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   필터 해제
                 </button>
@@ -417,7 +417,7 @@ export default function MapExplorer({
                       onClick={() =>
                         onSelectVenue(isVenueSelected ? '' : venueName)
                       }
-                      className={`px-2.5 py-1 rounded-lg text-[11.5px] font-medium transition-all cursor-pointer border ${
+                      className={`px-2.5 py-1 rounded-lg text-[11.5px] font-medium whitespace-nowrap transition-all cursor-pointer border ${
                         isVenueSelected
                           ? 'bg-[#191f28] text-white border-[#191f28]'
                           : 'bg-white text-[#4e5968] border-[#e5e8eb] hover:border-[#3182f6] hover:text-[#191f28]'
