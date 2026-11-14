@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Bell, Check, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bell, Check } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card.jsx'
-import { addWatch } from '../lib/alerts.js'
-import { fetchConcertProgram } from '../lib/api.js'
+import { fetchConcertProgram, addMyKeyword } from '../lib/api.js'
 
 export default function ProgramList({
   initialPrograms = null,
   concertId = null,
   isPending = false,
 }) {
+  const navigate = useNavigate()
   const [alertNotice, setAlertNotice] = useState('')
   const [programs, setPrograms] = useState(initialPrograms)
   const [loadingAI, setLoadingAI] = useState(Boolean(isPending || initialPrograms === null))
@@ -39,14 +40,21 @@ export default function ProgramList({
     }
   }, [initialPrograms, isPending, concertId])
 
-  function handleWatchSong(songTitle) {
-    const res = addWatch('song', songTitle)
-    if (res.ok) {
-      setAlertNotice(`'${songTitle}' 곡 알림이 등록되었습니다!`)
-    } else {
-      setAlertNotice(res.error)
+  async function handleWatchSong(songTitle) {
+    const target = String(songTitle || '').trim()
+    if (!target) return
+    try {
+      await addMyKeyword(target)
+      setAlertNotice(`'${target}' 이메일 알림이 등록되었습니다!`)
+      setTimeout(() => setAlertNotice(''), 3500)
+    } catch (err) {
+      if (err.status === 401) {
+        navigate(`/alerts?q=${encodeURIComponent(target)}`)
+      } else {
+        setAlertNotice(err.message || '알림 등록에 실패했습니다.')
+        setTimeout(() => setAlertNotice(''), 3500)
+      }
     }
-    setTimeout(() => setAlertNotice(''), 3500)
   }
 
   // Filter out any default fallback (def-) items
@@ -56,14 +64,14 @@ export default function ProgramList({
 
   return (
     <Card className="mt-6 border-[#e5e8eb] overflow-hidden">
-      <CardHeader className="pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-[17px]">진행 프로그램</CardTitle>
+      <CardHeader className="pb-3 flex flex-row flex-wrap items-center justify-between gap-2">
+        <CardTitle className="text-[17px] whitespace-nowrap shrink-0">진행 프로그램</CardTitle>
 
         {/* Alert Feedback Toast */}
         {alertNotice && (
-          <div className="mt-2 p-2.5 rounded-xl bg-[#e8faf3] text-[#03b26c] border border-[#03b26c]/20 text-[12px] font-medium flex items-center gap-1.5 animate-in fade-in">
+          <div className="p-2.5 rounded-xl bg-[#e8faf3] text-[#03b26c] border border-[#03b26c]/20 text-[12px] font-medium flex items-center gap-1.5 animate-in fade-in break-keep">
             <Check className="h-3.5 w-3.5 shrink-0" />
-            {alertNotice}
+            <span>{alertNotice}</span>
           </div>
         )}
       </CardHeader>
@@ -117,13 +125,13 @@ export default function ProgramList({
                   </div>
 
                   {/* 곡 제목: 굵고 선명하게 부각 */}
-                  <h4 className="text-[15px] sm:text-[16px] font-extrabold text-[#191f28] leading-snug tracking-tight">
+                  <h4 className="text-[15px] sm:text-[16px] font-extrabold text-[#191f28] leading-snug tracking-tight break-keep">
                     {track.titleKo || track.title}
                   </h4>
 
                   {/* 원어 원제 */}
                   {track.title && track.title !== track.titleKo && (
-                    <p className="mt-0.5 text-[12px] text-[#8b95a1] leading-relaxed">
+                    <p className="mt-0.5 text-[12px] text-[#8b95a1] leading-relaxed break-keep">
                       {track.title}
                     </p>
                   )}
@@ -133,9 +141,9 @@ export default function ProgramList({
                 <button
                   type="button"
                   onClick={() => handleWatchSong(track.titleKo || track.title)}
-                  className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#3182f6] hover:bg-[#e8f3ff] rounded-lg transition-colors cursor-pointer mt-0.5"
+                  className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-[#3182f6] hover:bg-[#e8f3ff] rounded-lg transition-colors cursor-pointer mt-0.5"
                 >
-                  <Bell className="h-3 w-3" />
+                  <Bell className="h-3 w-3 shrink-0" />
                   곡 알림
                 </button>
               </div>

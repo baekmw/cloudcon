@@ -91,9 +91,11 @@ function ConcertCardItem({ concert, isFading = false }) {
         <div>
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <StatePill state={concert.state} />
-            <span className="text-[12px] text-[#8b95a1]">{concert.genre || '클래식'}</span>
+            <span className="text-[12px] text-[#8b95a1] whitespace-nowrap shrink-0">
+              {concert.genre || '클래식'}
+            </span>
           </div>
-          <h3 className="text-[16px] sm:text-[17px] font-bold text-[#191f28] group-hover:text-[#3182f6] transition-colors line-clamp-2 leading-snug">
+          <h3 className="text-[16px] sm:text-[17px] font-bold text-[#191f28] group-hover:text-[#3182f6] transition-colors line-clamp-2 leading-snug break-keep">
             {concert.title}
           </h3>
         </div>
@@ -102,8 +104,8 @@ function ConcertCardItem({ concert, isFading = false }) {
         {Array.isArray(concert.programs) && concert.programs.length > 0 && (
           <div className="mt-2.5 rounded-xl bg-[#f8fafc] p-2.5 border border-[#edf2f7]">
             <div className="flex items-center justify-between text-[11px] font-semibold text-[#8b95a1] mb-1.5">
-              <span className="flex items-center gap-1 text-[#3182f6]">
-                <Music className="h-3 w-3" />
+              <span className="flex items-center gap-1 text-[#3182f6] whitespace-nowrap">
+                <Music className="h-3 w-3 shrink-0" />
                 진행 프로그램 ({concert.programs.length}곡)
               </span>
             </div>
@@ -111,19 +113,19 @@ function ConcertCardItem({ concert, isFading = false }) {
               {concert.programs.slice(0, 3).map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-baseline gap-1.5 text-[12px] truncate text-[#4e5968]"
+                  className="flex items-baseline gap-1.5 text-[12px] min-w-0 whitespace-nowrap text-[#4e5968]"
                 >
                   <span className="shrink-0 font-medium text-[#191f28]">
                     {item.composerShort || item.composerKo || item.composer}
                   </span>
-                  <span className="text-[#8b95a1]">·</span>
+                  <span className="shrink-0 text-[#8b95a1]">·</span>
                   <span className="truncate text-[#6b7684]">
                     {item.titleKo || item.title}
                   </span>
                 </div>
               ))}
               {concert.programs.length > 3 && (
-                <p className="text-[11px] text-[#8b95a1] pt-0.5">
+                <p className="text-[11px] text-[#8b95a1] pt-0.5 whitespace-nowrap">
                   외 {concert.programs.length - 3}곡 더보기...
                 </p>
               )}
@@ -131,14 +133,14 @@ function ConcertCardItem({ concert, isFading = false }) {
           </div>
         )}
 
-        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[13px] text-[#6b7684]">
-          <span className="flex items-center gap-1 truncate">
+        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-[12px] sm:text-[13px] text-[#6b7684] min-w-0">
+          <span className="flex items-center gap-1 min-w-0 whitespace-nowrap">
             <MapPin className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
-            {concert.venue} · {concert.area}
+            <span className="truncate">{concert.venue} · {concert.area}</span>
           </span>
-          <span className="flex items-center gap-1 shrink-0">
-            <Calendar className="h-3.5 w-3.5 text-[#8b95a1]" />
-            {formatPeriod(concert.from, concert.to)}
+          <span className="flex items-center gap-1 shrink-0 whitespace-nowrap">
+            <Calendar className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
+            <span>{formatPeriod(concert.from, concert.to)}</span>
           </span>
         </div>
       </div>
@@ -291,26 +293,26 @@ export default function ExplorePage() {
         </div>
 
         {/* 일정별 / 장소별 전환 탭 */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
           <button
             type="button"
             onClick={() => handleSwitchMode('calendar')}
-            className={`group relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border transition-all cursor-pointer ${
+            className={`group relative flex items-center justify-center gap-2 sm:gap-2.5 py-3 sm:py-3.5 px-3 sm:px-4 rounded-2xl border transition-all cursor-pointer ${
               mode === 'calendar'
                 ? 'bg-[#e8f3ff]/75 border-[#3182f6] ring-2 ring-[#3182f6]/15 shadow-xs'
                 : 'bg-white border-[#e5e8eb] hover:border-[#3182f6]/60 hover:bg-[#f8fbff]'
             }`}
           >
             <div
-              className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+              className={`h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                 mode === 'calendar'
                   ? 'bg-[#3182f6] text-white shadow-xs'
                   : 'bg-[#f2f4f6] text-[#4e5968] group-hover:bg-[#e8f3ff] group-hover:text-[#3182f6]'
               }`}
             >
-              <CalendarDays className="h-4.5 w-4.5" />
+              <CalendarDays className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </div>
-            <span className="text-[15px] font-bold text-[#191f28]">
+            <span className="text-[14px] sm:text-[15px] font-bold text-[#191f28] whitespace-nowrap">
               일정별로 보기
             </span>
           </button>
@@ -318,22 +320,22 @@ export default function ExplorePage() {
           <button
             type="button"
             onClick={() => handleSwitchMode('map')}
-            className={`group relative flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl border transition-all cursor-pointer ${
+            className={`group relative flex items-center justify-center gap-2 sm:gap-2.5 py-3 sm:py-3.5 px-3 sm:px-4 rounded-2xl border transition-all cursor-pointer ${
               mode === 'map'
                 ? 'bg-[#e8f3ff]/75 border-[#3182f6] ring-2 ring-[#3182f6]/15 shadow-xs'
                 : 'bg-white border-[#e5e8eb] hover:border-[#3182f6]/60 hover:bg-[#f8fbff]'
             }`}
           >
             <div
-              className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+              className={`h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
                 mode === 'map'
                   ? 'bg-[#3182f6] text-white shadow-xs'
                   : 'bg-[#f2f4f6] text-[#4e5968] group-hover:bg-[#e8f3ff] group-hover:text-[#3182f6]'
               }`}
             >
-              <MapIcon className="h-4.5 w-4.5" />
+              <MapIcon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
             </div>
-            <span className="text-[15px] font-bold text-[#191f28]">
+            <span className="text-[14px] sm:text-[15px] font-bold text-[#191f28] whitespace-nowrap">
               장소별로 보기
             </span>
           </button>
@@ -365,16 +367,16 @@ export default function ExplorePage() {
         {/* 선택된 조건의 공연 목록 헤더 & 상태 필터 */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-[#f2f4f6]">
           <div>
-            <h2 className="text-[17px] font-bold text-[#191f28] flex flex-wrap items-center gap-2">
+            <h2 className="text-[17px] font-bold text-[#191f28] flex flex-wrap items-center gap-2 break-keep">
               {mode === 'calendar' ? (
-                <span>{formatKoreanDateLabel(selectedDate)} 공연 일정</span>
+                <span className="whitespace-nowrap">{formatKoreanDateLabel(selectedDate)} 공연 일정</span>
               ) : (
-                <span>
+                <span className="break-keep">
                   {selectedRegionLabel}
                   {selectedVenue ? ` · ${selectedVenue}` : ''} 클래식 공연
                 </span>
               )}
-              <span className="text-[14px] font-normal text-[#8b95a1]">
+              <span className="text-[14px] font-normal text-[#8b95a1] whitespace-nowrap shrink-0">
                 {activeList.length}건
               </span>
             </h2>
@@ -391,7 +393,7 @@ export default function ExplorePage() {
                 key={key}
                 type="button"
                 onClick={() => handleStateChange(key)}
-                className={`px-3 py-1 text-[13px] font-semibold rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1 text-[13px] font-semibold rounded-lg whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                   state === key
                     ? 'bg-white text-[#191f28] shadow-sm'
                     : 'text-[#6b7684] hover:text-[#191f28]'

@@ -2,43 +2,30 @@ import fs from "node:fs";
 import path from "node:path";
 import { GoogleGenAI } from "@google/genai";
 import "dotenv/config";
+import {
+  DATA_DIR,
+  LEGACY_PROGRAMS_DIR,
+  PROGRAMS_CACHE_PATH,
+  loadUnifiedProgramsCache,
+  saveUnifiedProgramsCache,
+} from "./storage.js";
 
-const CACHE_DIR = path.resolve(process.cwd(), "server/data/programs");
-const ALL_PROGRAMS_CACHE_PATH = path.join(CACHE_DIR, "programs_cache.json");
-
-// Ensure cache directory exists
-try {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-} catch {
-  // directory already exists
-}
-
-// In-memory unified program cache
-let memoryCache = {};
-try {
-  if (fs.existsSync(ALL_PROGRAMS_CACHE_PATH)) {
-    const fileData = fs.readFileSync(ALL_PROGRAMS_CACHE_PATH, "utf8");
-    memoryCache = JSON.parse(fileData);
-    console.log(`[ProgramCache] Loaded ${Object.keys(memoryCache).length} cached concert programs.`);
-  }
-} catch (err) {
-  console.warn("[ProgramCache] Failed to load cache file:", err.message);
-}
+// In-memory unified program cache (`server/data/programs_cache.json`)
+let memoryCache = loadUnifiedProgramsCache();
+console.log(
+  `[ProgramCache] Loaded ${Object.keys(memoryCache).length} cached concert programs from ${PROGRAMS_CACHE_PATH}.`
+);
 
 export function getAllProgramsCache() {
   return memoryCache;
 }
 
+/**
+ * Atomically save unified programs cache (`server/data/programs_cache.json`)
+ * by writing to a temporary file (*.tmp) first and renaming with fs.renameSync.
+ */
 export function saveProgramsCache() {
-  try {
-    fs.writeFileSync(
-      ALL_PROGRAMS_CACHE_PATH,
-      JSON.stringify(memoryCache, null, 2),
-      "utf8"
-    );
-  } catch (err) {
-    console.warn("[ProgramCache] Failed to save cache file:", err.message);
-  }
+  saveUnifiedProgramsCache(memoryCache);
 }
 
 /**
@@ -56,7 +43,7 @@ export function cleanupOrphanPrograms(validConcertIds) {
       changed = true;
       deletedCount++;
 
-      const singleFilePath = path.join(CACHE_DIR, `${concertId}.json`);
+      const singleFilePath = path.join(LEGACY_PROGRAMS_DIR, `${concertId}.json`);
       try {
         if (fs.existsSync(singleFilePath)) {
           fs.unlinkSync(singleFilePath);
@@ -67,14 +54,16 @@ export function cleanupOrphanPrograms(validConcertIds) {
     }
   }
 
-  // Also remove orphan individual json files
+  // Also remove orphan individual json files in legacy dir if present
   try {
-    const files = fs.readdirSync(CACHE_DIR);
-    for (const file of files) {
-      if (file.endsWith(".json") && file !== "programs_cache.json") {
-        const id = file.replace(".json", "");
-        if (!validConcertIds.has(id)) {
-          fs.unlinkSync(path.join(CACHE_DIR, file));
+    if (fs.existsSync(LEGACY_PROGRAMS_DIR)) {
+      const files = fs.readdirSync(LEGACY_PROGRAMS_DIR);
+      for (const file of files) {
+        if (file.endsWith(".json") && file !== "programs_cache.json") {
+          const id = file.replace(".json", "");
+          if (!validConcertIds.has(id)) {
+            fs.unlinkSync(path.join(LEGACY_PROGRAMS_DIR, file));
+          }
         }
       }
     }
@@ -88,9 +77,9 @@ export function cleanupOrphanPrograms(validConcertIds) {
   }
 }
 
-// Rate Limiter for Gemini Free Tier (RPM 15, TPM 250k, RPD 500)
+// Rate Limiter for Gemini Free Tier (4초 sleep 적용)
 let lastCallTime = 0;
-const MIN_CALL_GAP_MS = 6000; // 6 seconds gap ensures 10 calls/min max (safely below 15 RPM)
+const MIN_CALL_GAP_MS = 4000; // 4 seconds sleep between Gemini calls to prevent rate limits
 let dailyCallCount = 0;
 let dailyCallDate = new Date().toISOString().slice(0, 10);
 const MAX_CALLS_PER_DAY = 480; // Strictly below 500 RPD

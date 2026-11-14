@@ -220,6 +220,7 @@ export function createKopis(rawKey) {
 
   async function fetchWindow(stdate, eddate) {
     const rows = [];
+    let complete = true;
     for (let page = 1; page <= 20; page += 1) {
       try {
         const pageRows = await kopisGet("pblprfr", {
@@ -234,6 +235,7 @@ export function createKopis(rawKey) {
         if (pageRows.length < 100) break;
         await new Promise((r) => setTimeout(r, 120));
       } catch (err) {
+        complete = false;
         console.warn(
           `Window ${stdate}-${eddate} page ${page} failed:`,
           err.message,
@@ -241,16 +243,18 @@ export function createKopis(rawKey) {
         break;
       }
     }
-    return rows;
+    return { rows, complete };
   }
 
   async function fetchAllConcerts() {
     const windows = dateWindows();
     const byId = new Map();
+    let allWindowsComplete = true;
 
     for (const [stdate, eddate] of windows) {
       try {
-        const rows = await fetchWindow(stdate, eddate);
+        const { rows, complete } = await fetchWindow(stdate, eddate);
+        if (!complete) allWindowsComplete = false;
         for (const row of rows) {
           const concert = mapSummary(row);
           if (
@@ -264,6 +268,7 @@ export function createKopis(rawKey) {
         }
         await new Promise((r) => setTimeout(r, 150));
       } catch (err) {
+        allWindowsComplete = false;
         console.warn(
           `Window ${stdate}-${eddate} skipped due to error:`,
           err.message,
@@ -271,12 +276,13 @@ export function createKopis(rawKey) {
       }
     }
 
-    return [...byId.values()].sort(
+    const sorted = [...byId.values()].sort(
       (a, b) =>
         stateRank(a.state) - stateRank(b.state) ||
         a.from.localeCompare(b.from) ||
         a.title.localeCompare(b.title, "ko"),
     );
+    return { concerts: sorted, allWindowsComplete };
   }
 
   function loadList(force = false) {
@@ -302,14 +308,16 @@ export function createKopis(rawKey) {
     if (!force && listPromise) return listPromise;
 
     const run = fetchAllConcerts()
-      .then((rawConcerts) => {
+      .then(({ concerts: rawConcerts, allWindowsComplete }) => {
         const validIds = new Set(rawConcerts.map((c) => c.id));
 
-        // DB 동기화: KOPIS에 더 이상 존재하지 않는 공연은 DB에서 완전 삭제
-        cleanupOrphanPrograms(validIds);
-        for (const detailId of details.keys()) {
-          if (!validIds.has(detailId)) {
-            details.delete(detailId);
+        // DB 동기화: 모든 기간 윈도우 조회가 정상 완료되었을 때만 KOPIS에 없는 공연 정리
+        if (allWindowsComplete && validIds.size > 0) {
+          cleanupOrphanPrograms(validIds);
+          for (const detailId of details.keys()) {
+            if (!validIds.has(detailId)) {
+              details.delete(detailId);
+            }
           }
         }
 

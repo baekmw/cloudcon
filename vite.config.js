@@ -10,6 +10,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss(), kopisPlugin(apiKey)],
+    server: {
+      host: true,
+      port: 5173,
+      allowedHosts: true,
+    },
     define: {
       "process.env.KOPIS_API_KEY": JSON.stringify(apiKey),
     },

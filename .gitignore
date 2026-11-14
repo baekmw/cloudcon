@@ -25,3 +25,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Server runtime data & JSON caches
+server/data/*.json
+server/data/**/*.json
+server/data/*.tmp
+server/data/**/*.tmp
