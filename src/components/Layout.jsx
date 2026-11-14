@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Bell, Compass, Menu, Music2, Search, X } from 'lucide-react'
+import { Bell, Compass, Download, Menu, Music2, Search, Share, X } from 'lucide-react'
 import { scanForNewConcerts, useAlerts } from '../lib/alerts.js'
 import { Badge } from './ui/badge.jsx'
 
@@ -31,12 +31,71 @@ export default function Layout() {
   const alerts = useAlerts()
   const unread = alerts.inbox.filter((item) => !item.read).length
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+  const [isIosInstallable, setIsIosInstallable] = useState(false)
+  const [showIosGuide, setShowIosGuide] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(false)
   const location = useLocation()
 
   // 페이지 이동 시 모바일 메뉴 자동 닫기
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [location.pathname, location.search])
+
+  // PWA 설치 프롬프트 및 iOS 홈 화면 추가 감지
+  useEffect(() => {
+    const standalone =
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+    if (standalone) {
+      setIsInstalled(true)
+      return
+    }
+
+    const ua = window.navigator.userAgent || ''
+    const isIos = /iPad|iPhone|iPod/.test(ua) && !window.MSStream
+    if (isIos) {
+      setIsIosInstallable(true)
+    }
+
+    const onBeforeInstallPrompt = (e) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+    const onAppInstalled = () => {
+      setIsInstalled(true)
+      setDeferredPrompt(null)
+      setShowIosGuide(false)
+    }
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+    window.addEventListener('appinstalled', onAppInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', onAppInstalled)
+    }
+  }, [])
+
+  const canInstallPwa = !isInstalled && (Boolean(deferredPrompt) || isIosInstallable)
+
+  const handleInstallClick = async () => {
+    setMobileMenuOpen(false)
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      try {
+        const choice = await deferredPrompt.userChoice
+        if (choice?.outcome === 'accepted') {
+          setDeferredPrompt(null)
+        }
+      } catch {
+        // ignore
+      }
+      return
+    }
+    if (isIosInstallable) {
+      setShowIosGuide(true)
+    }
+  }
 
   const todayFormatted = useMemo(() => {
     const now = new Date()
@@ -100,6 +159,16 @@ export default function Layout() {
                 </Badge>
               )}
             </NavItem>
+            {canInstallPwa && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="ml-1.5 flex items-center gap-1.5 rounded-xl bg-[#191f28] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[#333d4b] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+              >
+                <Download className="h-3.5 w-3.5 shrink-0" />
+                <span>앱 설치</span>
+              </button>
+            )}
           </nav>
 
           {/* 모바일 햄버거 메뉴 버튼 */}
@@ -157,9 +226,67 @@ export default function Layout() {
                 </Badge>
               )}
             </NavItem>
+            {canInstallPwa && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="w-full flex items-center gap-2 px-4 py-3 text-[15px] font-semibold text-[#3182f6] hover:bg-[#e8f3ff]/60 rounded-xl transition-colors cursor-pointer"
+              >
+                <Download className="h-4 w-4 shrink-0" />
+                <span>홈 화면에 앱 설치하기</span>
+              </button>
+            )}
           </nav>
         )}
       </header>
+
+      {showIosGuide && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-xs p-4"
+          onClick={() => setShowIosGuide(false)}
+        >
+          <div
+            className="w-full max-w-[380px] rounded-2xl bg-white p-6 shadow-xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#3182f6] text-white">
+                  <Music2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-[16px] font-bold text-[#191f28]">Cloudcon 앱 설치</h3>
+                  <p className="text-[12px] text-[#6b7684]">iPhone / iPad 홈 화면에 추가</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowIosGuide(false)}
+                className="h-8 w-8 flex items-center justify-center rounded-lg text-[#8b95a1] hover:bg-[#f2f4f6] cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="rounded-xl bg-[#f9fafb] p-4 space-y-2.5 text-[13px] text-[#333d4b] leading-relaxed">
+              <p className="flex items-center gap-2">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e8f3ff] text-[11px] font-bold text-[#3182f6]">1</span>
+                <span>브라우저 하단의 <Share className="inline h-3.5 w-3.5 text-[#3182f6] mx-0.5" /> <strong>공유</strong> 버튼을 누르세요.</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e8f3ff] text-[11px] font-bold text-[#3182f6]">2</span>
+                <span>메뉴에서 <strong>&lsquo;홈 화면에 추가&rsquo;</strong>를 선택하면 앱처럼 바로 실행할 수 있어요.</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowIosGuide(false)}
+              className="w-full rounded-xl bg-[#3182f6] py-3 text-[14px] font-semibold text-white hover:bg-[#1b64da] transition-colors cursor-pointer"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1">
         <Outlet />

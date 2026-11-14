@@ -28,7 +28,19 @@ app.use("/api", router);
 
 // Serve static frontend files in production
 if (fs.existsSync(distDir)) {
-  app.use(express.static(distDir));
+  app.use(
+    express.static(distDir, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith(".webmanifest")) {
+          res.setHeader("Content-Type", "application/manifest+json; charset=utf-8");
+        }
+        if (filePath.endsWith("sw.js")) {
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          res.setHeader("Service-Worker-Allowed", "/");
+        }
+      },
+    })
+  );
 }
 
 // SPA Fallback

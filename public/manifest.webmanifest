@@ -1,0 +1,63 @@
+{
+  "id": "/",
+  "name": "Cloudcon - 한국 클래식 공연 탐색 & 알림",
+  "short_name": "Cloudcon",
+  "description": "KOPIS에 등록된 한국 클래식 공연 검색, 달력·지도 모아보기, 아티스트·곡 이메일 알림 서비스",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f9fafb",
+  "theme_color": "#3182f6",
+  "lang": "ko",
+  "categories": ["entertainment", "music", "lifestyle"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "검색 홈",
+      "short_name": "검색",
+      "description": "클래식 공연 및 연주 프로그램 검색",
+      "url": "/",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "공연 모아보기",
+      "short_name": "모아보기",
+      "description": "달력 및 전국 지도로 공연 탐색",
+      "url": "/explore",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "내 키워드 알림",
+      "short_name": "알림",
+      "description": "관심 아티스트·곡 이메일 알림 관리",
+      "url": "/alerts",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
