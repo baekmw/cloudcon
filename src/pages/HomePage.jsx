@@ -11,7 +11,6 @@ import {
   AlertCircle,
   Check,
   Music,
-  TrendingUp,
   Compass,
 } from 'lucide-react'
 import Poster from '../components/Poster.jsx'
@@ -224,7 +223,21 @@ export default function HomePage() {
 
   const [registeredKeys, setRegisteredKeys] = useState(() => new Set())
   const [justAddedTarget, setJustAddedTarget] = useState(null)
+  const [rollingIndex, setRollingIndex] = useState(0)
+  const [isRolling, setIsRolling] = useState(false)
   const alerts = useAlerts()
+
+  // 검색란 내부 추천 키워드 아래로 내려가는 롤링 애니메이션
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIsRolling(true)
+      setTimeout(() => {
+        setRollingIndex((prev) => (prev + 1) % POPULAR_KEYWORDS.length)
+        setIsRolling(false)
+      }, 380)
+    }, 2600)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     document.title = 'Cloudcon · 클래식 공연 검색'
@@ -369,9 +382,41 @@ export default function HomePage() {
         {/* Minimal Toss-style Search Bar */}
         <div className="w-full max-w-[640px]">
           <div className="relative group">
-            <div className="pointer-events-none absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-[#8b95a1] group-focus-within:text-[#3182f6] transition-colors">
+            <div className="pointer-events-none absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-[#8b95a1] group-focus-within:text-[#3182f6] transition-colors z-10">
               <Search className="h-5 w-5" />
             </div>
+
+            {/* 입력값이 비어있을 때 아래로 내려가며 차례로 표시되는 추천 검색어 플레이스홀더 */}
+            {!inputValue && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-11 sm:left-13 right-22 sm:right-24 top-0 bottom-0 flex items-center overflow-hidden"
+              >
+                <div className="relative h-6 w-full overflow-hidden">
+                  {/* 들어오는 다음 키워드 (위에서 중앙으로 내려옴) */}
+                  <span
+                    className={`absolute inset-0 flex items-center text-[15px] sm:text-[17px] text-[#8b95a1] whitespace-nowrap truncate ${
+                      isRolling
+                        ? 'transition-all duration-380 ease-out translate-y-0 opacity-100'
+                        : '-translate-y-6 opacity-0'
+                    }`}
+                  >
+                    {POPULAR_KEYWORDS[(rollingIndex + 1) % POPULAR_KEYWORDS.length]}
+                  </span>
+                  {/* 현재 키워드 (중앙에서 아래로 내려가며 사라짐) */}
+                  <span
+                    className={`absolute inset-0 flex items-center text-[15px] sm:text-[17px] text-[#8b95a1] whitespace-nowrap truncate ${
+                      isRolling
+                        ? 'transition-all duration-380 ease-out translate-y-6 opacity-0'
+                        : 'translate-y-0 opacity-100'
+                    }`}
+                  >
+                    {POPULAR_KEYWORDS[rollingIndex]}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <input
               type="text"
               value={inputValue}
@@ -383,10 +428,11 @@ export default function HomePage() {
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  handleSearch(inputValue)
+                  handleSearch(inputValue.trim() ? inputValue : POPULAR_KEYWORDS[rollingIndex])
                 }
               }}
-              placeholder="예: 베9, 라피협2, 조성진, 모차르트"
+              placeholder=""
+              aria-label="공연, 아티스트, 연주곡 검색"
               className="w-full h-14 sm:h-15 rounded-2xl bg-white border border-[#e5e8eb] pl-11 sm:pl-13 pr-22 sm:pr-24 text-[15px] sm:text-[17px] text-[#191f28] placeholder-[#8b95a1] shadow-[0_2px_8px_rgba(0,0,0,0.04)] focus:outline-none focus:border-[#3182f6] focus:ring-4 focus:ring-[#3182f6]/10 transition-all"
             />
             <div className="absolute right-3 sm:right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -402,34 +448,14 @@ export default function HomePage() {
               )}
               <Button
                 size="sm"
-                onClick={() => handleSearch(inputValue)}
+                onClick={() =>
+                  handleSearch(inputValue.trim() ? inputValue : POPULAR_KEYWORDS[rollingIndex])
+                }
                 className="rounded-xl px-3.5 h-10 font-semibold whitespace-nowrap shrink-0"
               >
                 검색
               </Button>
             </div>
-          </div>
-
-          {/* Quick Keyword Chips */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#8b95a1] mr-1 whitespace-nowrap shrink-0">
-              <TrendingUp className="h-3.5 w-3.5 text-[#3182f6] shrink-0" />
-              추천 검색어
-            </span>
-            {POPULAR_KEYWORDS.map((word) => (
-              <button
-                key={word}
-                type="button"
-                onClick={() => handleSearch(word)}
-                className={`text-[13px] font-medium px-3 py-1 rounded-full whitespace-nowrap shrink-0 transition-all cursor-pointer ${
-                  q === word
-                    ? 'bg-[#3182f6] text-white shadow-sm'
-                    : 'bg-white text-[#4e5968] border border-[#e5e8eb] hover:bg-[#f2f4f6] hover:text-[#191f28]'
-                }`}
-              >
-                {word}
-              </button>
-            ))}
           </div>
 
           {/* 비검색 시 하단 바로가기 카드 (공연 모아보기 & 공연 알림 받기) */}
@@ -560,20 +586,30 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* 그 다음 1건: 점진적으로 흐려지는 그라데이션 페이드아웃 효과 */}
+          {/* 그 다음 1건: 완전 흰색이 아닌 반투명 블러 페이드아웃으로 내용물이 은은하게 보이도록 처리 */}
           {fadingConcert && (
             <div className="relative mt-3 select-none pointer-events-none overflow-hidden rounded-2xl">
               <div
                 style={{
                   maskImage:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0) 85%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.48) 55%, rgba(0,0,0,0.18) 100%)',
                   WebkitMaskImage:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0) 85%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.48) 55%, rgba(0,0,0,0.18) 100%)',
                 }}
               >
                 <ConcertCardItem concert={fadingConcert} q={q} isFading />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/60 to-[#f9fafb]" />
+              <div
+                style={{
+                  backdropFilter: 'blur(3px)',
+                  WebkitBackdropFilter: 'blur(3px)',
+                  maskImage:
+                    'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, black 100%)',
+                  WebkitMaskImage:
+                    'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, black 100%)',
+                }}
+                className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/35 to-[#f9fafb]/65"
+              />
             </div>
           )}
 
@@ -594,10 +630,29 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Quick noti CTA sticky at bottom of search results */}
+          {/* Quick noti CTA sticky at bottom of search results:
+              상단 부분에서는 컨텐츠가 거의 다 보이고, 아래쪽으로만 반투명 블러 페이드가 적용됨 */}
           {searchResults.length > 0 && (
-            <div className="sticky bottom-0 z-20 mt-6 -mx-6 px-6 pt-12 pb-14 sm:pb-5 pointer-events-none bg-[linear-gradient(to_top,#f9fafb_0%,#f9fafb_52%,rgba(249,250,251,0.92)_78%,rgba(249,250,251,0)_100%)] after:content-[''] after:absolute after:inset-x-0 after:-bottom-12 after:h-14 after:bg-[#f9fafb]">
-              <div className="relative z-10 pointer-events-auto px-4 py-3 rounded-2xl bg-white/65 backdrop-blur-[4px] border border-[#e5e8eb]/80 shadow-[0_4px_20px_rgba(25,31,40,0.06)] flex flex-row items-center justify-between gap-3 transition-all">
+            <div className="sticky bottom-0 z-20 mt-4 -mx-6 px-6 pt-1 pb-14 sm:pb-5 pointer-events-none relative">
+              <div
+                aria-hidden="true"
+                style={{
+                  backdropFilter: 'blur(4px)',
+                  WebkitBackdropFilter: 'blur(4px)',
+                  maskImage:
+                    'linear-gradient(to top, black 0%, black 55%, rgba(0,0,0,0.35) 82%, transparent 100%)',
+                  WebkitMaskImage:
+                    'linear-gradient(to top, black 0%, black 55%, rgba(0,0,0,0.35) 82%, transparent 100%)',
+                }}
+                className="absolute inset-x-0 top-1 -bottom-10 bg-gradient-to-t from-[#f9fafb]/72 via-[#f9fafb]/42 to-transparent pointer-events-none"
+              />
+              <div
+                style={{
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }}
+                className="relative z-10 pointer-events-auto px-4 py-3 rounded-2xl bg-white/60 border border-[#e5e8eb]/80 shadow-[0_4px_20px_rgba(25,31,40,0.06)] flex flex-row items-center justify-between gap-3 transition-all"
+              >
                 <div className="text-[13px] sm:text-[14px] text-[#333d4b] leading-snug break-keep text-left min-w-0 flex-1">
                   <span className="font-bold text-[#191f28]">'{q}'</span> 관련 새 공연이 올라오면 알림을 받을까요?
                 </div>

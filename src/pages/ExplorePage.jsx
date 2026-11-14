@@ -445,20 +445,30 @@ export default function ExplorePage() {
           ))}
         </div>
 
-        {/* 페이드아웃 미리보기 카드 */}
+        {/* 페이드아웃 미리보기 카드 (완전 흰색 대신 반투명 블러로 내용물이 은은하게 보이도록 처리) */}
         {fadingConcert && (
           <div className="relative mt-3 select-none pointer-events-none overflow-hidden rounded-2xl">
             <div
               style={{
                 maskImage:
-                  'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0) 85%)',
+                  'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.48) 55%, rgba(0,0,0,0.18) 100%)',
                 WebkitMaskImage:
-                  'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 45%, rgba(0,0,0,0) 85%)',
+                  'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.48) 55%, rgba(0,0,0,0.18) 100%)',
               }}
             >
               <ConcertCardItem concert={fadingConcert} isFading />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white" />
+            <div
+              style={{
+                backdropFilter: 'blur(3px)',
+                WebkitBackdropFilter: 'blur(3px)',
+                maskImage:
+                  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, black 100%)',
+                WebkitMaskImage:
+                  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, black 100%)',
+              }}
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/35 to-[#f9fafb]/65"
+            />
           </div>
         )}
 
@@ -476,6 +486,26 @@ export default function ExplorePage() {
             <p className="mt-1 text-[12px] text-[#8b95a1]/80">
               전체 {activeList.length}건 중 {visibleCount}건 표시 중
             </p>
+          </div>
+        )}
+
+        {/* 모아보기 하단 sticky 반투명 블러 페이드 영역 */}
+        {activeList.length > 0 && (
+          <div
+            aria-hidden="true"
+            className="sticky bottom-0 z-20 -mx-6 h-12 sm:h-9 pointer-events-none relative"
+          >
+            <div
+              style={{
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+                maskImage:
+                  'linear-gradient(to top, black 0%, black 50%, rgba(0,0,0,0.35) 80%, transparent 100%)',
+                WebkitMaskImage:
+                  'linear-gradient(to top, black 0%, black 50%, rgba(0,0,0,0.35) 80%, transparent 100%)',
+              }}
+              className="absolute inset-x-0 top-0 -bottom-10 bg-gradient-to-t from-[#f9fafb]/68 via-[#f9fafb]/38 to-transparent pointer-events-none"
+            />
           </div>
         )}
       </section>

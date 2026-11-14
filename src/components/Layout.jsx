@@ -127,7 +127,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#f9fafb] text-[#191f28] flex flex-col font-sans">
-      <header className="sticky top-0 z-30 bg-[#f9fafb]/85 backdrop-blur-xs border-b border-[#e5e8eb]/60">
+      <header className="sticky top-0 z-30 bg-[#f9fafb] border-b border-[#e5e8eb]/60">
         <div className="relative mx-auto flex max-w-[960px] items-center justify-between gap-4 px-5 sm:px-6 h-12 sm:h-13">
           <NavLink
             to="/"
@@ -193,7 +193,7 @@ export default function Layout() {
             )}
           </button>
 
-          {/* 모바일 플로팅 모달 셀렉트 메뉴 (레이아웃 밀림 없이 반투명 약한 블러) */}
+          {/* 모바일 플로팅 모달 셀렉트 메뉴 (레이아웃 밀림 없이 반투명 블러) */}
           {mobileMenuOpen && (
             <>
               <div
@@ -201,7 +201,13 @@ export default function Layout() {
                 onClick={() => setMobileMenuOpen(false)}
                 aria-hidden="true"
               />
-              <nav className="absolute right-4 top-[calc(100%+6px)] z-50 w-44 sm:hidden rounded-2xl bg-white/65 backdrop-blur-[5px] border border-white/70 ring-1 ring-[#191f28]/8 p-1.5 space-y-0.5 shadow-[0_10px_28px_rgba(25,31,40,0.12)] animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+              <nav
+                style={{
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                }}
+                className="absolute right-4 top-[calc(100%+6px)] z-50 w-44 sm:hidden rounded-2xl bg-white/55 border border-white/75 ring-1 ring-[#191f28]/10 p-1.5 space-y-0.5 shadow-[0_10px_28px_rgba(25,31,40,0.14)] animate-in fade-in zoom-in-95 duration-150 origin-top-right"
+              >
                 <NavItem
                   to="/"
                   end
