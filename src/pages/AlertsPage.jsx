@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import {
   Bell,
-  ChevronLeft,
   Trash2,
   Check,
   Mail,
@@ -233,12 +232,6 @@ export default function AlertsPage() {
     <main className="mx-auto max-w-[720px] px-6 py-8 sm:py-12">
       {/* 상단 헤더 */}
       <div className="mb-7">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1 text-[13px] font-medium text-[#6b7684] hover:text-[#191f28] mb-2.5 transition-colors whitespace-nowrap"
-        >
-          <ChevronLeft className="h-4 w-4 shrink-0" /> 검색으로 돌아가기
-        </Link>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#191f28] tracking-tight break-keep">
           공연 이메일 알림
         </h1>

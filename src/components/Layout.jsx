@@ -13,12 +13,16 @@ function NavItem({ to, children, end, onClick, mobile = false }) {
       className={({ isActive }) =>
         `relative flex items-center gap-2 whitespace-nowrap shrink-0 transition-colors rounded-xl ${
           mobile
-            ? 'w-full px-4 py-3 text-[15px]'
-            : 'px-3.5 py-2 text-[14px]'
+            ? 'w-full px-3 py-2 text-[13.5px]'
+            : 'px-3 py-1.5 text-[13.5px]'
         } ${
           isActive
-            ? 'text-[#3182f6] bg-[#e8f3ff] font-semibold'
-            : 'text-[#6b7684] font-medium hover:text-[#191f28] hover:bg-[#f2f4f6]'
+            ? mobile
+              ? 'text-[#3182f6] bg-[#3182f6]/12 font-semibold'
+              : 'text-[#3182f6] bg-[#e8f3ff] font-semibold'
+            : mobile
+              ? 'text-[#191f28] font-medium hover:bg-black/5'
+              : 'text-[#6b7684] font-medium hover:text-[#191f28] hover:bg-[#f2f4f6]'
         }`
       }
     >
@@ -123,16 +127,16 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#f9fafb] text-[#191f28] flex flex-col font-sans">
-      <header className="sticky top-0 z-30 bg-[#f9fafb]/95 backdrop-blur-md border-b border-[#e5e8eb]/60">
-        <div className="mx-auto flex max-w-[960px] items-center justify-between gap-4 px-6 h-16">
+      <header className="sticky top-0 z-30 bg-[#f9fafb]/85 backdrop-blur-xs border-b border-[#e5e8eb]/60">
+        <div className="relative mx-auto flex max-w-[960px] items-center justify-between gap-4 px-5 sm:px-6 h-12 sm:h-13">
           <NavLink
             to="/"
             className="flex items-center gap-2 group shrink-0 whitespace-nowrap"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#3182f6] text-white shadow-sm transition-transform group-hover:scale-105 shrink-0">
-              <Music2 className="h-5 w-5" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3182f6] text-white shadow-xs transition-transform group-hover:scale-105 shrink-0">
+              <Music2 className="h-4 w-4" />
             </div>
-            <span className="text-[17px] font-bold tracking-tight text-[#191f28]">
+            <span className="text-[15.5px] font-bold tracking-tight text-[#191f28]">
               Cloudcon
             </span>
           </NavLink>
@@ -140,20 +144,20 @@ export default function Layout() {
           {/* 데스크톱 네비게이션 */}
           <nav className="hidden sm:flex items-center gap-1 shrink-0">
             <NavItem to="/" end>
-              <Search className="h-4 w-4 shrink-0" />
+              <Search className="h-3.5 w-3.5 shrink-0" />
               <span>검색 홈</span>
             </NavItem>
             <NavItem to="/explore">
-              <Compass className="h-4 w-4 shrink-0" />
+              <Compass className="h-3.5 w-3.5 shrink-0" />
               <span>공연 모아보기</span>
             </NavItem>
             <NavItem to="/alerts">
-              <Bell className="h-4 w-4 shrink-0" />
+              <Bell className="h-3.5 w-3.5 shrink-0" />
               <span>알림</span>
               {unread > 0 && (
                 <Badge
                   variant="destructive"
-                  className="ml-1 h-5 px-1.5 text-[11px] font-bold rounded-full"
+                  className="ml-1 h-4.5 px-1.5 text-[10.5px] font-bold rounded-full"
                 >
                   {unread}
                 </Badge>
@@ -163,7 +167,7 @@ export default function Layout() {
               <button
                 type="button"
                 onClick={handleInstallClick}
-                className="ml-1.5 flex items-center gap-1.5 rounded-xl bg-[#191f28] px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-[#333d4b] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
+                className="ml-1.5 flex items-center gap-1.5 rounded-xl bg-[#191f28] px-3 py-1.5 text-[12.5px] font-semibold text-white hover:bg-[#333d4b] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
               >
                 <Download className="h-3.5 w-3.5 shrink-0" />
                 <span>앱 설치</span>
@@ -175,69 +179,76 @@ export default function Layout() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="relative flex sm:hidden h-10 w-10 items-center justify-center rounded-xl text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer shrink-0"
+            className="relative flex sm:hidden h-8.5 w-8.5 items-center justify-center rounded-xl text-[#191f28] hover:bg-[#f2f4f6] transition-colors cursor-pointer shrink-0"
             aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
             aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? (
-              <X className="h-5 w-5" />
+              <X className="h-4.5 w-4.5" />
             ) : (
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4.5 w-4.5" />
             )}
             {!mobileMenuOpen && unread > 0 && (
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#f04452]" />
+              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#f04452]" />
             )}
           </button>
-        </div>
 
-        {/* 모바일 드롭다운 세부 메뉴 */}
-        {mobileMenuOpen && (
-          <nav className="sm:hidden border-t border-[#e5e8eb]/70 bg-white/95 backdrop-blur-md px-4 py-3 space-y-1 shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
-            <NavItem
-              to="/"
-              end
-              mobile
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Search className="h-4 w-4 shrink-0" />
-              <span>검색 홈</span>
-            </NavItem>
-            <NavItem
-              to="/explore"
-              mobile
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Compass className="h-4 w-4 shrink-0" />
-              <span>공연 모아보기</span>
-            </NavItem>
-            <NavItem
-              to="/alerts"
-              mobile
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Bell className="h-4 w-4 shrink-0" />
-              <span>알림</span>
-              {unread > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="ml-auto h-5 px-1.5 text-[11px] font-bold rounded-full"
+          {/* 모바일 플로팅 모달 셀렉트 메뉴 (레이아웃 밀림 없이 반투명 약한 블러) */}
+          {mobileMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40 sm:hidden"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-hidden="true"
+              />
+              <nav className="absolute right-4 top-[calc(100%+6px)] z-50 w-44 sm:hidden rounded-2xl bg-white/65 backdrop-blur-[5px] border border-white/70 ring-1 ring-[#191f28]/8 p-1.5 space-y-0.5 shadow-[0_10px_28px_rgba(25,31,40,0.12)] animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+                <NavItem
+                  to="/"
+                  end
+                  mobile
+                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  {unread}
-                </Badge>
-              )}
-            </NavItem>
-            {canInstallPwa && (
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="w-full flex items-center gap-2 px-4 py-3 text-[15px] font-semibold text-[#3182f6] hover:bg-[#e8f3ff]/60 rounded-xl transition-colors cursor-pointer"
-              >
-                <Download className="h-4 w-4 shrink-0" />
-                <span>홈 화면에 앱 설치하기</span>
-              </button>
-            )}
-          </nav>
-        )}
+                  <Search className="h-3.5 w-3.5 shrink-0" />
+                  <span>검색 홈</span>
+                </NavItem>
+                <NavItem
+                  to="/explore"
+                  mobile
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Compass className="h-3.5 w-3.5 shrink-0" />
+                  <span>공연 모아보기</span>
+                </NavItem>
+                <NavItem
+                  to="/alerts"
+                  mobile
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Bell className="h-3.5 w-3.5 shrink-0" />
+                  <span>알림</span>
+                  {unread > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="ml-auto h-4.5 px-1.5 text-[10.5px] font-bold rounded-full"
+                    >
+                      {unread}
+                    </Badge>
+                  )}
+                </NavItem>
+                {canInstallPwa && (
+                  <button
+                    type="button"
+                    onClick={handleInstallClick}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-[13.5px] font-semibold text-[#3182f6] hover:bg-[#3182f6]/10 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5 shrink-0" />
+                    <span>앱 설치하기</span>
+                  </button>
+                )}
+              </nav>
+            </>
+          )}
+        </div>
       </header>
 
       {showIosGuide && (

@@ -573,7 +573,7 @@ export default function HomePage() {
               >
                 <ConcertCardItem concert={fadingConcert} q={q} isFading />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/60 to-[#f9fafb]" />
             </div>
           )}
 
@@ -596,8 +596,8 @@ export default function HomePage() {
 
           {/* Quick noti CTA sticky at bottom of search results */}
           {searchResults.length > 0 && (
-            <div className="sticky bottom-0 z-20 mt-6 -mx-2 px-2 pt-8 pb-14 sm:pb-5 pointer-events-none bg-gradient-to-t from-[#f9fafb] via-[#f9fafb]/85 to-transparent">
-              <div className="pointer-events-auto px-4 py-3.5 rounded-2xl bg-white/70 backdrop-blur-[4px] border border-[#e5e8eb]/80 shadow-[0_4px_20px_rgba(25,31,40,0.06)] flex flex-row items-center justify-between gap-3 transition-all">
+            <div className="sticky bottom-0 z-20 mt-6 -mx-6 px-6 pt-12 pb-14 sm:pb-5 pointer-events-none bg-[linear-gradient(to_top,#f9fafb_0%,#f9fafb_52%,rgba(249,250,251,0.92)_78%,rgba(249,250,251,0)_100%)] after:content-[''] after:absolute after:inset-x-0 after:-bottom-12 after:h-14 after:bg-[#f9fafb]">
+              <div className="relative z-10 pointer-events-auto px-4 py-3 rounded-2xl bg-white/65 backdrop-blur-[4px] border border-[#e5e8eb]/80 shadow-[0_4px_20px_rgba(25,31,40,0.06)] flex flex-row items-center justify-between gap-3 transition-all">
                 <div className="text-[13px] sm:text-[14px] text-[#333d4b] leading-snug break-keep text-left min-w-0 flex-1">
                   <span className="font-bold text-[#191f28]">'{q}'</span> 관련 새 공연이 올라오면 알림을 받을까요?
                 </div>
