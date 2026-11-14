@@ -1,4 +1,4 @@
-const CACHE_NAME = "cloudcon-pwa-v6";
+const CACHE_NAME = "cloudcon-pwa-v7";
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",

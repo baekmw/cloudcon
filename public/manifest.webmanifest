@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "cloudcon - 한국 클래식 공연 탐색 & 알림",
+  "name": "cloudcon (클라우드콘) - 한국 클래식 공연 탐색 & 알림",
   "short_name": "cloudcon",
-  "description": "KOPIS에 등록된 한국 클래식 공연 검색, 달력·지도 모아보기, 아티스트·곡 이메일 알림 서비스",
+  "description": "cloudcon(클라우드콘, Cloudcon) - KOPIS 한국 클래식 공연 검색, 달력·지도 모아보기, 아티스트·곡 이메일 알림 서비스",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

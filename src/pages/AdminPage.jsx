@@ -168,13 +168,19 @@ export default function AdminPage() {
   async function handleToggleVerify(email, currentVerified) {
     try {
       const res = await toggleAdminSubscriberVerify(email, !currentVerified)
+      const nextVerified =
+        typeof res?.verified === 'boolean'
+          ? res.verified
+          : typeof res?.subscriber?.verified === 'boolean'
+            ? res.subscriber.verified
+            : !currentVerified
       setSubscribers((prev) =>
-        prev.map((s) => (s.email === email ? { ...s, verified: res.subscriber.verified } : s))
+        prev.map((s) => (s.email === email ? { ...s, verified: nextVerified } : s))
       )
       const dash = await getAdminDashboard()
       setDashboard(dash)
       showToast(
-        `${email} 구독자를 ${!currentVerified ? '인증 완료' : '미인증'} 상태로 변경했습니다.`,
+        `${email} 구독자를 ${nextVerified ? '인증 완료' : '미인증'} 상태로 변경했습니다.`,
         'success'
       )
     } catch (err) {
@@ -195,49 +201,85 @@ export default function AdminPage() {
     }
   }
 
-  // Select concert for cache editing
-  function handleSelectCacheConcert(concertId) {
-    setSelectedConcertId(concertId)
-    const entry = cacheData[concertId]
-    const programs = Array.isArray(entry?.programs) ? entry.programs : []
-    const cloned = programs.map((p) => ({
-      composer: p.composer || '',
-      composerKo: p.composerKo || '',
-      composerShort: p.composerShort || '',
-      title: p.title || '',
-      titleKo: p.titleKo || '',
-      searchingWord: p.searchingWord || '',
-      id: p.id || '',
+  const normalizeProgramList = useCallback((rawEntry) => {
+    const programs = Array.isArray(rawEntry)
+      ? rawEntry
+      : Array.isArray(rawEntry?.programs)
+        ? rawEntry.programs
+        : []
+    return programs.map((p, idx) => ({
+      ...p,
+      id: p.id || `ai-${idx + 1}`,
+      composer: p.composer ?? '',
+      composerKo: p.composerKo ?? '',
+      composerShort: p.composerShort ?? '',
+      title: p.title ?? '',
+      titleKo: p.titleKo ?? '',
+      genre: p.genre ?? '',
+      movements: Array.isArray(p.movements) ? p.movements : [],
+      duration: p.duration ?? '',
+      searchingWord: p.searchingWord ?? '',
+      source: p.source || 'ai_vision',
     }))
-    setEditingPrograms(cloned)
-    setRawJsonText(JSON.stringify(cloned, null, 2))
-    setRawJsonMode(false)
-  }
+  }, [])
+
+  // Select concert for cache editing
+  const handleSelectCacheConcert = useCallback(
+    (concertId, sourceCache = cacheData) => {
+      setSelectedConcertId(concertId)
+      const cloned = normalizeProgramList(sourceCache[concertId])
+      setEditingPrograms(cloned)
+      setRawJsonText(JSON.stringify(cloned, null, 2))
+    },
+    [cacheData, normalizeProgramList]
+  )
 
   function handleProgramFieldChange(index, field, value) {
     setEditingPrograms((prev) => {
       const next = [...prev]
-      next[index] = { ...next[index], [field]: value }
+      if (field === 'movementsText') {
+        const lines = value
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+        next[index] = { ...next[index], movements: lines }
+      } else {
+        next[index] = { ...next[index], [field]: value }
+      }
+      setRawJsonText(JSON.stringify(next, null, 2))
       return next
     })
   }
 
   function handleAddProgramRow() {
-    setEditingPrograms((prev) => [
-      ...prev,
-      {
-        composer: '',
-        composerKo: '',
-        composerShort: '',
-        title: '',
-        titleKo: '',
-        searchingWord: '',
-      },
-    ])
+    setEditingPrograms((prev) => {
+      const next = [
+        ...prev,
+        {
+          id: `manual-${prev.length + 1}`,
+          composer: '',
+          composerKo: '',
+          composerShort: '',
+          title: '',
+          titleKo: '',
+          genre: '',
+          movements: [],
+          duration: '',
+          searchingWord: '',
+          source: 'admin_edited',
+        },
+      ]
+      setRawJsonText(JSON.stringify(next, null, 2))
+      return next
+    })
   }
 
   function handleRemoveProgramRow(index) {
-    setEditingPrograms((prev) => prev.filter((_, idx) => idx !== index))
+    setEditingPrograms((prev) => {
+      const next = prev.filter((_, idx) => idx !== index)
+      setRawJsonText(JSON.stringify(next, null, 2))
+      return next
+    })
   }
 
   async function handleSaveCache() {
@@ -260,12 +302,18 @@ export default function AdminPage() {
     setSavingCache(true)
     try {
       const res = await updateAdminCache(selectedConcertId, programsToSave)
+      const savedPrograms = Array.isArray(res?.programs)
+        ? res.programs
+        : Array.isArray(res?.entry?.programs)
+          ? res.entry.programs
+          : programsToSave
       setCacheData((prev) => ({
         ...prev,
-        [selectedConcertId]: res.entry,
+        [selectedConcertId]: savedPrograms,
       }))
-      setEditingPrograms(res.entry.programs || [])
-      setRawJsonText(JSON.stringify(res.entry.programs || [], null, 2))
+      const normalized = normalizeProgramList(savedPrograms)
+      setEditingPrograms(normalized)
+      setRawJsonText(JSON.stringify(normalized, null, 2))
       showToast(`${selectedConcertId} 프로그램 캐시가 저장되었습니다.`, 'success')
     } catch (err) {
       showToast(err?.message || '캐시 저장에 실패했습니다.', 'error')
@@ -287,16 +335,21 @@ export default function AdminPage() {
   const cacheEntriesList = useMemo(() => {
     const entries = Object.entries(cacheData).map(([concertId, item]) => {
       const concert = concertsMap[concertId]
+      const programs = Array.isArray(item)
+        ? item
+        : Array.isArray(item?.programs)
+          ? item.programs
+          : []
       return {
         concertId,
         title: concert?.title || `(KOPIS ID: ${concertId})`,
         venue: concert?.venue || '',
         period: concert ? `${concert.from || ''} ~ ${concert.to || ''}` : '',
-        programs: Array.isArray(item?.programs) ? item.programs : [],
-        extractedAt: item?.extractedAt || '',
+        programs,
+        from: concert?.from || '',
       }
     })
-    entries.sort((a, b) => (b.extractedAt || '').localeCompare(a.extractedAt || ''))
+    entries.sort((a, b) => (b.from || '').localeCompare(a.from || ''))
 
     const q = cacheSearch.trim().toLowerCase()
     if (!q) return entries
@@ -308,12 +361,20 @@ export default function AdminPage() {
           (p) =>
             (p.composerKo || '').toLowerCase().includes(q) ||
             (p.composerShort || '').toLowerCase().includes(q) ||
+            (p.composer || '').toLowerCase().includes(q) ||
             (p.titleKo || '').toLowerCase().includes(q) ||
             (p.title || '').toLowerCase().includes(q) ||
             (p.searchingWord || '').toLowerCase().includes(q)
         )
     )
   }, [cacheData, concertsMap, cacheSearch])
+
+  // 캐시 탭 진입 시 아직 선택된 공연이 없으면 첫 번째 공연 자동 선택
+  useEffect(() => {
+    if (activeTab === 'cache' && !selectedConcertId && cacheEntriesList.length > 0) {
+      handleSelectCacheConcert(cacheEntriesList[0].concertId)
+    }
+  }, [activeTab, selectedConcertId, cacheEntriesList, handleSelectCacheConcert])
 
   if (authStatus === 'checking') {
     return (
@@ -892,15 +953,20 @@ export default function AdminPage() {
                             onClick={() => {
                               if (!rawJsonMode) {
                                 setRawJsonText(JSON.stringify(editingPrograms, null, 2))
+                                setRawJsonMode(true)
                               } else {
                                 try {
                                   const parsed = JSON.parse(rawJsonText)
-                                  if (Array.isArray(parsed)) setEditingPrograms(parsed)
-                                } catch {
-                                  // keep current
+                                  if (!Array.isArray(parsed)) {
+                                    showToast('JSON 최상위 구조는 배열([])이어야 합니다.', 'error')
+                                    return
+                                  }
+                                  setEditingPrograms(normalizeProgramList(parsed))
+                                  setRawJsonMode(false)
+                                } catch (err) {
+                                  showToast(`JSON 문법 오류: ${err.message}`, 'error')
                                 }
                               }
-                              setRawJsonMode((prev) => !prev)
                             }}
                             className="rounded-xl border border-[#e5e8eb] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#4e5968] hover:bg-[#f2f4f6] cursor-pointer"
                           >
@@ -923,21 +989,28 @@ export default function AdminPage() {
                           <textarea
                             value={rawJsonText}
                             onChange={(e) => setRawJsonText(e.target.value)}
-                            rows={16}
+                            rows={18}
                             className="w-full rounded-xl border border-[#e5e8eb] bg-white p-3.5 font-mono text-[12.5px] text-[#191f28] focus:outline-none focus:border-[#3182f6]"
                           />
                         </div>
                       ) : (
-                        <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
+                        <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
                           {editingPrograms.map((prog, idx) => (
                             <div
-                              key={idx}
+                              key={prog.id || idx}
                               className="rounded-xl bg-white border border-[#e5e8eb] p-3.5 space-y-2.5"
                             >
                               <div className="flex items-center justify-between">
-                                <span className="text-[12px] font-bold text-[#3182f6]">
-                                  프로그램 #{idx + 1}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[12px] font-bold text-[#3182f6]">
+                                    프로그램 #{idx + 1}
+                                  </span>
+                                  {prog.id && (
+                                    <span className="font-mono text-[11px] text-[#8b95a1]">
+                                      ({prog.id})
+                                    </span>
+                                  )}
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveProgramRow(idx)}
@@ -979,15 +1052,15 @@ export default function AdminPage() {
                                 </div>
                                 <div>
                                   <label className="block text-[11px] font-semibold text-[#8b95a1] mb-1">
-                                    검색 키워드 (searchingWord)
+                                    작곡가 원문 (composer)
                                   </label>
                                   <input
                                     type="text"
-                                    value={prog.searchingWord || ''}
+                                    value={prog.composer || ''}
                                     onChange={(e) =>
-                                      handleProgramFieldChange(idx, 'searchingWord', e.target.value)
+                                      handleProgramFieldChange(idx, 'composer', e.target.value)
                                     }
-                                    placeholder="예: 황제"
+                                    placeholder="예: Ludwig van Beethoven"
                                     className="w-full h-9 rounded-lg border border-[#e5e8eb] px-2.5 text-[12.5px] focus:outline-none focus:border-[#3182f6]"
                                   />
                                 </div>
@@ -1022,6 +1095,54 @@ export default function AdminPage() {
                                     className="w-full h-9 rounded-lg border border-[#e5e8eb] px-2.5 text-[12.5px] focus:outline-none focus:border-[#3182f6]"
                                   />
                                 </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <div className="sm:col-span-1">
+                                  <label className="block text-[11px] font-semibold text-[#8b95a1] mb-1">
+                                    장르 (genre)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={prog.genre || ''}
+                                    onChange={(e) =>
+                                      handleProgramFieldChange(idx, 'genre', e.target.value)
+                                    }
+                                    placeholder="예: 피아노 협주곡"
+                                    className="w-full h-9 rounded-lg border border-[#e5e8eb] px-2.5 text-[12.5px] focus:outline-none focus:border-[#3182f6]"
+                                  />
+                                </div>
+                                <div className="sm:col-span-2">
+                                  <label className="block text-[11px] font-semibold text-[#8b95a1] mb-1">
+                                    검색 키워드 / 별칭 (searchingWord)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={prog.searchingWord || ''}
+                                    onChange={(e) =>
+                                      handleProgramFieldChange(idx, 'searchingWord', e.target.value)
+                                    }
+                                    placeholder="예: 황제 베토벤5 피협5번"
+                                    className="w-full h-9 rounded-lg border border-[#e5e8eb] px-2.5 text-[12.5px] focus:outline-none focus:border-[#3182f6]"
+                                  />
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-semibold text-[#8b95a1] mb-1">
+                                  악장 목록 (movements · 줄바꿈으로 구분)
+                                </label>
+                                <textarea
+                                  rows={2}
+                                  value={
+                                    Array.isArray(prog.movements) ? prog.movements.join('\n') : ''
+                                  }
+                                  onChange={(e) =>
+                                    handleProgramFieldChange(idx, 'movementsText', e.target.value)
+                                  }
+                                  placeholder="I. Allegro&#10;II. Adagio un poco mosso"
+                                  className="w-full rounded-lg border border-[#e5e8eb] px-2.5 py-1.5 text-[12px] focus:outline-none focus:border-[#3182f6]"
+                                />
                               </div>
                             </div>
                           ))}

@@ -192,7 +192,7 @@ export default function ExplorePage() {
   const [selectedVenue, setSelectedVenue] = useState('')
 
   useEffect(() => {
-    document.title = 'cloudcon · 공연 모아보기'
+    document.title = 'cloudcon (클라우드콘) · 공연 모아보기 | Cloudcon'
   }, [])
 
   useEffect(() => {

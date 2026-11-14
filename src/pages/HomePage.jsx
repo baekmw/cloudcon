@@ -243,7 +243,7 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    document.title = 'cloudcon · 클래식 공연 검색'
+    document.title = 'cloudcon (클라우드콘) · 클래식 공연 검색 & 프로그램 알림 | Cloudcon'
   }, [])
 
   useEffect(() => {

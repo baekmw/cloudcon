@@ -77,7 +77,7 @@ export default function AlertsPage() {
   const [expandedKeyword, setExpandedKeyword] = useState(null)
 
   useEffect(() => {
-    document.title = 'cloudcon · 이메일 공연 알림'
+    document.title = 'cloudcon (클라우드콘) · 이메일 공연 알림 | Cloudcon'
   }, [])
 
   // Mount 시 쿠키(manageToken) 기반 구독 상태 조회 (GET /api/my-keywords)

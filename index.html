@@ -5,18 +5,109 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="canonical" href="https://cloudcon.app/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#3182f6" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="cloudcon" />
-    <meta name="description" content="KOPIS에 등록된 한국 클래식 공연과 아티스트·곡 알림" />
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-    <title>cloudcon</title>
+
+    <title>cloudcon (클라우드콘) · 클래식 공연 검색 &amp; 프로그램 알림 | Cloudcon</title>
+    <meta
+      name="description"
+      content="cloudcon(클라우드콘, Cloudcon)은 KOPIS 한국 클래식 공연의 연주 프로그램(곡목)·작곡가·연주자 통합 검색과 달력·전국 지도 공연 모아보기, 관심 아티스트·곡 이메일 알림을 제공하는 클래식 공연 플랫폼입니다."
+    />
+    <meta
+      name="keywords"
+      content="cloudcon, 클라우드콘, Cloudcon, 클래식 공연, 클래식 콘서트, 클래식 공연 검색, 클래식 프로그램 검색, 클래식 알림, KOPIS 클래식, 예술의전당, 롯데콘서트홀, 세종문화회관, 교향곡, 협주곡, 리사이틀"
+    />
+    <meta name="application-name" content="cloudcon (클라우드콘)" />
+    <meta name="author" content="cloudcon (클라우드콘)" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:site_name" content="cloudcon (클라우드콘)" />
+    <meta
+      property="og:title"
+      content="cloudcon (클라우드콘) · 클래식 공연 검색 &amp; 프로그램 알림 | Cloudcon"
+    />
+    <meta
+      property="og:description"
+      content="보고 싶던 모든 클래식 무대를 한곳에서. cloudcon(클라우드콘)에서 작곡가·연주곡·공연장별 클래식 공연을 검색하고 이메일 알림을 받아보세요."
+    />
+    <meta property="og:url" content="https://cloudcon.app/" />
+    <meta property="og:image" content="https://cloudcon.app/pwa-512x512.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="cloudcon (클라우드콘) · 클래식 공연 검색 &amp; 프로그램 알림 | Cloudcon"
+    />
+    <meta
+      name="twitter:description"
+      content="보고 싶던 모든 클래식 무대를 한곳에서. cloudcon(클라우드콘)에서 작곡가·연주곡·공연장별 클래식 공연을 검색하고 이메일 알림을 받아보세요."
+    />
+    <meta name="twitter:image" content="https://cloudcon.app/pwa-512x512.png" />
+
+    <!-- Structured Data (JSON-LD) for Google Search -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://cloudcon.app/#website",
+            "url": "https://cloudcon.app/",
+            "name": "cloudcon (클라우드콘)",
+            "alternateName": ["클라우드콘", "Cloudcon", "cloudcon", "클라우드콘 클래식"],
+            "description": "KOPIS 한국 클래식 공연 연주 프로그램(곡목)·작곡가·연주자 검색 및 이메일 알림 서비스",
+            "inLanguage": "ko-KR",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://cloudcon.app/?q={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://cloudcon.app/#organization",
+            "name": "cloudcon",
+            "alternateName": ["클라우드콘", "Cloudcon"],
+            "url": "https://cloudcon.app/",
+            "logo": "https://cloudcon.app/pwa-512x512.png"
+          }
+        ]
+      }
+    </script>
+
+    <link
+      rel="stylesheet"
+      as="style"
+      crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+    />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <noscript>
+        <h1>cloudcon (클라우드콘 · Cloudcon) - 한국 클래식 공연 검색 &amp; 프로그램 알림</h1>
+        <p>
+          cloudcon(클라우드콘, Cloudcon)은 공연예술통합전산망(KOPIS)에 등록된 전국 클래식 공연과
+          연주 프로그램(곡목), 작곡가, 아티스트 정보를 검색하고 이메일로 신규 공연 알림을 받을 수 있는
+          클래식 공연 플랫폼입니다.
+        </p>
+      </noscript>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

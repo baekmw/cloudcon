@@ -432,6 +432,19 @@ export function createApiRouter(serviceKey) {
     }
 
     const saved = updateConcertProgramCache(concertId, programs);
+
+    // KOPIS 인메모리 공연 목록 캐시에도 즉시 반영
+    api
+      .concerts(false)
+      .then((listRes) => {
+        const found = (listRes?.concerts || []).find((c) => c.id === concertId);
+        if (found) {
+          found.programs = saved;
+          found.programSource = "cache";
+        }
+      })
+      .catch(() => {});
+
     return res.status(200).json({
       ok: true,
       concertId,

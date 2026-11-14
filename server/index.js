@@ -26,6 +26,55 @@ app.use(express.json());
 const { router, kopisApi } = createApiRouter(serviceKey);
 app.use("/api", router);
 
+// Dynamic XML Sitemap for Google Search indexing
+app.get("/sitemap.xml", async (req, res) => {
+  const baseUrl = (process.env.APP_BASE_URL || "https://cloudcon.app").replace(/\/+$/, "");
+  const today = new Date().toISOString().slice(0, 10);
+  let concertUrls = "";
+
+  try {
+    const listRes = await kopisApi.concerts(false);
+    const concerts = listRes?.concerts || [];
+    for (const c of concerts.slice(0, 500)) {
+      if (!c?.id) continue;
+      concertUrls += `
+  <url>
+    <loc>${baseUrl}/concerts/${encodeURIComponent(c.id)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+    }
+  } catch {
+    // ignore if KOPIS cache not warmed yet
+  }
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/explore</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/alerts</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>${concertUrls}
+</urlset>`;
+
+  res.setHeader("Content-Type", "application/xml; charset=utf-8");
+  return res.status(200).send(xml);
+});
+
 // Serve static frontend files in production
 if (fs.existsSync(distDir)) {
   app.use(

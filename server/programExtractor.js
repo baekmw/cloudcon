@@ -34,24 +34,45 @@ export function saveProgramsCache() {
  */
 export function updateConcertProgramCache(concertId, programs) {
   const normalized = Array.isArray(programs)
-    ? programs.map((item, idx) => ({
-        id: item.id || `manual-${idx + 1}`,
-        composer: String(item.composer || "").trim(),
-        composerKo: String(item.composerKo || item.composer || "").trim(),
-        composerShort: String(
-          item.composerShort || item.composerKo || item.composer || ""
-        ).trim(),
-        title: String(item.title || "").trim(),
-        titleKo: String(item.titleKo || item.title || "").trim(),
-        duration: String(item.duration || "").trim(),
-        searchingWord: String(
-          item.searchingWord ||
-            `${item.composerShort || item.composerKo || ""} ${
-              item.titleKo || item.title || ""
-            }`
-        ).trim(),
-        source: item.source || "admin_edited",
-      }))
+    ? programs.map((item, idx) => {
+        const movements = Array.isArray(item.movements)
+          ? item.movements.map((m) => String(m || "").trim()).filter(Boolean)
+          : typeof item.movements === "string" && item.movements.trim()
+            ? item.movements
+                .split(/\r?\n/)
+                .map((m) => m.trim())
+                .filter(Boolean)
+            : undefined;
+
+        const base = {
+          ...item,
+          id: item.id || `manual-${idx + 1}`,
+          composer: String(item.composer ?? "").trim(),
+          composerKo: String(item.composerKo ?? item.composer ?? "").trim(),
+          composerShort: String(
+            item.composerShort ?? item.composerKo ?? item.composer ?? ""
+          ).trim(),
+          title: String(item.title ?? "").trim(),
+          titleKo: String(item.titleKo ?? item.title ?? "").trim(),
+          duration: String(item.duration ?? "").trim(),
+          searchingWord: String(
+            item.searchingWord ??
+              `${item.composerShort || item.composerKo || ""} ${
+                item.titleKo || item.title || ""
+              }`
+          ).trim(),
+          source: item.source || "admin_edited",
+        };
+
+        if (item.genre !== undefined) {
+          base.genre = String(item.genre ?? "").trim();
+        }
+        if (movements !== undefined) {
+          base.movements = movements;
+        }
+
+        return base;
+      })
     : [];
 
   memoryCache[concertId] = normalized;

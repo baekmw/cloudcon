@@ -296,7 +296,7 @@ export default function Layout() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[#e5e8eb] overflow-hidden">
-                  <TicketLogo className="h-9 w-9" filled={false} whiteBg={true} />
+                  <TicketLogo className="h-9 w-9" filled={true} whiteBg={true} />
                 </div>
                 <div>
                   <h3 className="text-[16px] font-bold text-[#191f28]">cloudcon 앱 설치</h3>
@@ -340,7 +340,7 @@ export default function Layout() {
         <div className="mx-auto max-w-[960px] px-6 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[12px] text-[#8b95a1]">
             <p className="font-medium text-[#6b7684]">
-              © {new Date().getFullYear()} cloudcon. All rights reserved.
+              © {new Date().getFullYear()} cloudcon (클라우드콘 · Cloudcon). All rights reserved.
             </p>
             <p>출처: (재)예술경영지원센터 공연예술통합전산망(KOPIS)</p>
           </div>
