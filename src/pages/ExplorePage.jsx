@@ -451,23 +451,23 @@ export default function ExplorePage() {
             <div
               style={{
                 maskImage:
-                  'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.48) 55%, rgba(0,0,0,0.18) 100%)',
+                  'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.06) 95%)',
                 WebkitMaskImage:
-                  'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.48) 55%, rgba(0,0,0,0.18) 100%)',
+                  'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.06) 95%)',
               }}
             >
               <ConcertCardItem concert={fadingConcert} isFading />
             </div>
             <div
               style={{
-                backdropFilter: 'blur(3px)',
-                WebkitBackdropFilter: 'blur(3px)',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
                 maskImage:
-                  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, black 100%)',
+                  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.75) 40%, black 100%)',
                 WebkitMaskImage:
-                  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, black 100%)',
+                  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.75) 40%, black 100%)',
               }}
-              className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/35 to-[#f9fafb]/65"
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/65 to-[#f9fafb]/92"
             />
           </div>
         )}
@@ -493,18 +493,18 @@ export default function ExplorePage() {
         {activeList.length > 0 && (
           <div
             aria-hidden="true"
-            className="sticky bottom-0 z-20 -mx-6 h-12 sm:h-9 pointer-events-none relative"
+            className="sticky bottom-0 z-20 -mx-6 h-16 sm:h-12 pointer-events-none relative"
           >
             <div
               style={{
-                backdropFilter: 'blur(4px)',
-                WebkitBackdropFilter: 'blur(4px)',
+                backdropFilter: 'blur(6px)',
+                WebkitBackdropFilter: 'blur(6px)',
                 maskImage:
-                  'linear-gradient(to top, black 0%, black 50%, rgba(0,0,0,0.35) 80%, transparent 100%)',
+                  'linear-gradient(to top, black 0%, black 60%, rgba(0,0,0,0.45) 85%, transparent 100%)',
                 WebkitMaskImage:
-                  'linear-gradient(to top, black 0%, black 50%, rgba(0,0,0,0.35) 80%, transparent 100%)',
+                  'linear-gradient(to top, black 0%, black 60%, rgba(0,0,0,0.45) 85%, transparent 100%)',
               }}
-              className="absolute inset-x-0 top-0 -bottom-10 bg-gradient-to-t from-[#f9fafb]/68 via-[#f9fafb]/38 to-transparent pointer-events-none"
+              className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,0.95)_0%,rgba(249,250,251,0.84)_48%,rgba(249,250,251,0.5)_78%,rgba(249,250,251,0)_100%)] pointer-events-none"
             />
           </div>
         )}

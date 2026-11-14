@@ -592,23 +592,23 @@ export default function HomePage() {
               <div
                 style={{
                   maskImage:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.48) 55%, rgba(0,0,0,0.18) 100%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.06) 95%)',
                   WebkitMaskImage:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.48) 55%, rgba(0,0,0,0.18) 100%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.06) 95%)',
                 }}
               >
                 <ConcertCardItem concert={fadingConcert} q={q} isFading />
               </div>
               <div
                 style={{
-                  backdropFilter: 'blur(3px)',
-                  WebkitBackdropFilter: 'blur(3px)',
+                  backdropFilter: 'blur(4px)',
+                  WebkitBackdropFilter: 'blur(4px)',
                   maskImage:
-                    'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, black 100%)',
+                    'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.75) 40%, black 100%)',
                   WebkitMaskImage:
-                    'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 45%, black 100%)',
+                    'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.75) 40%, black 100%)',
                 }}
-                className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/35 to-[#f9fafb]/65"
+                className="absolute inset-0 bg-gradient-to-b from-transparent via-[#f9fafb]/65 to-[#f9fafb]/92"
               />
             </div>
           )}
@@ -631,27 +631,27 @@ export default function HomePage() {
           )}
 
           {/* Quick noti CTA sticky at bottom of search results:
-              상단 부분에서는 컨텐츠가 거의 다 보이고, 아래쪽으로만 반투명 블러 페이드가 적용됨 */}
+              하단 페이드의 흰색 농도와 블러를 강화하고 스티키 카드의 불투명도·블러를 높여 하단 영역을 확실히 차단 */}
           {searchResults.length > 0 && (
-            <div className="sticky bottom-0 z-20 mt-4 -mx-6 px-6 pt-1 pb-14 sm:pb-5 pointer-events-none relative">
+            <div className="sticky bottom-0 z-20 mt-5 -mx-6 px-6 pt-4 pb-14 sm:pb-5 pointer-events-none relative">
               <div
                 aria-hidden="true"
                 style={{
-                  backdropFilter: 'blur(4px)',
-                  WebkitBackdropFilter: 'blur(4px)',
+                  backdropFilter: 'blur(6px)',
+                  WebkitBackdropFilter: 'blur(6px)',
                   maskImage:
-                    'linear-gradient(to top, black 0%, black 55%, rgba(0,0,0,0.35) 82%, transparent 100%)',
+                    'linear-gradient(to top, black 0%, black 65%, rgba(0,0,0,0.45) 86%, transparent 100%)',
                   WebkitMaskImage:
-                    'linear-gradient(to top, black 0%, black 55%, rgba(0,0,0,0.35) 82%, transparent 100%)',
+                    'linear-gradient(to top, black 0%, black 65%, rgba(0,0,0,0.45) 86%, transparent 100%)',
                 }}
-                className="absolute inset-x-0 top-1 -bottom-10 bg-gradient-to-t from-[#f9fafb]/72 via-[#f9fafb]/42 to-transparent pointer-events-none"
+                className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,0.95)_0%,rgba(249,250,251,0.86)_48%,rgba(249,250,251,0.55)_78%,rgba(249,250,251,0)_100%)] pointer-events-none"
               />
               <div
                 style={{
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
                 }}
-                className="relative z-10 pointer-events-auto px-4 py-3 rounded-2xl bg-white/60 border border-[#e5e8eb]/80 shadow-[0_4px_20px_rgba(25,31,40,0.06)] flex flex-row items-center justify-between gap-3 transition-all"
+                className="relative z-10 pointer-events-auto px-4 py-3.5 rounded-2xl bg-white/85 border border-[#e5e8eb]/90 shadow-[0_6px_24px_rgba(25,31,40,0.08)] flex flex-row items-center justify-between gap-3 transition-all"
               >
                 <div className="text-[13px] sm:text-[14px] text-[#333d4b] leading-snug break-keep text-left min-w-0 flex-1">
                   <span className="font-bold text-[#191f28]">'{q}'</span> 관련 새 공연이 올라오면 알림을 받을까요?

@@ -6,10 +6,11 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "background_color": "#f9fafb",
   "theme_color": "#3182f6",
   "lang": "ko",
+  "prefer_related_applications": false,
   "categories": ["entertainment", "music", "lifestyle"],
   "icons": [
     {
@@ -29,12 +30,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ],
   "shortcuts": [
