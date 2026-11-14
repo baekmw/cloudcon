@@ -95,3 +95,99 @@ export function disconnectDevice() {
     credentials: 'include',
   }).then(readJson)
 }
+
+/**
+ * 공개 트래킹: 방문자 집계 (POST /api/track/visit)
+ */
+export function trackVisit() {
+  return fetch('/api/track/visit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  }).catch(() => {})
+}
+
+/**
+ * 공개 트래킹: 검색어 집계 (POST /api/track/search)
+ */
+export function trackSearch(query) {
+  const clean = String(query || '').trim()
+  if (clean.length <= 1) return Promise.resolve()
+  return fetch('/api/track/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: clean }),
+  }).catch(() => {})
+}
+
+// =========================================================================
+// 관리자(Admin) 전용 API (/api/admin/*)
+// =========================================================================
+
+export function adminLogin(password) {
+  return fetch('/api/admin/login', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  }).then(readJson)
+}
+
+export function adminLogout() {
+  return fetch('/api/admin/logout', {
+    method: 'POST',
+    credentials: 'include',
+  }).then(readJson)
+}
+
+export function getAdminDashboard() {
+  return fetch('/api/admin/dashboard', {
+    method: 'GET',
+    credentials: 'include',
+  }).then(readJson)
+}
+
+export function runAdminBatch() {
+  return fetch('/api/admin/run-batch', {
+    method: 'POST',
+    credentials: 'include',
+  }).then(readJson)
+}
+
+export function getAdminSubscribers() {
+  return fetch('/api/admin/subscribers', {
+    method: 'GET',
+    credentials: 'include',
+  }).then(readJson)
+}
+
+export function deleteAdminSubscriber(email) {
+  return fetch(`/api/admin/subscribers/${encodeURIComponent(email)}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  }).then(readJson)
+}
+
+export function toggleAdminSubscriberVerify(email, verified) {
+  return fetch(`/api/admin/subscribers/${encodeURIComponent(email)}/verify`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(typeof verified === 'boolean' ? { verified } : {}),
+  }).then(readJson)
+}
+
+export function getAdminCache() {
+  return fetch('/api/admin/cache', {
+    method: 'GET',
+    credentials: 'include',
+  }).then(readJson)
+}
+
+export function updateAdminCache(concertId, payload) {
+  return fetch(`/api/admin/cache/${encodeURIComponent(concertId)}`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then(readJson)
+}

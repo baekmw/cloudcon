@@ -1,7 +1,13 @@
 import path from "node:path";
 import { Resend } from "resend";
 import "dotenv/config";
-import { DATA_DIR, readJsonSafe, writeJsonAtomic } from "./storage.js";
+import {
+  DATA_DIR,
+  getKstDateString,
+  incrementDailyEmailSent,
+  readJsonSafe,
+  writeJsonAtomic,
+} from "./storage.js";
 
 const QUOTA_FILE_PATH = path.join(DATA_DIR, "email_quota.json");
 
@@ -28,9 +34,7 @@ function getFromEmail() {
 }
 
 function getTodayKey() {
-  // KST(Asia/Seoul) 기준 날짜 문자열 (YYYY-MM-DD)
-  const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  return now.toISOString().slice(0, 10);
+  return getKstDateString();
 }
 
 export function getBatchQuotaState() {
@@ -115,6 +119,7 @@ export async function sendVerificationEmail(email, manageToken, keyword = "") {
   `;
 
   if (!resend) {
+    incrementDailyEmailSent(1);
     console.log(
       `[EmailService - DRY RUN (RESEND_API_KEY 미설정)] To: ${email} | Magic Link: ${verifyUrl}`
     );
@@ -132,6 +137,7 @@ export async function sendVerificationEmail(email, manageToken, keyword = "") {
     throw new Error(error.message || "Resend 이메일 발송 실패");
   }
 
+  incrementDailyEmailSent(1);
   return { ok: true, id: data?.id, verifyUrl };
 }
 
@@ -223,6 +229,7 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
 
   if (!resend) {
     const used = incrementBatchQuota();
+    incrementDailyEmailSent(1);
     console.log(
       `[EmailService - DRY RUN] Batch alert to ${email} (${matchedItems.length} concerts, quota ${used}/${MAX_BATCH_EMAILS_PER_DAY})`
     );
@@ -241,6 +248,7 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
   }
 
   const used = incrementBatchQuota();
+  incrementDailyEmailSent(1);
   console.log(
     `[EmailService] Sent batch alert to ${email} (${matchedItems.length} concerts, quota ${used}/${MAX_BATCH_EMAILS_PER_DAY})`
   );

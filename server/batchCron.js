@@ -4,7 +4,12 @@ import {
   saveProgramsCache,
   extractProgramWithGemini,
 } from "./programExtractor.js";
-import { loadSubscribers, saveSubscribers } from "./storage.js";
+import {
+  appendBatchLog,
+  getKstTimestampString,
+  loadSubscribers,
+  saveSubscribers,
+} from "./storage.js";
 import {
   BATCH_SEND_DELAY_MS,
   canSendBatchEmail,
@@ -17,6 +22,10 @@ const GEMINI_SLEEP_MS = 4000; // Rate Limit 방어용 호출 간 4초 sleep
 
 let isBatchRunning = false;
 let cronTask = null;
+
+export function getBatchRunningStatus() {
+  return isBatchRunning;
+}
 
 /**
  * 공백 제거 및 소문자 변환 유틸리티 (단순 포함 여부 includes 매칭용)
@@ -75,15 +84,24 @@ export function doesConcertMatchKeyword(concert, programs, keyword) {
 /**
  * KOPIS 신규 공연 수집 + 미캐시 공연 Gemini 프로그램 추출(4초 딜레이) + 구독자 키워드 매칭 및 이메일 발송 배치
  */
-export async function runBatchJob(kopisApi) {
+export async function runBatchJob(kopisApi, { trigger = "cron" } = {}) {
   if (isBatchRunning) {
     console.log("[BatchCron] 이미 배치가 실행 중이므로 건너뜁니다.");
-    return { skipped: true, reason: "already_running" };
+    return {
+      ok: false,
+      skipped: true,
+      reason: "already_running",
+      error: "이미 배치가 실행 중입니다.",
+    };
   }
 
   isBatchRunning = true;
-  const startedAt = new Date().toISOString();
-  console.log(`[BatchCron] 정기 배치 시작 (${startedAt})`);
+  const timestamp = getKstTimestampString();
+  const triggerLabel = trigger === "manual" ? "수동 실행" : "정기 배치";
+  console.log(`[BatchCron] ${triggerLabel} 시작 (${timestamp})`);
+
+  let newConcertsCount = 0;
+  let emailsSent = 0;
 
   try {
     // 1. KOPIS 최신 공연 목록 강제 갱신
@@ -137,6 +155,7 @@ export async function runBatchJob(kopisApi) {
           if (extracted.length > 0) {
             programsCache[summary.id] = extracted;
             summary.programs = extracted;
+            newConcertsCount += 1;
             // Atomic Write (programs_cache.json.tmp -> programs_cache.json)
             saveProgramsCache();
           }
@@ -159,89 +178,106 @@ export async function runBatchJob(kopisApi) {
         sub.keywords.length > 0
     );
 
-    if (verifiedEntries.length === 0) {
-      console.log("[BatchCron] 인증 완료된 활성 구독자가 없습니다.");
-      return { ok: true, emailsSent: 0 };
-    }
-
-    // 매칭 정확도를 위해 활성 공연의 상세 정보(cast, venue 등) 확보
-    const enrichedConcerts = [];
-    for (const c of activeConcerts) {
-      try {
-        const detailRes = await kopisApi.concert(c.id);
-        enrichedConcerts.push(detailRes?.concert || c);
-      } catch {
-        enrichedConcerts.push(c);
-      }
-    }
-
-    let emailsSent = 0;
-
-    for (const [email, sub] of verifiedEntries) {
-      if (!canSendBatchEmail()) {
-        console.warn(
-          "[BatchCron] 일일 배치 알림 발송 상한(80통)에 도달하여 남은 발송을 중단합니다."
-        );
-        break;
-      }
-
-      const notifiedSet = new Set(Array.isArray(sub.notifiedIds) ? sub.notifiedIds : []);
-      const matchedItems = [];
-
-      for (const concert of enrichedConcerts) {
-        // 이미 발송된 공연(notifiedIds)은 제외
-        if (notifiedSet.has(concert.id)) continue;
-
-        const programs = programsCache[concert.id] || concert.programs || [];
-        const matchedKeywords = sub.keywords.filter((kw) =>
-          doesConcertMatchKeyword(concert, programs, kw)
-        );
-
-        if (matchedKeywords.length > 0) {
-          matchedItems.push({
-            concert,
-            matchedKeywords,
-          });
+    if (verifiedEntries.length > 0) {
+      // 매칭 정확도를 위해 활성 공연의 상세 정보(cast, venue 등) 확보
+      const enrichedConcerts = [];
+      for (const c of activeConcerts) {
+        try {
+          const detailRes = await kopisApi.concert(c.id);
+          enrichedConcerts.push(detailRes?.concert || c);
+        } catch {
+          enrichedConcerts.push(c);
         }
       }
 
-      if (matchedItems.length === 0) continue;
-
-      try {
-        const sendRes = await sendConcertAlertEmail(
-          email,
-          sub.manageToken,
-          matchedItems
-        );
-
-        if (sendRes.ok) {
-          emailsSent += 1;
-          // 발송 성공한 concertId를 notifiedIds에 기록하고 Atomic Write
-          for (const item of matchedItems) {
-            notifiedSet.add(item.concert.id);
-          }
-          sub.notifiedIds = [...notifiedSet];
-          subscribers[email] = sub;
-          saveSubscribers(subscribers);
-
-          // 순차 발송 딜레이 적용 (1초)
-          await sleep(BATCH_SEND_DELAY_MS);
-        } else if (sendRes.reason === "quota_exceeded") {
+      for (const [email, sub] of verifiedEntries) {
+        if (!canSendBatchEmail()) {
+          console.warn(
+            "[BatchCron] 일일 배치 알림 발송 상한(80통)에 도달하여 남은 발송을 중단합니다."
+          );
           break;
         }
-      } catch (emailErr) {
-        console.error(
-          `[BatchCron] ${email} 알림 메일 발송 실패:`,
-          emailErr.message
+
+        const notifiedSet = new Set(
+          Array.isArray(sub.notifiedIds) ? sub.notifiedIds : []
         );
+        const matchedItems = [];
+
+        for (const concert of enrichedConcerts) {
+          // 이미 발송된 공연(notifiedIds)은 제외
+          if (notifiedSet.has(concert.id)) continue;
+
+          const programs = programsCache[concert.id] || concert.programs || [];
+          const matchedKeywords = sub.keywords.filter((kw) =>
+            doesConcertMatchKeyword(concert, programs, kw)
+          );
+
+          if (matchedKeywords.length > 0) {
+            matchedItems.push({
+              concert,
+              matchedKeywords,
+            });
+          }
+        }
+
+        if (matchedItems.length === 0) continue;
+
+        try {
+          const sendRes = await sendConcertAlertEmail(
+            email,
+            sub.manageToken,
+            matchedItems
+          );
+
+          if (sendRes.ok) {
+            emailsSent += 1;
+            // 발송 성공한 concertId를 notifiedIds에 기록하고 Atomic Write
+            for (const item of matchedItems) {
+              notifiedSet.add(item.concert.id);
+            }
+            sub.notifiedIds = [...notifiedSet];
+            subscribers[email] = sub;
+            saveSubscribers(subscribers);
+
+            // 순차 발송 딜레이 적용 (1초)
+            await sleep(BATCH_SEND_DELAY_MS);
+          } else if (sendRes.reason === "quota_exceeded") {
+            break;
+          }
+        } catch (emailErr) {
+          console.error(
+            `[BatchCron] ${email} 알림 메일 발송 실패:`,
+            emailErr.message
+          );
+        }
       }
     }
 
-    console.log(`[BatchCron] 정기 배치 완료 (발송 메일: ${emailsSent}통)`);
-    return { ok: true, emailsSent };
+    const logEntry = appendBatchLog({
+      timestamp,
+      newConcerts: newConcertsCount,
+      matchedEmails: emailsSent,
+      status: "success",
+      message: `[${triggerLabel}] 활성 공연 ${activeConcerts.length}건 스캔 · AI 신규 추출 ${newConcertsCount}건 · 알림 메일 ${emailsSent}통 발송`,
+    });
+
+    console.log(`[BatchCron] ${triggerLabel} 완료 (발송 메일: ${emailsSent}통)`);
+    return {
+      ok: true,
+      newConcerts: newConcertsCount,
+      emailsSent,
+      log: logEntry,
+    };
   } catch (err) {
     console.error("[BatchCron] 배치 실행 중 오류:", err.message);
-    return { ok: false, error: err.message };
+    const logEntry = appendBatchLog({
+      timestamp,
+      newConcerts: newConcertsCount,
+      matchedEmails: emailsSent,
+      status: "error",
+      message: `[${triggerLabel} 오류] ${err.message || "알 수 없는 오류"}`,
+    });
+    return { ok: false, error: err.message, log: logEntry };
   } finally {
     isBatchRunning = false;
   }
@@ -256,7 +292,7 @@ export function startBatchCron(kopisApi) {
   cronTask = cron.schedule(
     "0 9,18 * * *",
     () => {
-      runBatchJob(kopisApi).catch((err) => {
+      runBatchJob(kopisApi, { trigger: "cron" }).catch((err) => {
         console.error("[BatchCron] 크론 작업 오류:", err);
       });
     },

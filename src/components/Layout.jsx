@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Bell, Compass, Download, Menu, Search, Share, X } from 'lucide-react'
 import { scanForNewConcerts, useAlerts } from '../lib/alerts.js'
+import { trackVisit } from '../lib/api.js'
 import { Badge } from './ui/badge.jsx'
 
 function TicketLogo({ className = 'h-6 w-6', filled = false, whiteBg = false }) {
@@ -64,6 +65,13 @@ export default function Layout() {
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [location.pathname, location.search])
+
+  // 일반 사용자 메인 레이아웃 마운트 시 1회 방문 집계 (/admin 제외)
+  useEffect(() => {
+    if (!window.location.pathname.startsWith('/admin')) {
+      trackVisit()
+    }
+  }, [])
 
   // PWA 설치 프롬프트 및 iOS 홈 화면 추가 감지
   useEffect(() => {

@@ -2,12 +2,50 @@ import crypto from "node:crypto";
 import express from "express";
 import cookieParser from "cookie-parser";
 import { createKopis } from "./kopis.js";
-import { getConcertProgram, getAllProgramsCache } from "./programExtractor.js";
-import { loadSubscribers, saveSubscribers } from "./storage.js";
-import { sendVerificationEmail } from "./emailService.js";
+import {
+  getConcertProgram,
+  getAllProgramsCache,
+  updateConcertProgramCache,
+} from "./programExtractor.js";
+import {
+  getKstDateString,
+  loadAnalytics,
+  loadSubscribers,
+  recordDailyVisit,
+  recordSearchQuery,
+  saveAnalytics,
+  saveSubscribers,
+} from "./storage.js";
+import { getBatchQuotaState, sendVerificationEmail } from "./emailService.js";
+import { getBatchRunningStatus, runBatchJob } from "./batchCron.js";
 
 const COOKIE_NAME = "manageToken";
 const COOKIE_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
+
+const ADMIN_COOKIE_NAME = "adminSession";
+const ADMIN_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function getExpectedAdminCookieValue() {
+  const adminPassword = String(process.env.ADMIN_PASSWORD || "").trim();
+  if (!adminPassword) return null;
+  return crypto
+    .createHmac("sha256", "cloudcon-admin-auth-v1")
+    .update(adminPassword)
+    .digest("hex");
+}
+
+function requireAdmin(req, res, next) {
+  const expected = getExpectedAdminCookieValue();
+  const actual = String(req.cookies?.[ADMIN_COOKIE_NAME] || "").trim();
+
+  if (!expected || !actual || actual !== expected) {
+    return res.status(401).json({
+      ok: false,
+      error: "관리자 인증이 필요합니다.",
+    });
+  }
+  return next();
+}
 
 function findSubscriberByToken(subscribers, token) {
   if (!token || typeof token !== "string") return null;
@@ -31,7 +69,7 @@ export function createApiRouter(serviceKey) {
   const api = createKopis(serviceKey);
 
   router.use(cookieParser());
-  router.use(express.json());
+  router.use(express.json({ limit: "2mb" }));
 
   // No-cache header for API responses
   router.use((req, res, next) => {
@@ -39,11 +77,374 @@ export function createApiRouter(serviceKey) {
     next();
   });
 
+  // =========================================================================
+  // 공개 트래킹 API (/api/track/visit, /api/track/search)
+  // =========================================================================
+
+  /**
+   * 중복 없는 방문자 집계 (POST /api/track/visit)
+   * SHA-256(req.ip + req.headers['user-agent'] + KST_오늘날짜)
+   */
+  router.post("/track/visit", (req, res) => {
+    try {
+      const forwarded = String(req.headers["x-forwarded-for"] || "")
+        .split(",")[0]
+        .trim();
+      const ip = forwarded || req.ip || req.socket?.remoteAddress || "unknown";
+      const ua = String(req.headers["user-agent"] || "unknown");
+
+      const result = recordDailyVisit(ip, ua);
+      return res.status(200).json({ ok: true, ...result });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  /**
+   * 검색어 집계 (POST /api/track/search)
+   * 빈 문자열 및 1글자 이하 제외, 앞뒤 공백 제거 후 searchCounts[query] 1 증가
+   */
+  router.post("/track/search", (req, res) => {
+    try {
+      const query = String(req.body?.query || "").trim();
+      if (query.length <= 1) {
+        return res.status(200).json({ ok: true, skipped: true });
+      }
+      const result = recordSearchQuery(query);
+      return res.status(200).json({ ok: true, ...result });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // =========================================================================
+  // 관리자 인증 및 어드민 API (/api/admin/*)
+  // =========================================================================
+
+  /**
+   * 관리자 로그인 (POST /api/admin/login)
+   * .env의 ADMIN_PASSWORD와 대조 후 HttpOnly, SameSite=Lax 쿠키 발급
+   */
+  router.post("/admin/login", (req, res) => {
+    const inputPassword = String(req.body?.password || "").trim();
+    const adminPassword = String(process.env.ADMIN_PASSWORD || "").trim();
+
+    if (!adminPassword) {
+      return res.status(500).json({
+        ok: false,
+        error: "서버에 ADMIN_PASSWORD가 설정되어 있지 않습니다.",
+      });
+    }
+
+    if (!inputPassword || inputPassword !== adminPassword) {
+      return res.status(401).json({
+        ok: false,
+        error: "비밀번호가 올바르지 않습니다.",
+      });
+    }
+
+    const tokenValue = getExpectedAdminCookieValue();
+    const isSecure =
+      process.env.NODE_ENV === "production" ||
+      req.secure ||
+      req.headers["x-forwarded-proto"] === "https";
+
+    res.cookie(ADMIN_COOKIE_NAME, tokenValue, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: isSecure,
+      maxAge: ADMIN_COOKIE_MAX_AGE_MS,
+      path: "/",
+    });
+
+    return res.status(200).json({ ok: true });
+  });
+
+  /**
+   * 관리자 로그아웃 (POST /api/admin/logout)
+   */
+  router.post("/admin/logout", (req, res) => {
+    res.clearCookie(ADMIN_COOKIE_NAME, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+    return res.status(200).json({ ok: true });
+  });
+
+  // 이하 모든 /api/admin/* 라우트는 requireAdmin 미들웨어로 보호
+  router.use("/admin", requireAdmin);
+
+  /**
+   * 관리자 대시보드 통계 조회 (GET /api/admin/dashboard)
+   */
+  router.get("/admin/dashboard", (req, res) => {
+    const today = getKstDateString();
+    const analytics = loadAnalytics();
+    const subscribers = loadSubscribers();
+
+    // 기존 email_quota.json의 오늘 배치 발송 건수와 동기화 보장
+    const quotaState = getBatchQuotaState();
+    const recordedSent = Number(analytics.dailyEmailSent[today] || 0);
+    const syncedSent = Math.max(recordedSent, Number(quotaState.batchSent || 0));
+    if (syncedSent !== recordedSent) {
+      analytics.dailyEmailSent[today] = syncedSent;
+      saveAnalytics(analytics);
+    }
+
+    // 1. 오늘 방문자 수(UV) 및 누적 방문자 수(일별 UV 합산)
+    const todayVisitors = Array.isArray(analytics.dailyVisitors[today])
+      ? analytics.dailyVisitors[today].length
+      : 0;
+    const totalVisitors = Object.values(analytics.dailyVisitors || {}).reduce(
+      (sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0),
+      0
+    );
+
+    // 2. 전체 구독자 수 및 인증 완료(verified: true) 구독자 수
+    const subEntries = Object.entries(subscribers);
+    const totalSubscribers = subEntries.length;
+    const verifiedSubscribers = subEntries.filter(
+      ([, sub]) => sub && sub.verified === true
+    ).length;
+
+    // 3. 오늘 Resend 메일 발송 건수 (일일 한도 100통 표시용)
+    const todayEmailSent = Number(analytics.dailyEmailSent[today] || 0);
+
+    // 4. 검색어 순위 Top 10
+    const topSearches = Object.entries(analytics.searchCounts || {})
+      .map(([keyword, count]) => ({
+        keyword,
+        count: Number(count || 0),
+      }))
+      .filter((item) => item.keyword && item.count > 0)
+      .sort((a, b) => b.count - a.count || a.keyword.localeCompare(b.keyword, "ko"))
+      .slice(0, 10);
+
+    // 5. 등록 키워드 순위 Top 10 (subscribers.json의 모든 구독자 keywords 합산·집계)
+    const keywordMap = new Map();
+    for (const [, sub] of subEntries) {
+      if (!sub || !Array.isArray(sub.keywords)) continue;
+      for (const rawKw of sub.keywords) {
+        const kw = String(rawKw || "").trim();
+        if (!kw) continue;
+        keywordMap.set(kw, (keywordMap.get(kw) || 0) + 1);
+      }
+    }
+    const topKeywords = [...keywordMap.entries()]
+      .map(([keyword, count]) => ({ keyword, count }))
+      .sort((a, b) => b.count - a.count || a.keyword.localeCompare(b.keyword, "ko"))
+      .slice(0, 10);
+
+    return res.status(200).json({
+      ok: true,
+      today,
+      todayVisitors,
+      totalVisitors,
+      totalSubscribers,
+      verifiedSubscribers,
+      todayEmailSent,
+      dailyEmailLimit: 100,
+      topSearches,
+      topKeywords,
+      batchLogs: analytics.batchLogs || [],
+      isBatchRunning: getBatchRunningStatus(),
+    });
+  });
+
+  /**
+   * 수동 배치 즉시 실행 (POST /api/admin/run-batch)
+   * 중복 동시 실행 방지 Lock 플래그 적용
+   */
+  router.post("/admin/run-batch", async (req, res) => {
+    if (getBatchRunningStatus()) {
+      return res.status(409).json({
+        ok: false,
+        alreadyRunning: true,
+        error: "이미 배치 작업이 실행 중입니다. 완료될 때까지 기다려 주세요.",
+      });
+    }
+
+    const result = await runBatchJob(api, { trigger: "manual" });
+    if (result.skipped) {
+      return res.status(409).json({
+        ok: false,
+        alreadyRunning: true,
+        error: "이미 배치 작업이 실행 중입니다.",
+      });
+    }
+    if (!result.ok) {
+      return res.status(500).json({
+        ok: false,
+        error: result.error || "배치 실행 중 오류가 발생했습니다.",
+        log: result.log,
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      newConcerts: result.newConcerts,
+      emailsSent: result.emailsSent,
+      log: result.log,
+    });
+  });
+
+  /**
+   * 구독자 목록 조회 (GET /api/admin/subscribers)
+   */
+  router.get("/admin/subscribers", (req, res) => {
+    const subscribers = loadSubscribers();
+    const list = Object.entries(subscribers)
+      .map(([email, sub]) => ({
+        email,
+        verified: Boolean(sub?.verified),
+        keywords: Array.isArray(sub?.keywords) ? sub.keywords : [],
+        notifiedCount: Array.isArray(sub?.notifiedIds) ? sub.notifiedIds.length : 0,
+        createdAt: sub?.createdAt || "",
+      }))
+      .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+    return res.status(200).json({ ok: true, subscribers: list });
+  });
+
+  /**
+   * 구독자 삭제 (DELETE /api/admin/subscribers/:email)
+   */
+  router.delete("/admin/subscribers/:email", (req, res) => {
+    const targetEmail = decodeURIComponent(req.params.email || "")
+      .trim()
+      .toLowerCase();
+    const subscribers = loadSubscribers();
+
+    const matchedKey = Object.keys(subscribers).find(
+      (k) => k.toLowerCase() === targetEmail
+    );
+    if (!matchedKey) {
+      return res
+        .status(404)
+        .json({ ok: false, error: "해당 구독자를 찾을 수 없습니다." });
+    }
+
+    delete subscribers[matchedKey];
+    saveSubscribers(subscribers);
+
+    return res.status(200).json({ ok: true, deletedEmail: matchedKey });
+  });
+
+  /**
+   * 구독자 강제 인증 토글 (PATCH /api/admin/subscribers/:email/verify)
+   */
+  router.patch("/admin/subscribers/:email/verify", (req, res) => {
+    const targetEmail = decodeURIComponent(req.params.email || "")
+      .trim()
+      .toLowerCase();
+    const subscribers = loadSubscribers();
+
+    const matchedKey = Object.keys(subscribers).find(
+      (k) => k.toLowerCase() === targetEmail
+    );
+    if (!matchedKey) {
+      return res
+        .status(404)
+        .json({ ok: false, error: "해당 구독자를 찾을 수 없습니다." });
+    }
+
+    const sub = subscribers[matchedKey];
+    const nextVerified =
+      typeof req.body?.verified === "boolean" ? req.body.verified : !sub.verified;
+    sub.verified = nextVerified;
+    subscribers[matchedKey] = sub;
+    saveSubscribers(subscribers);
+
+    return res.status(200).json({
+      ok: true,
+      email: matchedKey,
+      verified: sub.verified,
+    });
+  });
+
+  /**
+   * 공연 AI 프로그램 캐시 전체 조회 (GET /api/admin/cache)
+   */
+  router.get("/admin/cache", async (req, res) => {
+    const cache = getAllProgramsCache();
+    let concertMap = new Map();
+
+    try {
+      const listRes = await api.concerts(false);
+      for (const c of listRes?.concerts || []) {
+        concertMap.set(c.id, c);
+      }
+    } catch {
+      // KOPIS 캐시 미로드 시에도 programs_cache.json 자체는 정상 반환
+    }
+
+    const items = Object.entries(cache).map(([concertId, programs]) => {
+      const meta = concertMap.get(concertId);
+      return {
+        concertId,
+        title: meta?.title || `(KOPIS 목록 외 공연 · ${concertId})`,
+        venue: meta?.venue || "",
+        from: meta?.from || "",
+        to: meta?.to || "",
+        state: meta?.state || "",
+        poster: meta?.poster || "",
+        programs: Array.isArray(programs) ? programs : [],
+      };
+    });
+
+    return res.status(200).json({
+      ok: true,
+      totalCached: items.length,
+      items,
+      cache,
+    });
+  });
+
+  /**
+   * 특정 공연 AI 프로그램 캐시 수동 수정·저장 (PUT /api/admin/cache/:concertId)
+   */
+  router.put("/admin/cache/:concertId", (req, res) => {
+    const concertId = decodeURIComponent(req.params.concertId || "").trim();
+    if (!concertId) {
+      return res
+        .status(400)
+        .json({ ok: false, error: "공연 ID가 필요합니다." });
+    }
+
+    let programs = req.body?.programs;
+    if (typeof req.body?.rawJson === "string") {
+      try {
+        programs = JSON.parse(req.body.rawJson);
+      } catch (err) {
+        return res.status(400).json({
+          ok: false,
+          error: `JSON 형식이 올바르지 않습니다: ${err.message}`,
+        });
+      }
+    }
+
+    if (!Array.isArray(programs)) {
+      return res.status(400).json({
+        ok: false,
+        error: "프로그램 데이터는 배열(Array) 형식이어야 합니다.",
+      });
+    }
+
+    const saved = updateConcertProgramCache(concertId, programs);
+    return res.status(200).json({
+      ok: true,
+      concertId,
+      programs: saved,
+    });
+  });
+
+  // =========================================================================
+  // 구독자 알림 API (/api/subscribe, /api/verify, /api/my-keywords, /api/disconnect)
+  // =========================================================================
+
   /**
    * 1. POST /api/subscribe
-   * - { email, keyword } 수신
-   * - 신규 이메일: crypto.randomBytes(24).toString('hex')로 manageToken 생성, verified: false 저장 후 Resend로 매직 링크 발송
-   * - 기존 이메일: keywords 배열에 중복 없이 추가 저장. 미인증 상태면 인증 메일 재발송, 이미 verified: true면 바로 추가 완료 응답
    */
   router.post("/subscribe", async (req, res) => {
     try {
@@ -143,8 +544,6 @@ export function createApiRouter(serviceKey) {
 
   /**
    * 2. GET /api/verify
-   * - 쿼리의 token으로 구독자 조회 -> verified = true 업데이트 ->
-   *   HttpOnly, SameSite=Lax 쿠키에 manageToken 저장 -> 프론트엔드 알림 관리 화면(/alerts)으로 Redirect
    */
   router.get("/verify", (req, res) => {
     const token = String(req.query.token || "").trim();
@@ -183,7 +582,6 @@ export function createApiRouter(serviceKey) {
 
   /**
    * 3. GET /api/my-keywords
-   * - 쿠키의 manageToken 검증 후 { email, keywords } 반환 (유효하지 않으면 401)
    */
   router.get("/my-keywords", (req, res) => {
     const token = req.cookies?.[COOKIE_NAME];
@@ -208,7 +606,6 @@ export function createApiRouter(serviceKey) {
 
   /**
    * 4. POST /api/my-keywords
-   * - 쿠키 인증 기반으로 해당 유저의 keywords 추가 후 Atomic Write
    */
   router.post("/my-keywords", (req, res) => {
     const token = req.cookies?.[COOKIE_NAME];
@@ -250,7 +647,6 @@ export function createApiRouter(serviceKey) {
 
   /**
    * 5. DELETE /api/my-keywords
-   * - 쿠키 인증 기반으로 해당 유저의 keywords 삭제 후 Atomic Write
    */
   router.delete("/my-keywords", (req, res) => {
     const token = req.cookies?.[COOKIE_NAME];
@@ -292,7 +688,6 @@ export function createApiRouter(serviceKey) {
 
   /**
    * 6. POST /api/disconnect
-   * - 쿠키 삭제 (res.clearCookie)
    */
   router.post("/disconnect", (req, res) => {
     res.clearCookie(COOKIE_NAME, {

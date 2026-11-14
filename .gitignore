@@ -34,3 +34,4 @@ server/data/*.tmp
 server/data/**/*.tmp
 subscribers.json
 programs_cache.json
+analytics.json

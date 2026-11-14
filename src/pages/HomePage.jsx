@@ -17,7 +17,7 @@ import Poster from '../components/Poster.jsx'
 import StatePill from '../components/StatePill.jsx'
 import { Button } from '../components/ui/button.jsx'
 import { Card, CardContent } from '../components/ui/card.jsx'
-import { getConcerts, addMyKeyword } from '../lib/api.js'
+import { getConcerts, addMyKeyword, trackSearch } from '../lib/api.js'
 import { useAlerts } from '../lib/alerts.js'
 import { formatPeriod } from '../lib/format.js'
 import { matchConcertClassical } from '../lib/classical.js'
@@ -275,6 +275,9 @@ export default function HomePage() {
     setInputValue(searchQuery)
     if (trimmed) {
       setParams({ q: trimmed, state }, { replace: true })
+      if (trimmed.length > 1) {
+        trackSearch(trimmed)
+      }
     } else {
       setParams({}, { replace: true })
     }
