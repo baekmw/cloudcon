@@ -9,6 +9,7 @@ export const SUBSCRIBERS_PATH = path.join(DATA_DIR, "subscribers.json");
 export const PROGRAMS_CACHE_PATH = path.join(DATA_DIR, "programs_cache.json");
 export const ANALYTICS_PATH = path.join(DATA_DIR, "analytics.json");
 export const NOL_UPCOMING_PATH = path.join(DATA_DIR, "nol_upcoming.json");
+export const YES24_CONCERTS_PATH = path.join(DATA_DIR, "yes24_concerts.json");
 export const LEGACY_PROGRAMS_CACHE_PATH = path.join(
   LEGACY_PROGRAMS_DIR,
   "programs_cache.json"
@@ -159,6 +160,15 @@ export function initDataStorage() {
         concerts: [],
       });
       console.log(`[Storage] Created initial ${NOL_UPCOMING_PATH}`);
+    }
+
+    if (!fs.existsSync(YES24_CONCERTS_PATH)) {
+      writeJsonAtomic(YES24_CONCERTS_PATH, {
+        updatedAt: null,
+        totalCount: 0,
+        concerts: [],
+      });
+      console.log(`[Storage] Created initial ${YES24_CONCERTS_PATH}`);
     }
   } catch (err) {
     console.error("[Storage] Failed to initialize data storage:", err.message);
@@ -414,4 +424,27 @@ export function loadNolUpcoming() {
 
 export function saveNolUpcoming(data) {
   return writeJsonAtomic(NOL_UPCOMING_PATH, data);
+}
+
+/**
+ * YES24 클래식 공연 및 티켓 오픈 정보 저장소 헬퍼 (`server/data/yes24_concerts.json`)
+ */
+export function loadYes24Concerts() {
+  initDataStorage();
+  const data = readJsonSafe(YES24_CONCERTS_PATH, {
+    updatedAt: null,
+    totalCount: 0,
+    concerts: [],
+  });
+  if (!data || typeof data !== "object") {
+    return { updatedAt: null, totalCount: 0, concerts: [] };
+  }
+  if (!Array.isArray(data.concerts)) {
+    data.concerts = [];
+  }
+  return data;
+}
+
+export function saveYes24Concerts(data) {
+  return writeJsonAtomic(YES24_CONCERTS_PATH, data);
 }

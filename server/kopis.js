@@ -5,7 +5,7 @@ import {
   cleanupOrphanPrograms,
   startUpcomingProgramsWorker,
 } from "./programExtractor.js";
-import { loadNolUpcoming } from "./storage.js";
+import { loadNolUpcoming, loadYes24Concerts } from "./storage.js";
 
 export function normalizeConcertTitle(title) {
   return String(title || "")
@@ -325,14 +325,107 @@ export function createKopis(rawKey) {
     return { concerts: sorted, allWindowsComplete };
   }
 
+  function mergeConcertsWithTicketing(rawConcerts, nolConcerts, yes24Concerts, allCache) {
+    const matchedNolIds = new Set();
+    const matchedYes24Ids = new Set();
+
+    const mergedKopisConcerts = rawConcerts.map((c) => {
+      const matchingNol = nolConcerts.find((n) => isSameConcert(c, n));
+      const matchingYes24 = yes24Concerts.find((y) => isSameConcert(c, y));
+
+      let ticketOpen = c.ticketOpen || null;
+      let nolGoodsCode = c.nolGoodsCode || null;
+      let yes24Id = c.yes24Id || null;
+      const tickets = Array.isArray(c.tickets) ? [...c.tickets] : [];
+
+      if (matchingNol) {
+        ticketOpen = matchingNol.ticketOpen;
+        nolGoodsCode = matchingNol.goodsCode;
+        matchedNolIds.add(matchingNol.id);
+        if (matchingNol.tickets) {
+          for (const t of matchingNol.tickets) {
+            if (!tickets.some((x) => x.name === t.name || x.url === t.url)) {
+              tickets.push(t);
+            }
+          }
+        }
+      }
+
+      if (matchingYes24) {
+        matchedYes24Ids.add(matchingYes24.id);
+        yes24Id = matchingYes24.yes24Id;
+        if (!ticketOpen || !ticketOpen.openAt) {
+          ticketOpen = matchingYes24.ticketOpen;
+        }
+        if (matchingYes24.tickets) {
+          for (const t of matchingYes24.tickets) {
+            if (!tickets.some((x) => x.name === t.name || x.url === t.url)) {
+              tickets.push(t);
+            }
+          }
+        }
+      }
+
+      return {
+        ...c,
+        ticketOpen,
+        nolGoodsCode,
+        yes24Id,
+        tickets,
+        programs: allCache[c.id] || c.programs || [],
+      };
+    });
+
+    const unmergedNolConcerts = nolConcerts
+      .filter((n) => !matchedNolIds.has(n.id))
+      .map((n) => {
+        const matchingYes24 = yes24Concerts.find((y) => isSameConcert(n, y));
+        const tickets = Array.isArray(n.tickets) ? [...n.tickets] : [];
+        let ticketOpen = n.ticketOpen;
+        let yes24Id = null;
+
+        if (matchingYes24) {
+          matchedYes24Ids.add(matchingYes24.id);
+          yes24Id = matchingYes24.yes24Id;
+          if (!ticketOpen || !ticketOpen.openAt) {
+            ticketOpen = matchingYes24.ticketOpen;
+          }
+          if (matchingYes24.tickets) {
+            for (const t of matchingYes24.tickets) {
+              if (!tickets.some((x) => x.name === t.name || x.url === t.url)) {
+                tickets.push(t);
+              }
+            }
+          }
+        }
+
+        return {
+          ...n,
+          ticketOpen,
+          yes24Id,
+          tickets,
+          programs: allCache[n.id] || [],
+        };
+      });
+
+    const unmergedYes24Concerts = yes24Concerts
+      .filter((y) => !matchedYes24Ids.has(y.id))
+      .map((y) => ({
+        ...y,
+        programs: allCache[y.id] || [],
+      }));
+
+    return [...unmergedNolConcerts, ...unmergedYes24Concerts, ...mergedKopisConcerts];
+  }
+
   function loadList(force = false) {
     if (!serviceKey) {
       const nolData = loadNolUpcoming();
+      const yes24Data = loadYes24Concerts();
       const allCache = getAllProgramsCache();
-      const concerts = (nolData.concerts || []).map((n) => ({
-        ...n,
-        programs: allCache[n.id] || [],
-      }));
+      const nolConcerts = Array.isArray(nolData.concerts) ? nolData.concerts : [];
+      const yes24Concerts = Array.isArray(yes24Data.concerts) ? yes24Data.concerts : [];
+      const concerts = mergeConcertsWithTicketing([], nolConcerts, yes24Concerts, allCache);
       return Promise.resolve({
         configured: false,
         concerts,
@@ -342,36 +435,15 @@ export function createKopis(rawKey) {
     if (!force && listCache && Date.now() - listCache.at < LIST_TTL_MS) {
       const allCache = getAllProgramsCache();
       const nolData = loadNolUpcoming();
+      const yes24Data = loadYes24Concerts();
       const nolConcerts = Array.isArray(nolData.concerts) ? nolData.concerts : [];
-      const matchedNolIds = new Set();
-
-      const concerts = listCache.concerts.map((c) => {
-        const matchingNol = nolConcerts.find((n) => isSameConcert(c, n));
-        let ticketOpen = c.ticketOpen || null;
-        let nolGoodsCode = c.nolGoodsCode || null;
-        if (matchingNol) {
-          ticketOpen = matchingNol.ticketOpen;
-          nolGoodsCode = matchingNol.goodsCode;
-          matchedNolIds.add(matchingNol.id);
-        }
-        return {
-          ...c,
-          ticketOpen,
-          nolGoodsCode,
-          programs: allCache[c.id] || c.programs || [],
-        };
-      });
-
-      const unmergedNolConcerts = nolConcerts
-        .filter((n) => !matchedNolIds.has(n.id))
-        .map((n) => ({
-          ...n,
-          programs: allCache[n.id] || [],
-        }));
+      const yes24Concerts = Array.isArray(yes24Data.concerts) ? yes24Data.concerts : [];
+      const rawKopis = listCache.rawKopisConcerts || listCache.concerts;
+      const concerts = mergeConcertsWithTicketing(rawKopis, nolConcerts, yes24Concerts, allCache);
 
       return Promise.resolve({
         configured: true,
-        concerts: [...unmergedNolConcerts, ...concerts],
+        concerts,
         fetchedAt: listCache.at,
       });
     }
@@ -393,40 +465,16 @@ export function createKopis(rawKey) {
 
         const allCache = getAllProgramsCache();
         const nolData = loadNolUpcoming();
+        const yes24Data = loadYes24Concerts();
         const nolConcerts = Array.isArray(nolData.concerts) ? nolData.concerts : [];
-        const matchedNolIds = new Set();
+        const yes24Concerts = Array.isArray(yes24Data.concerts) ? yes24Data.concerts : [];
 
-        const mergedKopisConcerts = rawConcerts.map((c) => {
-          const matchingNol = nolConcerts.find((n) => isSameConcert(c, n));
-          let ticketOpen = c.ticketOpen || null;
-          let nolGoodsCode = c.nolGoodsCode || null;
-          if (matchingNol) {
-            ticketOpen = matchingNol.ticketOpen;
-            nolGoodsCode = matchingNol.goodsCode;
-            matchedNolIds.add(matchingNol.id);
-          }
-          return {
-            ...c,
-            ticketOpen,
-            nolGoodsCode,
-            programs: allCache[c.id] || [],
-          };
-        });
+        const concerts = mergeConcertsWithTicketing(rawConcerts, nolConcerts, yes24Concerts, allCache);
 
-        // NOL 티켓 오픈 일정에 있으나 아직 KOPIS에 미등록된 공연 추가 (기존 DB 통합)
-        const unmergedNolConcerts = nolConcerts
-          .filter((n) => !matchedNolIds.has(n.id))
-          .map((n) => ({
-            ...n,
-            programs: allCache[n.id] || [],
-          }));
-
-        const concerts = [...unmergedNolConcerts, ...mergedKopisConcerts];
-
-        listCache = { at: Date.now(), concerts };
+        listCache = { at: Date.now(), concerts, rawKopisConcerts: rawConcerts };
         listError = null;
         enqueue(concerts);
-        console.log(`Cloudcon classical concerts (KOPIS + NOL): ${concerts.length}`);
+        console.log(`Cloudcon classical concerts (KOPIS + NOL + YES24): ${concerts.length}`);
 
         // 모든 '공연예정' 공연에 대해 AI 프로그램 추출 큐 실행
         startUpcomingProgramsWorker(concerts, getDetail);
@@ -458,6 +506,19 @@ export function createKopis(rawKey) {
       return Promise.reject(new Error("NOL 공연 정보를 찾지 못했습니다."));
     }
 
+    if (id && String(id).startsWith("yes24-")) {
+      const yes24Data = loadYes24Concerts();
+      const found = (yes24Data.concerts || []).find((y) => y.id === id);
+      if (found) {
+        const allCache = getAllProgramsCache();
+        return Promise.resolve({
+          ...found,
+          programs: allCache[id] || [],
+        });
+      }
+      return Promise.reject(new Error("YES24 공연 정보를 찾지 못했습니다."));
+    }
+
     if (details.has(id)) return Promise.resolve(details.get(id));
     if (!inflight.has(id)) {
       const request = kopisGet(`pblprfr/${id}`, {})
@@ -478,6 +539,23 @@ export function createKopis(rawKey) {
               detail.tickets = match.tickets || [];
             } else if (!detail.tickets.some((t) => t.url && t.url.includes(match.goodsCode))) {
               detail.tickets = [...(match.tickets || []), ...detail.tickets];
+            }
+          }
+
+          // YES24 티켓 및 티켓 오픈 정보 연동
+          const yes24Data = loadYes24Concerts();
+          const yesMatch = (yes24Data.concerts || []).find((y) => isSameConcert(detail, y));
+          if (yesMatch) {
+            if (!detail.ticketOpen || !detail.ticketOpen.openAt) {
+              detail.ticketOpen = yesMatch.ticketOpen;
+            }
+            detail.yes24Id = yesMatch.yes24Id;
+            if (!detail.tickets) detail.tickets = [];
+            if (!detail.tickets.some((t) => t.name === "YES24 티켓" || (t.url && t.url.includes("yes24.com")))) {
+              detail.tickets.push({
+                name: "YES24 티켓",
+                url: yesMatch.tickets?.[0]?.url || `http://ticket.yes24.com/Perf/${yesMatch.yes24Id}`,
+              });
             }
           }
 
@@ -563,7 +641,7 @@ export function createKopis(rawKey) {
       return loadList(force);
     },
     async concert(id) {
-      if (id && String(id).startsWith("nol-")) {
+      if (id && (String(id).startsWith("nol-") || String(id).startsWith("yes24-"))) {
         const concert = await getDetail(id);
         return { configured: true, concert };
       }
@@ -582,14 +660,42 @@ export function createKopis(rawKey) {
     },
     async ticketOpens() {
       const nolData = loadNolUpcoming();
+      const yes24Data = loadYes24Concerts();
       const nolConcerts = Array.isArray(nolData.concerts) ? nolData.concerts : [];
+      const yes24Concerts = (Array.isArray(yes24Data.concerts) ? yes24Data.concerts : []).filter(
+        (y) => y.ticketOpen && y.ticketOpen.openAt
+      );
 
       // 이미 캐시가 로드되어 있다면 KOPIS 공연 중 ticketOpen이 있는 항목도 병합
       const kopisTicketOpens = (listCache?.concerts || []).filter(
         (c) => c.ticketOpen && c.ticketOpen.openAt
       );
 
-      const all = [...nolConcerts];
+      const all = [];
+
+      // 1. NOL 티켓 오픈 항목 추가
+      for (const nc of nolConcerts) {
+        const item = { ...nc, tickets: Array.isArray(nc.tickets) ? [...nc.tickets] : [] };
+        // YES24 티켓 오픈과 동일한 공연이면 YES24 티켓 링크 병합
+        const matchYes = yes24Concerts.find((y) => isSameConcert(nc, y));
+        if (matchYes && matchYes.tickets) {
+          for (const yt of matchYes.tickets) {
+            if (!item.tickets.some((t) => t.name === yt.name || t.url === yt.url)) {
+              item.tickets.push(yt);
+            }
+          }
+        }
+        all.push(item);
+      }
+
+      // 2. YES24 티켓 오픈 항목 중 NOL과 중복되지 않는 항목 추가
+      for (const yc of yes24Concerts) {
+        if (!all.some((a) => isSameConcert(a, yc))) {
+          all.push(yc);
+        }
+      }
+
+      // 3. KOPIS 항목 중 이미 추가되지 않은 항목 추가
       for (const kc of kopisTicketOpens) {
         if (!all.some((a) => isSameConcert(a, kc))) {
           all.push(kc);

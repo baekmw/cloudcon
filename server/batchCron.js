@@ -19,6 +19,7 @@ import {
 } from "./emailService.js";
 import { matchConcertClassical } from "../src/lib/classical.js";
 import { fetchNolUpcomingClassical } from "./nolCrawler.js";
+import { fetchYes24Classical } from "./yes24Crawler.js";
 
 const GEMINI_SLEEP_MS = 4000; // Rate Limit 방어용 호출 간 4초 sleep
 
@@ -106,12 +107,20 @@ export async function runBatchJob(kopisApi, { trigger = "cron" } = {}) {
   let emailsSent = 0;
 
   try {
-    // 1. NOL 티켓 오픈 예정 클래식 공연 크롤링
+    // 1-1. NOL 티켓 오픈 예정 클래식 공연 크롤링
     try {
       console.log("[BatchCron] NOL 티켓오픈 클래식 공연 수집 시작...");
       await fetchNolUpcomingClassical();
     } catch (nolErr) {
       console.warn("[BatchCron] NOL 티켓오픈 수집 오류 (진행 계속):", nolErr.message);
+    }
+
+    // 1-2. YES24 클래식 공연 및 티켓 오픈 크롤링
+    try {
+      console.log("[BatchCron] YES24 클래식 공연 및 티켓오픈 수집 시작...");
+      await fetchYes24Classical();
+    } catch (yesErr) {
+      console.warn("[BatchCron] YES24 수집 오류 (진행 계속):", yesErr.message);
     }
 
     // 2. KOPIS 최신 공연 목록 강제 갱신 (NOL 데이터 자동 병합 및 중복 제거)

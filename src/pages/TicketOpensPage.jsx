@@ -265,11 +265,16 @@ export default function TicketOpensPage() {
                       <span className="text-[12px] font-semibold text-[#4e5968] bg-[#f2f4f6] px-2 py-0.5 rounded-md">
                         {ticketOpen.typeName || '일반 예매'}
                       </span>
-                      {concert.source === 'nol' && (
+                      {concert.tickets?.some((t) => t.name?.includes('놀유니버스')) || concert.source === 'nol' ? (
                         <span className="text-[11px] font-medium text-[#ff3b30] bg-[#fff0f0] px-2 py-0.5 rounded-md">
                           놀유니버스
                         </span>
-                      )}
+                      ) : null}
+                      {concert.tickets?.some((t) => t.name?.includes('YES24') || t.url?.includes('yes24.com')) || concert.source === 'yes24' ? (
+                        <span className="text-[11px] font-medium text-[#1062fe] bg-[#eef4ff] px-2 py-0.5 rounded-md">
+                          YES24 티켓
+                        </span>
+                      ) : null}
                     </div>
 
                     {/* Prominent Ticket Open Schedule Box */}
@@ -284,18 +289,33 @@ export default function TicketOpensPage() {
                         </div>
                       </div>
 
-                      {/* Direct Reservation Link Button */}
-                      {bookingUrl && (
-                        <a
-                          href={bookingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#3182f6] text-white text-[13px] font-bold hover:bg-[#1b64da] transition-colors shrink-0 whitespace-nowrap shadow-xs"
-                        >
-                          <span>예매 바로가기</span>
-                          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                        </a>
-                      )}
+                      {/* Direct Reservation Link Buttons */}
+                      <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                        {concert.tickets && concert.tickets.length > 0 ? (
+                          concert.tickets.map((t) => (
+                            <a
+                              key={t.url}
+                              href={t.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#3182f6] text-white text-[12px] font-bold hover:bg-[#1b64da] transition-colors shrink-0 whitespace-nowrap shadow-xs"
+                            >
+                              <span>{t.name || '예매 바로가기'}</span>
+                              <ExternalLink className="h-3 w-3 shrink-0" />
+                            </a>
+                          ))
+                        ) : bookingUrl ? (
+                          <a
+                            href={bookingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#3182f6] text-white text-[13px] font-bold hover:bg-[#1b64da] transition-colors shrink-0 whitespace-nowrap shadow-xs"
+                          >
+                            <span>예매 바로가기</span>
+                            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                          </a>
+                        ) : null}
+                      </div>
                     </div>
 
                     {/* Concert Title */}

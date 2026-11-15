@@ -20,6 +20,7 @@ import {
 import { getBatchQuotaState, sendVerificationEmail } from "./emailService.js";
 import { getBatchRunningStatus, runBatchJob } from "./batchCron.js";
 import { fetchNolUpcomingClassical } from "./nolCrawler.js";
+import { fetchYes24Classical } from "./yes24Crawler.js";
 
 const COOKIE_NAME = "manageToken";
 const COOKIE_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
@@ -492,6 +493,24 @@ export function createApiRouter(serviceKey) {
         ok: true,
         count: items.length,
         message: `놀유니버스 클래식 티켓오픈 공연 ${items.length}건 수집 및 동기화 완료`,
+      });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  /**
+   * YES24 티켓 및 티켓오픈 일정 크롤러 수동 실행 (POST /api/admin/crawl-yes24)
+   */
+  router.post("/admin/crawl-yes24", async (req, res) => {
+    try {
+      const items = await fetchYes24Classical();
+      // force reload cache so list includes new upcoming tickets
+      await api.concerts(true);
+      return res.status(200).json({
+        ok: true,
+        count: items.length,
+        message: `YES24 클래식 공연 ${items.length}건 수집 및 동기화 완료`,
       });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
