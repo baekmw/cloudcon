@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Bell, Compass, Download, Menu, Search, Share, Ticket, X } from 'lucide-react'
 import { scanForNewConcerts, useAlerts } from '../lib/alerts.js'
 import { trackVisit } from '../lib/api.js'
