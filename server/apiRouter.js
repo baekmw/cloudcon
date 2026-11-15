@@ -252,9 +252,22 @@ export function createApiRouter(serviceKey) {
       verifiedSubscribers,
       todayEmailSent,
       dailyEmailLimit: 100,
+      visitors: {
+        todayUv: todayVisitors,
+        cumulativeUv: totalVisitors,
+      },
+      subscribers: {
+        total: totalSubscribers,
+        verified: verifiedSubscribers,
+      },
+      emails: {
+        todaySent: todayEmailSent,
+        dailyLimit: 100,
+      },
       totalCachedPrograms: totalCachedCount,
       topSearches,
       topKeywords,
+      topSubscriberKeywords: topKeywords,
       batchLogs: analytics.batchLogs || [],
       isBatchRunning: getBatchRunningStatus(),
     });
@@ -303,13 +316,23 @@ export function createApiRouter(serviceKey) {
   router.get("/admin/subscribers", (req, res) => {
     const subscribers = loadSubscribers();
     const list = Object.entries(subscribers)
-      .map(([email, sub]) => ({
-        email,
-        verified: Boolean(sub?.verified),
-        keywords: Array.isArray(sub?.keywords) ? sub.keywords : [],
-        notifiedCount: Array.isArray(sub?.notifiedIds) ? sub.notifiedIds.length : 0,
-        createdAt: sub?.createdAt || "",
-      }))
+      .map(([email, sub]) => {
+        const batchCount = Array.isArray(sub?.notifiedIds) ? sub.notifiedIds.length : 0;
+        const verifyCount = Number(sub?.verificationCount ?? (sub?.verified ? 1 : 0));
+        const totalSent = Number(sub?.totalEmailsSent) || (batchCount + verifyCount);
+
+        return {
+          email,
+          verified: Boolean(sub?.verified),
+          keywords: Array.isArray(sub?.keywords) ? sub.keywords : [],
+          notifiedCount: totalSent,
+          notifiedConcerts: sub?.notifiedIds || [],
+          verificationCount: verifyCount,
+          totalEmailsSent: totalSent,
+          createdAt: sub?.createdAt || "",
+          lastEmailSentAt: sub?.lastEmailSentAt || sub?.createdAt || "",
+        };
+      })
       .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 
     return res.status(200).json({ ok: true, subscribers: list });
@@ -554,6 +577,9 @@ export function createApiRouter(serviceKey) {
           verified: false,
           keywords: keyword ? [keyword] : [],
           notifiedIds: [],
+          verificationCount: 1,
+          totalEmailsSent: 1,
+          lastEmailSentAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
         };
 
@@ -593,6 +619,12 @@ export function createApiRouter(serviceKey) {
       // 미인증 상태이거나 기기 연결 링크 발송을 명시 요청한 경우 인증 메일 발송
       if (!existing.verified || sendMagicLink) {
         await sendVerificationEmail(email, existing.manageToken, keyword);
+        existing.verificationCount = Number(existing.verificationCount || 0) + 1;
+        existing.totalEmailsSent = Number(existing.totalEmailsSent || 0) + 1;
+        existing.lastEmailSentAt = new Date().toISOString();
+        subscribers[email] = existing;
+        saveSubscribers(subscribers);
+
         return res.status(200).json({
           ok: true,
           status: "verification_sent",

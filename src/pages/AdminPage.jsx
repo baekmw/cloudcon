@@ -512,8 +512,8 @@ export default function AdminPage() {
   }
 
   const isRunning = Boolean(dashboard?.isBatchRunning || batchTriggering)
-  const todaySent = dashboard?.emails?.todaySent ?? 0
-  const dailyLimit = dashboard?.emails?.dailyLimit ?? 100
+  const todaySent = dashboard?.emails?.todaySent ?? dashboard?.todayEmailSent ?? 0
+  const dailyLimit = dashboard?.emails?.dailyLimit ?? dashboard?.dailyEmailLimit ?? 100
   const emailRatio = Math.min(100, Math.round((todaySent / dailyLimit) * 100))
 
   return (
@@ -588,13 +588,13 @@ export default function AdminPage() {
             </div>
             <div>
               <div className="text-[28px] font-extrabold text-[#191f28] leading-tight">
-                {(dashboard?.visitors?.todayUv ?? 0).toLocaleString()}
+                {(dashboard?.visitors?.todayUv ?? dashboard?.todayVisitors ?? 0).toLocaleString()}
                 <span className="text-[14px] font-semibold text-[#8b95a1] ml-1">명</span>
               </div>
               <p className="text-[12px] text-[#8b95a1] mt-1">
                 최근 30일 누적 UV:{' '}
                 <strong className="text-[#4e5968]">
-                  {(dashboard?.visitors?.cumulativeUv ?? 0).toLocaleString()}명
+                  {(dashboard?.visitors?.cumulativeUv ?? dashboard?.totalVisitors ?? 0).toLocaleString()}명
                 </strong>
               </p>
             </div>
@@ -608,13 +608,13 @@ export default function AdminPage() {
             </div>
             <div>
               <div className="text-[28px] font-extrabold text-[#191f28] leading-tight">
-                {(dashboard?.subscribers?.verified ?? 0).toLocaleString()}
+                {(dashboard?.subscribers?.verified ?? dashboard?.verifiedSubscribers ?? 0).toLocaleString()}
                 <span className="text-[14px] font-semibold text-[#8b95a1] ml-1">명</span>
               </div>
               <p className="text-[12px] text-[#8b95a1] mt-1">
                 전체 등록 구독자:{' '}
                 <strong className="text-[#4e5968]">
-                  {(dashboard?.subscribers?.total ?? 0).toLocaleString()}명
+                  {(dashboard?.subscribers?.total ?? dashboard?.totalSubscribers ?? 0).toLocaleString()}명
                 </strong>
               </p>
             </div>
@@ -930,7 +930,14 @@ export default function AdminPage() {
                               </div>
                             </td>
                             <td className="py-3 px-3 text-[#6b7684] whitespace-nowrap">
-                              {(sub.notifiedConcerts || []).length}건
+                              <span className="font-semibold text-[#191f28]">
+                                {sub.totalEmailsSent ?? sub.notifiedCount ?? (sub.notifiedConcerts || []).length ?? 0}통
+                              </span>
+                              {sub.verificationCount > 0 && (
+                                <span className="ml-1 text-[11px] text-[#8b95a1]" title="로그인/인증 링크 메일 발송 건수">
+                                  (인증 {sub.verificationCount})
+                                </span>
+                              )}
                             </td>
                             <td className="py-3 px-3 text-right whitespace-nowrap">
                               <div className="inline-flex items-center gap-1.5">

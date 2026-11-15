@@ -693,85 +693,86 @@ export default function AlertsPage() {
 
                     return (
                       <li key={kw} className="transition-colors">
-                        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:py-3.5 hover:bg-[#f9fafb]">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setExpandedKeyword(isExpanded ? null : kw)
-                            }
-                            className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer group"
-                          >
-                            <span className="text-[14.5px] sm:text-[15.5px] font-bold text-[#191f28] group-hover:text-[#3182f6] transition-colors truncate">
-                              {kw}
-                            </span>
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#e8f3ff] text-[#3182f6] shrink-0 whitespace-nowrap">
-                              공연 {matchedConcerts.length}건
-                              <ChevronDown
-                                className={`h-3 w-3 transition-transform ${
-                                  isExpanded ? 'rotate-180' : ''
-                                }`}
-                              />
-                            </span>
-                          </button>
-
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Link
-                              to={`/?q=${encodeURIComponent(kw)}`}
-                              className="inline-flex items-center gap-0.5 px-2.5 py-1.5 rounded-xl text-[12px] font-semibold text-[#4e5968] hover:text-[#3182f6] hover:bg-[#e8f3ff] whitespace-nowrap transition-colors"
-                            >
-                              <span>검색</span>
-                              <ChevronRight className="h-3 w-3 shrink-0" />
-                            </Link>
-                            <button
-                              type="button"
-                              disabled={deletingKeyword === kw}
-                              onClick={() => handleDeleteKeyword(kw)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[12px] font-semibold text-[#8b95a1] hover:text-[#f04452] hover:bg-[#fff0f1] whitespace-nowrap shrink-0 transition-colors cursor-pointer"
-                              aria-label={`${kw} 알림 삭제`}
-                            >
-                              <Trash2 className="h-3.5 w-3.5 shrink-0" />
-                              <span>{deletingKeyword === kw ? '삭제 중' : '삭제'}</span>
-                            </button>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedKeyword(isExpanded ? null : kw)}
+                          className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 hover:bg-[#f9fafb] text-left cursor-pointer group transition-colors"
+                        >
+                          <span className="text-[15px] sm:text-[16px] font-bold text-[#191f28] group-hover:text-[#3182f6] transition-colors truncate">
+                            {kw}
+                          </span>
+                          <div className="h-7 w-7 rounded-full flex items-center justify-center text-[#8b95a1] group-hover:text-[#3182f6] group-hover:bg-[#e8f3ff] transition-all shrink-0">
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform duration-200 ${
+                                isExpanded ? 'rotate-180 text-[#3182f6]' : ''
+                              }`}
+                            />
                           </div>
-                        </div>
+                        </button>
 
                         {isExpanded && (
-                          <div className="px-4 pb-4 pt-1 bg-[#f9fafb]/80 border-t border-[#f2f4f6] space-y-2 animate-fade-up">
+                          <div className="px-4 sm:px-5 pb-4 pt-3 bg-[#f9fafb] border-t border-[#f2f4f6] space-y-3 animate-fade-up">
+                            {/* 아코디언 상단: 매칭 건수 + 검색/삭제 버튼 */}
+                            <div className="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-[#e5e8eb]/70 text-[12.5px]">
+                              <div className="flex items-center gap-1.5 font-semibold text-[#4e5968]">
+                                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#3182f6]" />
+                                <span>매칭된 공연 {matchedConcerts.length}건</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Link
+                                  to={`/?q=${encodeURIComponent(kw)}`}
+                                  className="inline-flex items-center gap-1 font-semibold text-[#3182f6] hover:underline"
+                                >
+                                  <span>'{kw}' 전체 검색</span>
+                                  <ChevronRight className="h-3.5 w-3.5" />
+                                </Link>
+                                <span className="text-[#d1d6db]">·</span>
+                                <button
+                                  type="button"
+                                  disabled={deletingKeyword === kw}
+                                  onClick={() => handleDeleteKeyword(kw)}
+                                  className="inline-flex items-center gap-1 font-semibold text-[#8b95a1] hover:text-[#f04452] transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <span>{deletingKeyword === kw ? '삭제 중...' : '알림 삭제'}</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 매칭된 공연 카드 목록 */}
                             {matchedConcerts.length === 0 ? (
                               <p className="text-[12.5px] text-[#8b95a1] py-2">
                                 현재 진행·예정인 &lsquo;{kw}&rsquo; 관련 공연이 없습니다. 새 공연이 등록되면 이메일로 바로 알려드릴게요.
                               </p>
                             ) : (
-                              <>
-                                <div className="space-y-1.5">
-                                  {matchedConcerts.slice(0, 5).map((concert) => (
-                                    <Link
-                                      key={concert.id}
-                                      to={`/concerts/${concert.id}`}
-                                      className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-[#e5e8eb] hover:border-[#3182f6] transition-all group"
-                                    >
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-1.5 mb-1">
-                                          <StatePill state={concert.state} />
-                                          <span className="text-[12px] font-bold text-[#191f28] truncate group-hover:text-[#3182f6]">
-                                            {concert.title}
-                                          </span>
-                                        </div>
-                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-[#6b7684]">
-                                          <span className="flex items-center gap-1 truncate">
-                                            <MapPin className="h-3 w-3 text-[#8b95a1] shrink-0" />
-                                            {concert.venue}
-                                          </span>
-                                          <span className="flex items-center gap-1 shrink-0">
-                                            <Calendar className="h-3 w-3 text-[#8b95a1] shrink-0" />
-                                            {formatPeriod(concert.from, concert.to)}
-                                          </span>
-                                        </div>
+                              <div className="space-y-1.5">
+                                {matchedConcerts.slice(0, 5).map((concert) => (
+                                  <Link
+                                    key={concert.id}
+                                    to={`/concerts/${concert.id}`}
+                                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-[#e5e8eb] hover:border-[#3182f6] hover:shadow-xs transition-all group"
+                                  >
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5 mb-1">
+                                        <StatePill state={concert.state} />
+                                        <span className="text-[12.5px] font-bold text-[#191f28] truncate group-hover:text-[#3182f6]">
+                                          {concert.title}
+                                        </span>
                                       </div>
-                                      <ChevronRight className="h-4 w-4 text-[#8b95a1] group-hover:text-[#3182f6] shrink-0" />
-                                    </Link>
-                                  ))}
-                                </div>
+                                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-[#6b7684]">
+                                        <span className="flex items-center gap-1 truncate">
+                                          <MapPin className="h-3 w-3 text-[#8b95a1] shrink-0" />
+                                          {concert.venue}
+                                        </span>
+                                        <span className="flex items-center gap-1 shrink-0">
+                                          <Calendar className="h-3 w-3 text-[#8b95a1] shrink-0" />
+                                          {formatPeriod(concert.from, concert.to)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-[#8b95a1] group-hover:text-[#3182f6] shrink-0" />
+                                  </Link>
+                                ))}
                                 {matchedConcerts.length > 5 && (
                                   <Link
                                     to={`/?q=${encodeURIComponent(kw)}`}
@@ -780,7 +781,7 @@ export default function AlertsPage() {
                                     외 {matchedConcerts.length - 5}건의 공연 전체 보기 &rarr;
                                   </Link>
                                 )}
-                              </>
+                              </div>
                             )}
                           </div>
                         )}

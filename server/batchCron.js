@@ -263,6 +263,8 @@ export async function runBatchJob(kopisApi, { trigger = "cron" } = {}) {
                 notifiedSet.add(item.concert.id);
               }
               sub.notifiedIds = [...notifiedSet];
+              sub.totalEmailsSent = Number(sub.totalEmailsSent || 0) + 1;
+              sub.lastEmailSentAt = new Date().toISOString();
               subscribers[email] = sub;
               saveSubscribers(subscribers);
               await sleep(BATCH_SEND_DELAY_MS);
@@ -313,6 +315,8 @@ export async function runBatchJob(kopisApi, { trigger = "cron" } = {}) {
               notifiedSet.add(item.concert.id);
             }
             sub.notifiedIds = [...notifiedSet];
+            sub.totalEmailsSent = Number(sub.totalEmailsSent || 0) + 1;
+            sub.lastEmailSentAt = new Date().toISOString();
             subscribers[email] = sub;
             saveSubscribers(subscribers);
 
