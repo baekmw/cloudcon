@@ -43,6 +43,12 @@ function getConcertTimeDisplay(schedule, runtime) {
   const mins = parseRuntimeMinutes(runtime)
 
   if (schedule) {
+    if (schedule.trim().startsWith('(러닝타임') && schedule.trim().endsWith(')')) {
+      return {
+        timeValue: '',
+        showRuntimeRow: Boolean(runtime),
+      }
+    }
     const times = [...schedule.matchAll(/\b(\d{1,2}:\d{2})\b/g)].map((m) => m[1])
     const uniqueTimes = [...new Set(times)]
     if (uniqueTimes.length > 0 && mins > 0) {

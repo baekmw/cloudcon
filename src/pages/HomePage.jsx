@@ -621,11 +621,20 @@ export default function HomePage() {
                             >
                               {c.title}
                             </Link>
-                            <p className="text-[12px] text-[#6b7684] mt-1 truncate">
-                              {c.venue || '공연장 미정'}
+                            <p className="text-[12px] text-[#4e5968] mt-1.5 truncate flex items-center gap-1.5">
+                              <MapPin className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
+                              <span className="font-medium text-[#191f28]">장소:</span>
+                              <span className="truncate">{c.venue || '공연장 미정'}</span>
                             </p>
-                            <p className="text-[11.5px] text-[#8b95a1] mt-0.5">
-                              공연일: {c.from || ''}
+                            <p className="text-[11.5px] text-[#4e5968] mt-1 truncate flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
+                              <span className="font-medium text-[#191f28]">일시:</span>
+                              <span className="truncate">{c.schedule || `공연일: ${c.from || ''}`}</span>
+                            </p>
+                            <p className="text-[11.5px] text-[#3182f6] font-semibold mt-1 truncate flex items-center gap-1.5">
+                              <Ticket className="h-3.5 w-3.5 shrink-0" />
+                              <span className="font-medium text-[#191f28]">가격:</span>
+                              <span className="truncate">{c.price || '오픈 시 예매처 공개'}</span>
                             </p>
                           </div>
                         </div>

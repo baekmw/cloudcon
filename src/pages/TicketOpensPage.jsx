@@ -316,26 +316,51 @@ export default function TicketOpensPage() {
                         출연: {concert.cast}
                       </p>
                     )}
+
+                    {/* Venue, Schedule, Price Details Box */}
+                    <div className="mt-2.5 rounded-xl bg-[#f8fafc] border border-[#f0f2f5] p-3 text-[13px] space-y-1.5">
+                      <div className="flex items-start gap-2 text-[#4e5968]">
+                        <MapPin className="h-4 w-4 text-[#8b95a1] shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="font-semibold text-[#191f28] mr-1.5">장소:</span>
+                          <span className="text-[#333d4b] font-medium">{concert.venue || '공연장 미정'}</span>
+                          {concert.venueAddress && (
+                            <span className="text-[12px] text-[#8b95a1] ml-1.5 block sm:inline">
+                              ({concert.venueAddress})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 text-[#4e5968]">
+                        <Calendar className="h-4 w-4 text-[#8b95a1] shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="font-semibold text-[#191f28] mr-1.5">일시:</span>
+                          <span className="text-[#333d4b]">
+                            {concert.schedule || (concert.from ? `${concert.from} ~ ${concert.to || concert.from}` : '일정 확인 중')}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2 text-[#4e5968]">
+                        <Ticket className="h-4 w-4 text-[#3182f6] shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="font-semibold text-[#191f28] mr-1.5">가격:</span>
+                          <span className="font-semibold text-[#3182f6]">
+                            {concert.price || '오픈 시 예매처 공개'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Metadata Footer: Performance Date & Venue */}
-                  <div className="mt-3 pt-3 border-t border-[#f2f4f6] flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-[#8b95a1]">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="flex items-center gap-1 font-medium text-[#4e5968]">
-                        <Calendar className="h-3.5 w-3.5 text-[#8b95a1]" />
-                        공연일: {concert.from || ''}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 text-[#8b95a1]" />
-                        {concert.venue || '공연장 미정'}
-                      </span>
-                    </div>
-
+                  {/* Metadata Footer: Link */}
+                  <div className="mt-3 pt-3 border-t border-[#f2f4f6] flex items-center justify-end text-[12.5px]">
                     <Link
                       to={`/concerts/${concert.id}`}
                       className="inline-flex items-center gap-1 font-semibold text-[#3182f6] hover:underline"
                     >
-                      <span>공연 상세 및 프로그램</span>
+                      <span>공연 상세 및 프로그램 소개</span>
                       <ChevronRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
