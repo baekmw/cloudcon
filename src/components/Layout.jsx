@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Bell, Compass, Download, Menu, Search, Share, X } from 'lucide-react'
+import { Bell, Compass, Download, Menu, Search, Share, Ticket, X } from 'lucide-react'
 import { scanForNewConcerts, useAlerts } from '../lib/alerts.js'
 import { trackVisit } from '../lib/api.js'
 import { Badge } from './ui/badge.jsx'
@@ -174,6 +174,10 @@ export default function Layout() {
               <Search className="h-3.5 w-3.5 shrink-0" />
               <span>검색 홈</span>
             </NavItem>
+            <NavItem to="/tickets">
+              <Ticket className="h-3.5 w-3.5 shrink-0" />
+              <span>티켓 오픈</span>
+            </NavItem>
             <NavItem to="/explore">
               <Compass className="h-3.5 w-3.5 shrink-0" />
               <span>공연 모아보기</span>
@@ -243,6 +247,14 @@ export default function Layout() {
                 >
                   <Search className="h-3.5 w-3.5 shrink-0" />
                   <span>검색 홈</span>
+                </NavItem>
+                <NavItem
+                  to="/tickets"
+                  mobile
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Ticket className="h-3.5 w-3.5 shrink-0" />
+                  <span>티켓 오픈</span>
                 </NavItem>
                 <NavItem
                   to="/explore"

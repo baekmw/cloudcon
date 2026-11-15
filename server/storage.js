@@ -8,6 +8,7 @@ export const LEGACY_PROGRAMS_DIR = path.join(DATA_DIR, "programs");
 export const SUBSCRIBERS_PATH = path.join(DATA_DIR, "subscribers.json");
 export const PROGRAMS_CACHE_PATH = path.join(DATA_DIR, "programs_cache.json");
 export const ANALYTICS_PATH = path.join(DATA_DIR, "analytics.json");
+export const NOL_UPCOMING_PATH = path.join(DATA_DIR, "nol_upcoming.json");
 export const LEGACY_PROGRAMS_CACHE_PATH = path.join(
   LEGACY_PROGRAMS_DIR,
   "programs_cache.json"
@@ -149,6 +150,15 @@ export function initDataStorage() {
     if (!fs.existsSync(ANALYTICS_PATH)) {
       writeJsonAtomic(ANALYTICS_PATH, createDefaultAnalytics());
       console.log(`[Storage] Created initial ${ANALYTICS_PATH}`);
+    }
+
+    if (!fs.existsSync(NOL_UPCOMING_PATH)) {
+      writeJsonAtomic(NOL_UPCOMING_PATH, {
+        updatedAt: null,
+        totalCount: 0,
+        concerts: [],
+      });
+      console.log(`[Storage] Created initial ${NOL_UPCOMING_PATH}`);
     }
   } catch (err) {
     console.error("[Storage] Failed to initialize data storage:", err.message);
@@ -381,4 +391,27 @@ export function saveUnifiedProgramsCache(memoryCache) {
     writeJsonAtomic(LEGACY_PROGRAMS_CACHE_PATH, merged);
   }
   return ok;
+}
+
+/**
+ * NOL 티켓 오픈 공연 저장소 헬퍼 (`server/data/nol_upcoming.json`)
+ */
+export function loadNolUpcoming() {
+  initDataStorage();
+  const data = readJsonSafe(NOL_UPCOMING_PATH, {
+    updatedAt: null,
+    totalCount: 0,
+    concerts: [],
+  });
+  if (!data || typeof data !== "object") {
+    return { updatedAt: null, totalCount: 0, concerts: [] };
+  }
+  if (!Array.isArray(data.concerts)) {
+    data.concerts = [];
+  }
+  return data;
+}
+
+export function saveNolUpcoming(data) {
+  return writeJsonAtomic(NOL_UPCOMING_PATH, data);
 }

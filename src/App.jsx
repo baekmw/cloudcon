@@ -5,6 +5,7 @@ import AlertsPage from './pages/AlertsPage.jsx'
 import ConcertDetailPage from './pages/ConcertDetailPage.jsx'
 import ExplorePage from './pages/ExplorePage.jsx'
 import HomePage from './pages/HomePage.jsx'
+import TicketOpensPage from './pages/TicketOpensPage.jsx'
 
 export default function App() {
   return (
@@ -12,6 +13,8 @@ export default function App() {
       <Route path="/admin" element={<AdminPage />} />
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="tickets" element={<TicketOpensPage />} />
+        <Route path="ticket-opens" element={<TicketOpensPage />} />
         <Route path="explore" element={<ExplorePage />} />
         <Route path="concerts/:id" element={<ConcertDetailPage />} />
         <Route path="alerts" element={<AlertsPage />} />

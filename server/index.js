@@ -58,6 +58,12 @@ app.get("/sitemap.xml", async (req, res) => {
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>${baseUrl}/tickets</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
     <loc>${baseUrl}/explore</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>

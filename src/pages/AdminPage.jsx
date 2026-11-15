@@ -20,10 +20,12 @@ import {
   TrendingUp,
   Users,
   X,
+  Ticket,
 } from 'lucide-react'
 import {
   adminLogin,
   adminLogout,
+  crawlNolUpcoming,
   deleteAdminSubscriber,
   getAdminCache,
   getAdminDashboard,
@@ -165,6 +167,23 @@ export default function AdminPage() {
       showToast(err?.message || '배치 실행에 실패했습니다.', 'error')
     } finally {
       setBatchTriggering(false)
+    }
+  }
+
+  const [isCrawlingNol, setIsCrawlingNol] = useState(false)
+
+  async function handleCrawlNol() {
+    if (isCrawlingNol) return
+    setIsCrawlingNol(true)
+    try {
+      const res = await crawlNolUpcoming()
+      showToast(res?.message || 'NOL 클래식 티켓오픈 수집이 완료되었습니다.', 'success')
+      const updated = await getAdminDashboard()
+      setDashboard(updated)
+    } catch (err) {
+      showToast(err?.message || 'NOL 티켓오픈 수집에 실패했습니다.', 'error')
+    } finally {
+      setIsCrawlingNol(false)
     }
   }
 
@@ -638,7 +657,7 @@ export default function AdminPage() {
                 type="button"
                 onClick={handleRunBatch}
                 disabled={isRunning}
-                className="w-full h-11 rounded-xl bg-[#3182f6] hover:bg-[#1b64da] disabled:bg-[#8b95a1] text-white text-[13.5px] font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="w-full h-10 rounded-xl bg-[#3182f6] hover:bg-[#1b64da] disabled:bg-[#8b95a1] text-white text-[13px] font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 {isRunning ? (
                   <>
@@ -652,8 +671,26 @@ export default function AdminPage() {
                   </>
                 )}
               </button>
-              <p className="text-[11.5px] text-[#8b95a1] text-center">
-                KOPIS 수집 → AI 곡 추출 → 알림 발송
+              <button
+                type="button"
+                onClick={handleCrawlNol}
+                disabled={isCrawlingNol}
+                className="w-full h-9 rounded-xl border border-[#3182f6] bg-white hover:bg-[#e8f3ff] disabled:bg-[#f2f4f6] text-[#3182f6] text-[12.5px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                {isCrawlingNol ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>NOL 티켓오픈 수집 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <Ticket className="h-3.5 w-3.5" />
+                    <span>NOL 티켓오픈 즉시 수집</span>
+                  </>
+                )}
+              </button>
+              <p className="text-[11px] text-[#8b95a1] text-center">
+                NOL 티켓오픈 + KOPIS 수집 + AI 추출 + 알림
               </p>
             </div>
           </div>

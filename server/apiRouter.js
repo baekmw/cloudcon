@@ -19,6 +19,7 @@ import {
 } from "./storage.js";
 import { getBatchQuotaState, sendVerificationEmail } from "./emailService.js";
 import { getBatchRunningStatus, runBatchJob } from "./batchCron.js";
+import { fetchNolUpcomingClassical } from "./nolCrawler.js";
 
 const COOKIE_NAME = "manageToken";
 const COOKIE_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000; // 1 year
@@ -479,6 +480,24 @@ export function createApiRouter(serviceKey) {
     });
   });
 
+  /**
+   * NOL 티켓오픈 일정 크롤러 수동 실행 (POST /api/admin/crawl-nol)
+   */
+  router.post("/admin/crawl-nol", async (req, res) => {
+    try {
+      const items = await fetchNolUpcomingClassical();
+      // force reload cache so list includes new upcoming tickets
+      await api.concerts(true);
+      return res.status(200).json({
+        ok: true,
+        count: items.length,
+        message: `NOL 클래식 티켓오픈 공연 ${items.length}건 수집 및 동기화 완료`,
+      });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
   // =========================================================================
   // 구독자 알림 API (/api/subscribe, /api/verify, /api/my-keywords, /api/disconnect)
   // =========================================================================
@@ -765,6 +784,89 @@ export function createApiRouter(serviceKey) {
 
   router.get("/status", async (req, res) => {
     return res.status(200).json(await api.status());
+  });
+
+  /**
+   * 클래식 공연 티켓 오픈 일정 목록 조회 (GET /api/ticket-opens)
+   * NOL 및 KOPIS 연동 티켓 오픈 일정 (오픈일시 오름차순 정렬)
+   */
+  router.get("/ticket-opens", async (req, res) => {
+    try {
+      const ticketOpens = await api.ticketOpens();
+      const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
+      const todayStr = now.toISOString().slice(0, 10);
+
+      const enriched = ticketOpens.map((concert) => {
+        const openAt = concert.ticketOpen?.openAt || "";
+        let dDay = null;
+        let dDayLabel = "";
+        let openAtFormatted = openAt;
+        let isToday = false;
+        let isTomorrow = false;
+        let isPast = false;
+
+        if (openAt) {
+          try {
+            const openDate = new Date(openAt);
+            const openDateStr = openAt.slice(0, 10);
+            const diffTime =
+              new Date(openDateStr).getTime() - new Date(todayStr).getTime();
+            dDay = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            const days = ["일", "월", "화", "수", "목", "금", "토"];
+            const dayName = days[openDate.getDay()];
+            const hh = String(openDate.getHours()).padStart(2, "0");
+            const mm = String(openDate.getMinutes()).padStart(2, "0");
+            openAtFormatted = `${openDate.getFullYear()}.${String(
+              openDate.getMonth() + 1
+            ).padStart(2, "0")}.${String(openDate.getDate()).padStart(
+              2,
+              "0"
+            )}(${dayName}) ${hh}:${mm}`;
+
+            if (dDay < 0) {
+              isPast = true;
+              dDayLabel = "오픈 완료";
+            } else if (dDay === 0) {
+              isToday = true;
+              dDayLabel = `오늘 ${hh}:${mm} 오픈`;
+            } else if (dDay === 1) {
+              isTomorrow = true;
+              dDayLabel = `내일 ${hh}:${mm} 오픈`;
+            } else {
+              dDayLabel = `D-${dDay}`;
+            }
+          } catch {
+            dDayLabel = "오픈 예정";
+          }
+        }
+
+        return {
+          ...concert,
+          ticketOpen: {
+            ...concert.ticketOpen,
+            dDay,
+            dDayLabel,
+            openAtFormatted,
+            isToday,
+            isTomorrow,
+            isPast,
+          },
+        };
+      });
+
+      return res.status(200).json({
+        ok: true,
+        count: enriched.length,
+        ticketOpens: enriched,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        ok: false,
+        error: error.message,
+        ticketOpens: [],
+      });
+    }
   });
 
   router.get("/concerts", async (req, res) => {

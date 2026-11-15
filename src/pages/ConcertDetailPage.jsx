@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, ChevronDown, ChevronUp, ExternalLink, Bell, Calendar, MapPin, Check, Ticket } from 'lucide-react'
+import { ChevronLeft, ChevronDown, ChevronUp, ExternalLink, Bell, Calendar, MapPin, Check, Ticket, Clock } from 'lucide-react'
 import Poster from '../components/Poster.jsx'
 import StatePill from '../components/StatePill.jsx'
 import ProgramList from '../components/ProgramList.jsx'
@@ -444,6 +444,46 @@ export default function ConcertDetailPage() {
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#191f28] leading-tight">
             {concert.title}
           </h1>
+
+          {/* 티켓 예매 오픈 안내 배너 */}
+          {concert.ticketOpen && concert.ticketOpen.openAt && (
+            <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-[#fff0f1] to-[#fff7f7] border border-[#ffcdd2] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+              <div>
+                <div className="flex items-center gap-1.5 text-[12px] font-bold text-[#f04452] mb-1">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  <span>티켓 예매 오픈 ({concert.ticketOpen.typeName || '일반 예매'})</span>
+                </div>
+                <div className="text-[17px] sm:text-[19px] font-extrabold text-[#191f28]">
+                  {(() => {
+                    try {
+                      const d = new Date(concert.ticketOpen.openAt)
+                      const days = ['일', '월', '화', '수', '목', '금', '토']
+                      const dayName = days[d.getDay()]
+                      const yyyy = d.getFullYear()
+                      const mm = String(d.getMonth() + 1).padStart(2, '0')
+                      const dd = String(d.getDate()).padStart(2, '0')
+                      const hh = String(d.getHours()).padStart(2, '0')
+                      const min = String(d.getMinutes()).padStart(2, '0')
+                      return `${yyyy}.${mm}.${dd}(${dayName}) ${hh}:${min} 오픈`
+                    } catch {
+                      return concert.ticketOpen.openAt
+                    }
+                  })()}
+                </div>
+              </div>
+              {concert.ticketOpen.bookingUrl && (
+                <a
+                  href={concert.ticketOpen.bookingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#f04452] text-white text-[13px] font-bold hover:bg-[#d93845] transition-colors shrink-0 whitespace-nowrap shadow-xs"
+                >
+                  <span>예매처 바로가기</span>
+                  <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                </a>
+              )}
+            </div>
+          )}
 
           {/* Facts Card */}
           <Card className="mt-6 border-[#e5e8eb] overflow-hidden">

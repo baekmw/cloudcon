@@ -13,6 +13,13 @@ export function getConcerts({ refresh = false } = {}) {
   return fetch(`/api/concerts${query}`).then(readJson)
 }
 
+/**
+ * 클래식 공연 티켓 오픈 일정 목록 조회 (GET /api/ticket-opens)
+ */
+export function getTicketOpens() {
+  return fetch('/api/ticket-opens').then(readJson)
+}
+
 export function getConcert(id) {
   return fetch(`/api/concerts/${encodeURIComponent(id)}`).then(readJson)
 }
@@ -194,6 +201,13 @@ export function updateAdminCache(concertId, payload) {
 
 export async function reextractEmptyPrograms() {
   return fetch('/api/admin/reextract-empty', {
+    method: 'POST',
+    credentials: 'include',
+  }).then(readJson)
+}
+
+export function crawlNolUpcoming() {
+  return fetch('/api/admin/crawl-nol', {
     method: 'POST',
     credentials: 'include',
   }).then(readJson)
