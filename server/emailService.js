@@ -341,7 +341,7 @@ export async function sendTicketOpenAlertEmail(email, manageToken, matchedItems)
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <a href="${bookingUrl}" target="_blank" style="display: inline-block; background-color: #3182f6; color: #ffffff; font-size: 13px; font-weight: 700; text-decoration: none; padding: 10px 18px; border-radius: 10px;">
-              인터파크/NOL 예매 바로가기 &rarr;
+              놀유니버스 예매 바로가기 &rarr;
             </a>
             <a href="${concertUrl}" style="display: inline-block; background-color: #ffffff; color: #4e5968; border: 1px solid #d1d6db; font-size: 13px; font-weight: 600; text-decoration: none; padding: 10px 16px; border-radius: 10px;">
               클라우드콘 공연 상세

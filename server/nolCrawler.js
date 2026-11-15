@@ -236,19 +236,48 @@ export async function fetchPublicProductHtml(goodsCode) {
 
     // 10. 출연진 (Cast)
     let cast = "";
-    const castNoticeMatch = html.match(
-      /(?:\[아티스트\]|\[출연진\]|출연진|출연|아티스트)\s*[:\n]\s*([^\n\r<]+(?:\n[^\n\r<]+)?)/i
+    const castingMatch = html.match(
+      /castingInfo\\*"\s*:\s*\\*"(.*?)\\*",\\*"bookingPopupMessage/
     );
-    if (castNoticeMatch) {
-      cast = cleanText(castNoticeMatch[1]);
+    if (castingMatch && castingMatch[1]) {
+      const rawCasting = castingMatch[1]
+        .replace(/\\u003cbr\s*\/?[^>]*\\u003e/gi, ", ")
+        .replace(/<br\s*\/?>/gi, ", ")
+        .replace(/\\u003c[^>]+?\\u003e/g, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\\"/g, '"')
+        .trim();
+      if (
+        rawCasting &&
+        !rawCasting.includes("펼쳐지는") &&
+        !rawCasting.includes("선사하는")
+      ) {
+        cast = cleanText(rawCasting);
+      }
     }
     if (!cast) {
-      const musicianMatch = html.match(
-        /((?:지휘\s*[^<\n]+|연주\s*[^<\n]+|[가-힣]{2,4}\s*\((?:피아노|바이올린|첼로|지휘|소프라노|테너)\)[^<\n]*))/i
+      const castNoticeMatch = html.match(
+        /(?:\[아티스트\]|\[출연진\]|출연진|출연|아티스트)\s*[:\n]\s*([^\n\r<]+(?:\n[^\n\r<]+)?)/i
       );
-      if (musicianMatch) {
-        cast = cleanText(musicianMatch[1]);
+      if (castNoticeMatch) {
+        const candidate = cleanText(castNoticeMatch[1]);
+        if (
+          candidate &&
+          !candidate.includes("펼쳐지는") &&
+          !candidate.includes("선사하는") &&
+          !candidate.includes("오픈")
+        ) {
+          cast = candidate;
+        }
       }
+    }
+    if (
+      cast.includes("펼쳐지는") ||
+      cast.includes("선사하는") ||
+      cast.length > 80 ||
+      cast === ","
+    ) {
+      cast = "";
     }
 
     const bookingUrl = `https://tickets.interpark.com/goods/${goodsCode}`;
@@ -289,13 +318,13 @@ export async function fetchPublicProductHtml(goodsCode) {
           ? "대구"
           : "서울",
       cast,
-      story: `NOL 단독 오픈 클래식 공연입니다.`,
+      story: "",
       state: "공연예정",
       openRun: false,
       visit: false,
       tickets: [
         {
-          name: "인터파크 / NOL 티켓",
+          name: "놀유니버스",
           url: bookingUrl,
         },
       ],

@@ -176,7 +176,7 @@ export default function Layout() {
             </NavItem>
             <NavItem to="/tickets">
               <Ticket className="h-3.5 w-3.5 shrink-0" />
-              <span>티켓 오픈</span>
+              <span>티켓 오픈일 보기</span>
             </NavItem>
             <NavItem to="/explore">
               <Compass className="h-3.5 w-3.5 shrink-0" />
@@ -254,7 +254,7 @@ export default function Layout() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Ticket className="h-3.5 w-3.5 shrink-0" />
-                  <span>티켓 오픈</span>
+                  <span>티켓 오픈일 보기</span>
                 </NavItem>
                 <NavItem
                   to="/explore"
@@ -308,7 +308,7 @@ export default function Layout() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[#e5e8eb] overflow-hidden">
-                  <TicketLogo className="h-9 w-9" filled={true} whiteBg={true} />
+                  <TicketLogo className="h-9 w-9" filled={false} whiteBg={true} />
                 </div>
                 <div>
                   <h3 className="text-[16px] font-bold text-[#191f28]">cloudcon 앱 설치</h3>

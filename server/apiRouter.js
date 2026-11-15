@@ -491,7 +491,7 @@ export function createApiRouter(serviceKey) {
       return res.status(200).json({
         ok: true,
         count: items.length,
-        message: `NOL 클래식 티켓오픈 공연 ${items.length}건 수집 및 동기화 완료`,
+        message: `놀유니버스 클래식 티켓오픈 공연 ${items.length}건 수집 및 동기화 완료`,
       });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });

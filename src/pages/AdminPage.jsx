@@ -177,11 +177,11 @@ export default function AdminPage() {
     setIsCrawlingNol(true)
     try {
       const res = await crawlNolUpcoming()
-      showToast(res?.message || 'NOL 클래식 티켓오픈 수집이 완료되었습니다.', 'success')
+      showToast(res?.message || '놀유니버스 클래식 티켓오픈 수집이 완료되었습니다.', 'success')
       const updated = await getAdminDashboard()
       setDashboard(updated)
     } catch (err) {
-      showToast(err?.message || 'NOL 티켓오픈 수집에 실패했습니다.', 'error')
+      showToast(err?.message || '놀유니버스 티켓오픈 수집에 실패했습니다.', 'error')
     } finally {
       setIsCrawlingNol(false)
     }
@@ -680,17 +680,17 @@ export default function AdminPage() {
                 {isCrawlingNol ? (
                   <>
                     <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                    <span>NOL 티켓오픈 수집 중...</span>
+                    <span>놀유니버스 티켓오픈 수집 중...</span>
                   </>
                 ) : (
                   <>
                     <Ticket className="h-3.5 w-3.5" />
-                    <span>NOL 티켓오픈 즉시 수집</span>
+                    <span>놀유니버스 티켓오픈 즉시 수집</span>
                   </>
                 )}
               </button>
               <p className="text-[11px] text-[#8b95a1] text-center">
-                NOL 티켓오픈 + KOPIS 수집 + AI 추출 + 알림
+                놀유니버스 티켓오픈 + KOPIS 수집 + AI 추출 + 알림
               </p>
             </div>
           </div>

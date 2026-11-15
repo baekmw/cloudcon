@@ -342,6 +342,7 @@ export default function HomePage() {
 
     const matches = []
     for (const concert of concerts) {
+      if (concert.source === 'nol') continue
       if (!matchesState(concert, state)) continue
       const matchResult = matchConcertClassical(concert, needle, concert.programs)
       if (matchResult.matched) {
@@ -377,14 +378,6 @@ export default function HomePage() {
       return (a.title || '').localeCompare(b.title || '', 'ko')
     })
   }, [concerts, q, state])
-
-  const upcomingTicketOpens = useMemo(() => {
-    return concerts
-      .filter((c) => c.ticketOpen && c.ticketOpen.openAt)
-      .sort((a, b) =>
-        (a.ticketOpen.openAt || '9999').localeCompare(b.ticketOpen.openAt || '9999')
-      )
-  }, [concerts])
 
   const hasSearch = Boolean(q.trim())
   const targetClean = q.trim().toLowerCase()
@@ -502,23 +495,20 @@ export default function HomePage() {
             <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
               <Link
                 to="/tickets"
-                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl bg-[#f7faff] border border-[#d0e4ff] shadow-xs text-[14px] text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] transition-all group"
+                className="flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl bg-white border border-[#e5e8eb] shadow-xs text-[14px] text-[#4e5968] hover:text-[#191f28] hover:border-[#3182f6] transition-all group"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-xl bg-[#3182f6] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                  <div className="h-9 w-9 rounded-xl bg-[#f2f4f6] text-[#4e5968] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <Ticket className="h-4.5 w-4.5" />
                   </div>
                   <div className="text-left min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="font-bold text-[#191f28] whitespace-nowrap">티켓 오픈</p>
-                      <span className="text-[10px] font-extrabold bg-[#f04452] text-white px-1.5 py-0.2 rounded-full">HOT</span>
-                    </div>
-                    <p className="text-[12px] text-[#6b7684] truncate">
-                      인터파크·NOL 단독 오픈 일정
+                    <p className="font-bold text-[#191f28] whitespace-nowrap">티켓 오픈일 보기</p>
+                    <p className="text-[12px] text-[#8b95a1] truncate">
+                      놀유니버스 오픈 일정
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#3182f6] shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="h-4 w-4 text-[#8b95a1] shrink-0 group-hover:translate-x-0.5 transition-transform" />
               </Link>
 
               <Link
@@ -556,114 +546,6 @@ export default function HomePage() {
                 </div>
                 <ChevronRight className="h-4 w-4 text-[#8b95a1] shrink-0 group-hover:translate-x-0.5 transition-transform" />
               </Link>
-            </div>
-          )}
-
-          {/* 주력 상품: 곧 오픈하는 클래식 공연 티켓 일정 섹션 */}
-          {!hasSearch && upcomingTicketOpens.length > 0 && (
-            <div className="mt-10 w-full animate-fade-up">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-[17px] font-extrabold text-[#191f28] tracking-tight">
-                    🔥 티켓 예매 오픈 예정
-                  </span>
-                  <span className="text-[11.5px] font-bold text-[#3182f6] bg-[#e8f3ff] px-2 py-0.5 rounded-full">
-                    주력 상품
-                  </span>
-                </div>
-                <Link
-                  to="/tickets"
-                  className="text-[13px] font-bold text-[#3182f6] hover:underline flex items-center gap-1"
-                >
-                  <span>전체 일정 ({upcomingTicketOpens.length}건)</span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {upcomingTicketOpens.slice(0, 4).map((c) => {
-                  const openAt = c.ticketOpen?.openAt || ''
-                  const bookingUrl =
-                    c.ticketOpen?.bookingUrl ||
-                    (c.tickets && c.tickets[0]?.url) ||
-                    '#'
-
-                  return (
-                    <div
-                      key={c.id}
-                      className="p-4 rounded-2xl bg-white border border-[#e5e8eb] hover:border-[#3182f6] transition-all hover:shadow-[0_4px_16px_rgba(49,130,246,0.06)] flex flex-col justify-between"
-                    >
-                      <div>
-                        {/* Open Time Banner */}
-                        <div className="flex items-center justify-between gap-2 mb-2.5">
-                          <span className="inline-flex items-center gap-1 text-[12px] font-extrabold text-[#f04452] bg-[#fff0f1] px-2 py-0.5 rounded-md">
-                            <Clock className="h-3 w-3 shrink-0" />
-                            {c.ticketOpen?.dDayLabel || '오픈 예정'}
-                          </span>
-                          <span className="text-[11.5px] font-semibold text-[#8b95a1]">
-                            {c.ticketOpen?.typeName || '일반 예매'}
-                          </span>
-                        </div>
-
-                        {/* Concert Info */}
-                        <div className="flex gap-3 items-start mb-3">
-                          <div className="w-14 aspect-[3/4] rounded-lg overflow-hidden bg-[#f2f4f6] shrink-0">
-                            <Poster
-                              src={c.poster}
-                              title={c.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <Link
-                              to={`/concerts/${c.id}`}
-                              className="font-bold text-[14.5px] text-[#191f28] hover:text-[#3182f6] transition-colors line-clamp-2 leading-snug break-keep"
-                            >
-                              {c.title}
-                            </Link>
-                            <p className="text-[12px] text-[#4e5968] mt-1.5 truncate flex items-center gap-1.5">
-                              <MapPin className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
-                              <span className="font-medium text-[#191f28]">장소:</span>
-                              <span className="truncate">{c.venue || '공연장 미정'}</span>
-                            </p>
-                            <p className="text-[11.5px] text-[#4e5968] mt-1 truncate flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5 text-[#8b95a1] shrink-0" />
-                              <span className="font-medium text-[#191f28]">일시:</span>
-                              <span className="truncate">{c.schedule || `공연일: ${c.from || ''}`}</span>
-                            </p>
-                            <p className="text-[11.5px] text-[#3182f6] font-semibold mt-1 truncate flex items-center gap-1.5">
-                              <Ticket className="h-3.5 w-3.5 shrink-0" />
-                              <span className="font-medium text-[#191f28]">가격:</span>
-                              <span className="truncate">{c.price || '오픈 시 예매처 공개'}</span>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="pt-2 border-t border-[#f2f4f6] flex items-center justify-between gap-2">
-                        <Link
-                          to={`/concerts/${c.id}`}
-                          className="text-[12.5px] font-semibold text-[#4e5968] hover:text-[#191f28]"
-                        >
-                          상세보기
-                        </Link>
-                        {bookingUrl && (
-                          <a
-                            href={bookingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#3182f6] text-white text-[12px] font-bold hover:bg-[#1b64da] transition-colors"
-                          >
-                            <span>예매 바로가기</span>
-                            <ExternalLink className="h-3 w-3 shrink-0" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
             </div>
           )}
         </div>

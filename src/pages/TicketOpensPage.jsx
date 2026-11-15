@@ -134,15 +134,11 @@ export default function TicketOpensPage() {
     <div className="mx-auto max-w-[840px] px-4 sm:px-6 py-8 md:py-12 animate-fade-up">
       {/* Page Header */}
       <div className="mb-8">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#e8f3ff] text-[#3182f6] text-[12.5px] font-bold mb-3">
-          <Ticket className="h-3.5 w-3.5" />
-          <span>Cloudcon 주력 서비스</span>
-        </div>
         <h1 className="text-[24px] sm:text-[28px] font-extrabold text-[#191f28] tracking-tight">
-          티켓 오픈 일정
+          티켓 오픈일 보기
         </h1>
         <p className="mt-2 text-[14.5px] sm:text-[15.5px] text-[#6b7684] leading-relaxed break-keep">
-          좋아하는 클래식 공연의 티켓 예매 오픈 시각을 놓치지 않도록 인터파크·NOL 단독 오픈 일정을 한곳에 모았습니다. 사전에 알림 키워드를 등록해 두시면 티켓 오픈 예정 시 이메일로 즉시 알려드려요.
+          좋아하는 클래식 공연의 티켓 예매 오픈 시각을 놓치지 않도록 놀유니버스 티켓 예매 오픈 일정을 한곳에 모았습니다. 사전에 알림 키워드를 등록해 두시면 티켓 오픈 예정 시 이메일로 즉시 알려드려요.
         </p>
       </div>
 
@@ -271,7 +267,7 @@ export default function TicketOpensPage() {
                       </span>
                       {concert.source === 'nol' && (
                         <span className="text-[11px] font-medium text-[#ff3b30] bg-[#fff0f0] px-2 py-0.5 rounded-md">
-                          인터파크/NOL
+                          놀유니버스
                         </span>
                       )}
                     </div>
@@ -343,10 +339,10 @@ export default function TicketOpensPage() {
                       </div>
 
                       <div className="flex items-start gap-2 text-[#4e5968]">
-                        <Ticket className="h-4 w-4 text-[#3182f6] shrink-0 mt-0.5" />
+                        <Ticket className="h-4 w-4 text-[#8b95a1] shrink-0 mt-0.5" />
                         <div className="min-w-0">
                           <span className="font-semibold text-[#191f28] mr-1.5">가격:</span>
-                          <span className="font-semibold text-[#3182f6]">
+                          <span className="text-[#333d4b] font-medium">
                             {concert.price || '오픈 시 예매처 공개'}
                           </span>
                         </div>
