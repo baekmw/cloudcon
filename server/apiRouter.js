@@ -291,9 +291,9 @@ export function createApiRouter(serviceKey) {
 
   /**
    * 수동 배치 즉시 실행 (POST /api/admin/run-batch)
-   * 중복 동시 실행 방지 Lock 플래그 적용
+   * 비동기 백그라운드 실행으로 Nginx 60초 타임아웃 방지 및 UI 실시간 폴링 지원
    */
-  router.post("/admin/run-batch", async (req, res) => {
+  router.post("/admin/run-batch", (req, res) => {
     if (getBatchRunningStatus()) {
       return res.status(409).json({
         ok: false,
@@ -302,27 +302,19 @@ export function createApiRouter(serviceKey) {
       });
     }
 
-    const result = await runBatchJob(api, { trigger: "manual" });
-    if (result.skipped) {
-      return res.status(409).json({
-        ok: false,
-        alreadyRunning: true,
-        error: "이미 배치 작업이 실행 중입니다.",
+    // 비동기 백그라운드로 실행
+    runBatchJob(api, { trigger: "manual" })
+      .then((result) => {
+        console.log("[Batch Finished]:", result?.message || result?.log?.message || "완료");
+      })
+      .catch((err) => {
+        console.error("[Batch Error]:", err.message);
       });
-    }
-    if (!result.ok) {
-      return res.status(500).json({
-        ok: false,
-        error: result.error || "배치 실행 중 오류가 발생했습니다.",
-        log: result.log,
-      });
-    }
 
     return res.status(200).json({
       ok: true,
-      newConcerts: result.newConcerts,
-      emailsSent: result.emailsSent,
-      log: result.log,
+      isBatchRunning: true,
+      message: "배치 파이프라인 백그라운드 실행을 시작했습니다.",
     });
   });
 
