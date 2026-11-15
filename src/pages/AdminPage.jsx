@@ -29,6 +29,7 @@ import {
   getAdminDashboard,
   getAdminSubscribers,
   getConcerts,
+  reextractEmptyPrograms,
   runAdminBatch,
   toggleAdminSubscriberVerify,
   updateAdminCache,
@@ -61,6 +62,8 @@ export default function AdminPage() {
   const [rawJsonMode, setRawJsonMode] = useState(false)
   const [rawJsonText, setRawJsonText] = useState('')
   const [savingCache, setSavingCache] = useState(false)
+  const [onlyEmptyTitles, setOnlyEmptyTitles] = useState(false)
+  const [reextracting, setReextracting] = useState(false)
 
   useEffect(() => {
     document.title = 'cloudcon · 관리자 대시보드'
@@ -322,6 +325,30 @@ export default function AdminPage() {
     }
   }
 
+  async function handleTriggerReextract() {
+    if (reextracting) return
+    if (
+      !window.confirm(
+        '곡명이 비어있는("") 공연들을 대상으로 모든 세부 이미지를 모아 Gemini AI 재분석을 진행하시겠습니까? (15 RPM 한도 준수)'
+      )
+    ) {
+      return
+    }
+
+    setReextracting(true)
+    try {
+      const res = await reextractEmptyPrograms()
+      showToast(
+        res?.message || '곡명 누락 공연 재분석을 백그라운드에서 시작했습니다.',
+        'success'
+      )
+    } catch (err) {
+      showToast(err?.message || '재분석 요청에 실패했습니다.', 'error')
+    } finally {
+      setTimeout(() => setReextracting(false), 5000)
+    }
+  }
+
   const filteredSubscribers = useMemo(() => {
     const q = subFilter.trim().toLowerCase()
     if (!q) return subscribers
@@ -340,6 +367,14 @@ export default function AdminPage() {
         : Array.isArray(item?.programs)
           ? item.programs
           : []
+      const hasEmptyTitle =
+        programs.length === 0 ||
+        programs.some(
+          (p) =>
+            (!p.title || String(p.title).trim().length === 0) &&
+            (!p.titleKo || String(p.titleKo).trim().length === 0)
+        )
+
       return {
         concertId,
         title: concert?.title || `(KOPIS ID: ${concertId})`,
@@ -347,13 +382,19 @@ export default function AdminPage() {
         period: concert ? `${concert.from || ''} ~ ${concert.to || ''}` : '',
         programs,
         from: concert?.from || '',
+        hasEmptyTitle,
       }
     })
     entries.sort((a, b) => (b.from || '').localeCompare(a.from || ''))
 
+    let filtered = entries
+    if (onlyEmptyTitles) {
+      filtered = filtered.filter((e) => e.hasEmptyTitle)
+    }
+
     const q = cacheSearch.trim().toLowerCase()
-    if (!q) return entries
-    return entries.filter(
+    if (!q) return filtered
+    return filtered.filter(
       (e) =>
         e.concertId.toLowerCase().includes(q) ||
         e.title.toLowerCase().includes(q) ||
@@ -367,7 +408,25 @@ export default function AdminPage() {
             (p.searchingWord || '').toLowerCase().includes(q)
         )
     )
-  }, [cacheData, concertsMap, cacheSearch])
+  }, [cacheData, concertsMap, cacheSearch, onlyEmptyTitles])
+
+  const totalEmptyTitlesCount = useMemo(() => {
+    return Object.values(cacheData).filter((item) => {
+      const programs = Array.isArray(item)
+        ? item
+        : Array.isArray(item?.programs)
+          ? item.programs
+          : []
+      return (
+        programs.length === 0 ||
+        programs.some(
+          (p) =>
+            (!p.title || String(p.title).trim().length === 0) &&
+            (!p.titleKo || String(p.titleKo).trim().length === 0)
+        )
+      )
+    }).length
+  }, [cacheData])
 
   // 캐시 탭 진입 시 아직 선택된 공연이 없으면 첫 번째 공연 자동 선택
   useEffect(() => {
@@ -870,59 +929,117 @@ export default function AdminPage() {
 
             {/* 탭 3: 공연 AI 캐시 수정 */}
             {activeTab === 'cache' && (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                {/* 좌측: 캐시된 공연 목록 */}
-                <div className="lg:col-span-5 space-y-3">
-                  <div className="relative">
-                    <Search className="h-4 w-4 text-[#8b95a1] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={cacheSearch}
-                      onChange={(e) => setCacheSearch(e.target.value)}
-                      placeholder="공연명, KOPIS ID, 작곡가, 곡명 검색..."
-                      className="w-full h-10 rounded-xl border border-[#e5e8eb] bg-[#f9fafb] pl-9 pr-3 text-[13px] focus:outline-none focus:border-[#3182f6] focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="max-h-[540px] overflow-y-auto divide-y divide-[#f2f4f6] rounded-xl border border-[#e5e8eb]">
-                    {cacheEntriesList.length > 0 ? (
-                      cacheEntriesList.map((entry) => {
-                        const isSelected = selectedConcertId === entry.concertId
-                        return (
-                          <button
-                            key={entry.concertId}
-                            type="button"
-                            onClick={() => handleSelectCacheConcert(entry.concertId)}
-                            className={`w-full text-left p-3.5 transition-colors cursor-pointer ${
-                              isSelected ? 'bg-[#e8f3ff]/70' : 'hover:bg-[#f9fafb]'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <span className="font-mono text-[11px] font-bold text-[#3182f6] bg-[#e8f3ff] px-2 py-0.5 rounded">
-                                {entry.concertId}
-                              </span>
-                              <span className="text-[11.5px] font-semibold text-[#6b7684]">
-                                추출 곡: {entry.programs.length}개
-                              </span>
-                            </div>
-                            <p className="text-[13.5px] font-bold text-[#191f28] line-clamp-1">
-                              {entry.title}
-                            </p>
-                            {entry.venue && (
-                              <p className="text-[11.5px] text-[#8b95a1] mt-0.5 truncate">
-                                {entry.venue} · {entry.period}
-                              </p>
-                            )}
-                          </button>
-                        )
-                      })
-                    ) : (
-                      <div className="p-8 text-center text-[13px] text-[#8b95a1]">
-                        검색된 AI 캐시 항목이 없습니다.
-                      </div>
+              <div className="space-y-4">
+                {/* 상단 액션 바: 곡명 누락 공연 재분석 (15 RPM 준수) 및 필터 */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-[#f9fafb] border border-[#e5e8eb]">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setOnlyEmptyTitles((prev) => !prev)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12.5px] font-bold border transition-colors cursor-pointer ${
+                        onlyEmptyTitles
+                          ? 'bg-[#f04452] text-white border-[#f04452]'
+                          : 'bg-white text-[#4e5968] border-[#e5e8eb] hover:bg-[#f2f4f6]'
+                      }`}
+                    >
+                      <span>곡명("") 누락 공연만 보기</span>
+                      <span
+                        className={`px-1.5 py-0.2 rounded-full text-[11px] ${
+                          onlyEmptyTitles
+                            ? 'bg-white/20 text-white'
+                            : 'bg-[#f04452]/10 text-[#f04452]'
+                        }`}
+                      >
+                        {totalEmptyTitlesCount}건
+                      </span>
+                    </button>
+                    {onlyEmptyTitles && (
+                      <span className="text-[12px] text-[#8b95a1]">
+                        전체 {cacheEntriesList.length}건 표시 중
+                      </span>
                     )}
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={handleTriggerReextract}
+                    disabled={reextracting || totalEmptyTitlesCount === 0}
+                    className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#3182f6] hover:bg-[#1b64da] disabled:bg-[#8b95a1] text-white text-[12.5px] font-bold transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+                  >
+                    {reextracting ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        <span>다중 이미지 재분석 요청 중...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-3.5 w-3.5 fill-current" />
+                        <span>제목 누락 {totalEmptyTitlesCount}건 전체 재분석 (15 RPM 준수)</span>
+                      </>
+                    )}
+                  </button>
                 </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  {/* 좌측: 캐시된 공연 목록 */}
+                  <div className="lg:col-span-5 space-y-3">
+                    <div className="relative">
+                      <Search className="h-4 w-4 text-[#8b95a1] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={cacheSearch}
+                        onChange={(e) => setCacheSearch(e.target.value)}
+                        placeholder="공연명, KOPIS ID, 작곡가, 곡명 검색..."
+                        className="w-full h-10 rounded-xl border border-[#e5e8eb] bg-[#f9fafb] pl-9 pr-3 text-[13px] focus:outline-none focus:border-[#3182f6] focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="max-h-[540px] overflow-y-auto divide-y divide-[#f2f4f6] rounded-xl border border-[#e5e8eb]">
+                      {cacheEntriesList.length > 0 ? (
+                        cacheEntriesList.map((entry) => {
+                          const isSelected = selectedConcertId === entry.concertId
+                          return (
+                            <button
+                              key={entry.concertId}
+                              type="button"
+                              onClick={() => handleSelectCacheConcert(entry.concertId)}
+                              className={`w-full text-left p-3.5 transition-colors cursor-pointer ${
+                                isSelected ? 'bg-[#e8f3ff]/70' : 'hover:bg-[#f9fafb]'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-mono text-[11px] font-bold text-[#3182f6] bg-[#e8f3ff] px-2 py-0.5 rounded">
+                                    {entry.concertId}
+                                  </span>
+                                  {entry.hasEmptyTitle && (
+                                    <span className="rounded bg-[#fff0f1] px-1.5 py-0.5 text-[10.5px] font-bold text-[#f04452]">
+                                      곡명("") 누락
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[11.5px] font-semibold text-[#6b7684]">
+                                  추출 곡: {entry.programs.length}개
+                                </span>
+                              </div>
+                              <p className="text-[13.5px] font-bold text-[#191f28] line-clamp-1">
+                                {entry.title}
+                              </p>
+                              {entry.venue && (
+                                <p className="text-[11.5px] text-[#8b95a1] mt-0.5 truncate">
+                                  {entry.venue} · {entry.period}
+                                </p>
+                              )}
+                            </button>
+                          )
+                        })
+                      ) : (
+                        <div className="p-8 text-center text-[13px] text-[#8b95a1]">
+                          검색된 AI 캐시 항목이 없습니다.
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                 {/* 우측: 선택된 공연 프로그램 수정 에디터 */}
                 <div className="lg:col-span-7">
@@ -1171,10 +1288,11 @@ export default function AdminPage() {
                   )}
                 </div>
               </div>
-            )}
-          </div>
-        </section>
-      </main>
-    </div>
-  )
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
+  </div>
+)
 }

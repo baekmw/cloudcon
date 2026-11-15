@@ -129,14 +129,27 @@ export function cleanupOrphanPrograms(validConcertIds) {
   }
 }
 
-// Rate Limiter for Gemini Free Tier (4초 sleep 적용)
+// =========================================================================
+// Gemini API Rate Limiter & Global Sequential Execution Queue (15 RPM Strict 준수)
+// =========================================================================
+const MAX_RPM = 14; // Gemini Free Tier 15 RPM 한도 내 안전 마진 (분당 최대 14회)
+const WINDOW_MS = 60000; // 60초 슬라이딩 윈도우
+const MIN_GAP_MS = 4500; // 연속 호출 간 최소 4.5초 간격 보장
+
+const callTimestamps = [];
 let lastCallTime = 0;
-const MIN_CALL_GAP_MS = 4000; // 4 seconds sleep between Gemini calls to prevent rate limits
 let dailyCallCount = 0;
 let dailyCallDate = new Date().toISOString().slice(0, 10);
-const MAX_CALLS_PER_DAY = 480; // Strictly below 500 RPD
+const MAX_CALLS_PER_DAY = 480; // 일일 무료 한도 500 RPD 대비 안전선
 
-async function acquireRateLimitToken() {
+// 모든 Gemini 호출을 1개씩 순차 실행하는 글로벌 직렬화 큐
+let globalGeminiQueue = Promise.resolve();
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function acquireRateLimitSlot() {
   const today = new Date().toISOString().slice(0, 10);
   if (today !== dailyCallDate) {
     dailyCallDate = today;
@@ -144,126 +157,267 @@ async function acquireRateLimitToken() {
   }
 
   if (dailyCallCount >= MAX_CALLS_PER_DAY) {
-    console.warn(`[Gemini RateLimit] 일일 무료 한도(${MAX_CALLS_PER_DAY}회) 도달. 오늘 AI 호출을 중단합니다.`);
+    console.warn(
+      `[Gemini RateLimit] 일일 무료 한도(${MAX_CALLS_PER_DAY}회)에 도달하여 금일 AI 호출을 중단합니다.`
+    );
     return false;
   }
 
-  const now = Date.now();
-  const waitMs = MIN_CALL_GAP_MS - (now - lastCallTime);
-  if (waitMs > 0) {
-    await new Promise((r) => setTimeout(r, waitMs));
+  while (true) {
+    const now = Date.now();
+
+    // 60초 지난 오래된 호출 타임스탬프 정리
+    while (callTimestamps.length > 0 && now - callTimestamps[0] >= WINDOW_MS) {
+      callTimestamps.shift();
+    }
+
+    // 1) 60초 슬라이딩 윈도우 내 호출 수가 MAX_RPM 이상이면 대기
+    if (callTimestamps.length >= MAX_RPM) {
+      const oldest = callTimestamps[0];
+      const waitTime = oldest + WINDOW_MS - now + 250;
+      if (waitTime > 0) {
+        console.log(
+          `[Gemini RateLimit] 15 RPM 준수를 위해 ${Math.ceil(
+            waitTime / 1000
+          )}초 대기합니다. (최근 1분간 ${callTimestamps.length}회 호출됨)`
+        );
+        await sleep(waitTime);
+        continue;
+      }
+    }
+
+    // 2) 직전 호출과의 최소 간격 (4.5초) 확인
+    const gap = now - lastCallTime;
+    if (gap < MIN_GAP_MS) {
+      await sleep(MIN_GAP_MS - gap);
+      continue;
+    }
+
+    // 슬롯 획득 성공
+    const callTime = Date.now();
+    callTimestamps.push(callTime);
+    lastCallTime = callTime;
+    dailyCallCount++;
+    return true;
   }
-  lastCallTime = Date.now();
-  dailyCallCount++;
-  return true;
 }
 
 /**
- * Call Gemini Flash Lite Vision API to extract structured classical tracks from image (and story text if available)
+ * 공연이 순수 클래식(서양 고전음악) 공연인지 검증
  */
-export async function extractProgramWithGemini(imageUrl, apiKey, storyText = "") {
+export function isClassicalConcert(concert) {
+  if (!concert) return false;
+  const genre = String(concert.genre || "").trim();
+  // KOPIS 장르 분류가 서양음악(클래식)이 아니면 제외
+  if (genre && !genre.includes("서양음악") && !genre.includes("클래식")) {
+    return false;
+  }
+
+  const title = String(concert.title || "").trim();
+  // 국악, 대중가요, 뮤지컬, 트로트 등 비클래식 공연 제외 (단, '클래식' 단어가 제목에 명시된 퓨전/해설은 허용)
+  const nonClassicalRegex = /국악|판소리|마당놀이|트로트|K-POP|대중가요|뮤지컬\s*(갈라|콘서트)?|힙합/i;
+  if (nonClassicalRegex.test(title) && !title.includes("클래식")) {
+    return false;
+  }
+
+  return true;
+}
+export function enqueueGeminiTask(taskFn) {
+  const run = async () => {
+    const allowed = await acquireRateLimitSlot();
+    if (!allowed) return null;
+    return await taskFn();
+  };
+
+  const next = globalGeminiQueue.then(run, run);
+  globalGeminiQueue = next.catch(() => {});
+  return next;
+}
+
+/**
+ * 여러 개의 이미지 URL(포스터 + 세부 이미지 전체)을 다운로드하여 Gemini Vision inlineData 배열로 변환
+ */
+async function fetchImagesToInlineData(imageUrls = []) {
+  const urls = Array.from(
+    new Set(
+      (Array.isArray(imageUrls) ? imageUrls : [imageUrls])
+        .filter((u) => typeof u === "string" && u.trim().startsWith("http"))
+        .map((u) => u.trim())
+    )
+  ).slice(0, 8); // 안전을 위해 최대 8장까지 일괄 입력
+
+  if (urls.length === 0) return [];
+
+  const results = await Promise.allSettled(
+    urls.map(async (url) => {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const arrayBuffer = await res.arrayBuffer();
+      const base64 = Buffer.from(arrayBuffer).toString("base64");
+      const contentType = res.headers.get("content-type") || "image/jpeg";
+      return {
+        inlineData: {
+          data: base64,
+          mimeType: contentType.split(";")[0].trim() || "image/jpeg",
+        },
+      };
+    })
+  );
+
+  return results
+    .filter((r) => r.status === "fulfilled" && r.value?.inlineData?.data)
+    .map((r) => r.value);
+}
+
+/**
+ * Call Gemini Flash Lite Vision API with multiple images (포스터 + 모든 세부 이미지 일괄 입력)
+ */
+export async function extractProgramWithGemini(
+  imageUrls,
+  apiKey,
+  storyText = ""
+) {
   const key = apiKey || process.env.GEMINI_API_KEY;
-  if (!key || !imageUrl) return null;
+  if (!key) return null;
 
-  const allowed = await acquireRateLimitToken();
-  if (!allowed) return null;
+  return enqueueGeminiTask(async () => {
+    let attempts = 0;
+    const maxRetries = 3;
 
-  try {
-    // 1. Download image
-    const imgRes = await fetch(imageUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!imgRes.ok) return null;
+    while (attempts < maxRetries) {
+      attempts++;
+      try {
+        // 1. 포스터 및 모든 세부 이미지를 병렬로 다운로드하여 base64 변환
+        const imageParts = await fetchImagesToInlineData(imageUrls);
+        if (imageParts.length === 0) {
+          console.warn("[Gemini AI] 유효한 공연 이미지를 다운로드하지 못했습니다.");
+          return [];
+        }
 
-    const arrayBuffer = await imgRes.arrayBuffer();
-    const base64Image = Buffer.from(arrayBuffer).toString("base64");
-    const contentType = imgRes.headers.get("content-type") || "image/jpeg";
+        // 2. 클래식 음악(서양 고전음악)만 추출하도록 엄격히 제한하는 프롬프트
+        let prompt = `당신은 서양 클래식 음악 전문 에디터입니다.
+이 서비스는 오직 '클래식 음악(서양 고전음악)' 연주회만을 다룹니다.
+제공된 공연 포스터 및 세부 안내 이미지들(총 ${imageParts.length}장), 그리고 공연 소개글을 종합적으로 분석하여
+해당 공연에서 연주되는 클래식 연주 프로그램(곡목) 목록을 순수 JSON 배열로 반환하세요.
 
-    // 2. Minimal prompt to keep token count low
-    let prompt = `당신은 클래식 음악 전문 에디터입니다. 이 공연 포스터/상세 이미지에 적힌 연주 프로그램(곡목)을 식별하여 순수 JSON 배열로 반환하세요.
+[필수 엄격 작성 규칙]
+1. 오직 클래식 음악(교향곡, 협주곡, 독주곡, 소나타, 실내악, 가곡, 오페라 아리아 등 서양 고전음악 레퍼토리)만 추출하세요.
+2. 대중가요, 팝송, 뮤지컬 넘버, 트로트, 국악, 영화/애니메이션 OST 등 비클래식 곡목은 절대로 추출하지 마세요.
+3. 곡명(title 또는 titleKo)이 식별되지 않는 항목은 절대 포함하지 마세요. 작곡가만 있고 구체적인 곡명이 없는 항목은 연주곡이 아닙니다.
+4. 포스터나 세부 이미지, 소개글에서 연주되는 교향곡, 협주곡, 소나타, 소품 등 구체적인 곡명을 반드시 찾아내세요.
+5. 세부 이미지가 여러 장 제공된 경우, 각 이미지에 나뉘어 있는 1부/2부 연주곡 목록이나 상세 프로그램 안내를 모두 꼼꼼히 확인하여 전체 곡을 빠짐없이 추출하세요.
+6. 만약 포스터에 '쇼팽 피아노 독주회', '베토벤 교향곡 제9번'처럼 공연 제목 자체에 연주곡이 명시되어 있다면 해당 곡을 프로그램에 포함하세요.
+7. 클래식 연주곡이 전혀 식별되지 않거나 비클래식 공연인 경우 반드시 빈 배열 []을 반환하세요.
+
 반환형식 (JSON 배열):
 [
   {
-    "composer": "원어 작곡가명",
-    "composerKo": "한글 작곡가명",
-    "composerShort": "작곡가 성 (예: 베토벤)",
-    "title": "원어 전체 곡명",
-    "titleKo": "한글 번역 곡명",
+    "composer": "원어 작곡가명 (예: Ludwig van Beethoven)",
+    "composerKo": "한글 작곡가명 (예: 베토벤)",
+    "composerShort": "작곡가 성/약칭 (예: 베토벤)",
+    "title": "원어 전체 곡명 (예: Symphony No. 9 in D minor, Op. 125 'Choral')",
+    "titleKo": "한글 번역 곡명 (예: 교향곡 제9번 라단조, 작품번호 125 '합창')",
+    "genre": "장르 (예: 교향곡, 피아노 협주곡 등)",
+    "movements": ["I. Allegro ma non troppo", "II. Molto vivace"],
     "duration": "소요시간",
-    "searchingWord": "유저 검색용 줄임말/별칭/키워드 모음 (띄어쓰기 구분, 예: 베9 합창 베토벤9)"
+    "searchingWord": "유저 검색용 줄임말/별칭/키워드 모음 (띄어쓰기 구분, 예: 베토벤9 합창 심포니9)"
   }
-]
-곡 정보가 없으면 빈 배열 []을 반환하세요.`;
+]`;
 
-    if (storyText && storyText.trim()) {
-      const cleanStory = storyText.trim().slice(0, 1500);
-      prompt += `\n\n[참고용 공연 상세 소개글]\n${cleanStory}\n\n위 소개글과 이미지를 함께 종합적으로 대조하여 누락 없는 정확한 프로그램 목록을 작성하세요.`;
-    }
+        if (storyText && storyText.trim()) {
+          const cleanStory = storyText.trim().slice(0, 2000);
+          prompt += `\n\n[참고용 공연 상세 소개글]\n${cleanStory}\n\n위 소개글과 이미지들을 함께 대조하여 누락 없는 정확한 프로그램 목록을 작성하세요.`;
+        }
 
-    console.log(`[Gemini AI] Calling gemini-3.5-flash-lite for program extraction... (오늘 ${dailyCallCount}회차)`);
+        console.log(
+          `[Gemini AI] Calling gemini-3.5-flash-lite (이미지 ${imageParts.length}장 일괄 입력, 오늘 ${dailyCallCount}회차)`
+        );
 
-    const ai = new GoogleGenAI({ apiKey: key });
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash-lite",
-      contents: [
-        {
-          inlineData: {
-            data: base64Image,
-            mimeType: contentType,
+        const ai = new GoogleGenAI({ apiKey: key });
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash-lite",
+          contents: [...imageParts, prompt],
+          config: {
+            responseMimeType: "application/json",
+            temperature: 0.1,
           },
-        },
-        prompt,
-      ],
-      config: {
-        responseMimeType: "application/json",
-        temperature: 0.1,
-      },
-    });
+        });
 
-    console.log(response.text);
+        let rawText = response.text;
+        if (!rawText) return [];
 
-    let rawText = response.text;
-    if (!rawText) return [];
+        rawText = rawText
+          .replace(/```json/gi, "")
+          .replace(/```/g, "")
+          .trim();
+        const parsed = JSON.parse(rawText);
 
-    rawText = rawText
-      .replace(/```json/gi, "")
-      .replace(/```/g, "")
-      .trim();
-    const parsed = JSON.parse(rawText);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // title 또는 titleKo 중 최소 하나는 반드시 내용이 있는 유효한 곡만 필터링 (제목 "" 원천 제거)
+          const validTracks = parsed.filter(
+            (item) =>
+              (item.title && String(item.title).trim().length > 0) ||
+              (item.titleKo && String(item.titleKo).trim().length > 0)
+          );
 
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map((item, idx) => ({
-        id: `ai-${idx + 1}`,
-        composer: item.composer || "",
-        composerKo: item.composerKo || item.composer || "",
-        composerShort: item.composerShort || item.composerKo || "",
-        title: item.title || "",
-        titleKo: item.titleKo || item.title || "",
-        duration: item.duration || "",
-        searchingWord:
-          item.searchingWord || `${item.composerShort} ${item.titleKo}`.trim(),
-        source: "ai_vision",
-      }));
+          return validTracks.map((item, idx) => ({
+            id: `ai-${idx + 1}`,
+            composer: String(item.composer || "").trim(),
+            composerKo: String(item.composerKo || item.composer || "").trim(),
+            composerShort: String(
+              item.composerShort || item.composerKo || item.composer || ""
+            ).trim(),
+            title: String(item.title || "").trim(),
+            titleKo: String(item.titleKo || item.title || "").trim(),
+            genre: String(item.genre || "클래식").trim(),
+            movements: Array.isArray(item.movements)
+              ? item.movements.map((m) => String(m).trim()).filter(Boolean)
+              : [],
+            duration: String(item.duration || "").trim(),
+            searchingWord: String(
+              item.searchingWord ||
+                `${item.composerShort || item.composerKo || ""} ${
+                  item.titleKo || item.title || ""
+                }`
+            ).trim(),
+            source: "ai_vision",
+          }));
+        }
+
+        return [];
+      } catch (err) {
+        const is429 = err.status === 429 || err.message?.includes("429");
+        if (is429 && attempts < maxRetries) {
+          console.warn(
+            `⚠️ Gemini API 429 Rate Limit 감지 (시도 ${attempts}/${maxRetries}). 30초 대기 후 자동 재시도합니다...`
+          );
+          await sleep(30000);
+          continue;
+        }
+
+        console.warn(`[Gemini AI] 추출 실패 (${attempts}/${maxRetries}):`, err.message);
+        if (attempts >= maxRetries) {
+          return null;
+        }
+        await sleep(5000);
+      }
     }
 
-    return [];
-  } catch (err) {
-    if (err.status === 429 || err.message?.includes("429")) {
-      console.warn("⚠️ Gemini API 429 Rate Limit 초과. 20초간 쿨다운합니다.");
-      await new Promise((r) => setTimeout(r, 20000));
-    } else {
-      console.warn("Gemini extraction failed:", err.message);
-    }
     return null;
-  }
+  });
 }
 
 // Track retry attempts for AI extraction
 const aiAttempts = new Map();
 
 /**
- * Get or extract the program for a concert
+ * Get or extract the program for a concert (포스터 + 모든 세부 이미지 일괄 전달)
  */
 export async function getConcertProgram(
   concert,
@@ -276,7 +430,9 @@ export async function getConcertProgram(
   // Check cache unless forceAI
   if (!forceAI && memoryCache[concert.id]) {
     const cachedItems = memoryCache[concert.id];
-    const hasDef = Array.isArray(cachedItems) && cachedItems.some((item) => item.id?.startsWith("def-"));
+    const hasDef =
+      Array.isArray(cachedItems) &&
+      cachedItems.some((item) => item.id?.startsWith("def-"));
     if (hasDef) {
       const attempts = aiAttempts.get(concert.id) || 1;
       if (attempts < 2) {
@@ -296,18 +452,29 @@ export async function getConcertProgram(
     return { source: "completed_skipped", programs: [] };
   }
 
+  // 순수 클래식 공연이 아니면 AI 분석 건너뜀 (국악, 대중가요, 뮤지컬 등 제외)
+  if (!isClassicalConcert(concert)) {
+    return { source: "non_classical_skipped", programs: [] };
+  }
+
   // Only extract for '공연예정' (or forceAI)
   const key = apiKey || process.env.GEMINI_API_KEY || "";
   if (key && (concert.state === "공연예정" || forceAI)) {
     const attempts = aiAttempts.get(concert.id) || 0;
     aiAttempts.set(concert.id, attempts + 1);
 
-    const imagesToScan = (concert.images && concert.images.length > 0)
-      ? concert.images.slice(0, 2)
-      : (concert.poster ? [concert.poster] : []);
+    // 포스터 및 세부 이미지들을 모두 모아서 한 번에 전달
+    const allImages = [
+      concert.poster,
+      ...(Array.isArray(concert.images) ? concert.images : []),
+    ].filter((u) => typeof u === "string" && u.trim().startsWith("http"));
 
-    for (const imgUrl of imagesToScan) {
-      const aiResult = await extractProgramWithGemini(imgUrl, key, concert.story);
+    if (allImages.length > 0) {
+      const aiResult = await extractProgramWithGemini(
+        allImages,
+        key,
+        concert.story
+      );
       if (aiResult && aiResult.length > 0) {
         memoryCache[concert.id] = aiResult;
         saveProgramsCache();
@@ -316,7 +483,6 @@ export async function getConcertProgram(
     }
   }
 
-  // If extraction failed or no program found, return empty array (do NOT create def- items)
   return { source: "none", programs: [] };
 }
 
@@ -331,9 +497,9 @@ export async function startUpcomingProgramsWorker(concerts, getDetailFn) {
     return;
   }
 
-  // Filter: only '공연예정' concerts that do NOT have cached programs yet
+  // Filter: only '공연예정' concerts that do NOT have cached programs yet (클래식 공연만 선별)
   const upcomingTargets = concerts.filter(
-    (c) => c.state === "공연예정" && !memoryCache[c.id]
+    (c) => c.state === "공연예정" && !memoryCache[c.id] && isClassicalConcert(c)
   );
 
   if (upcomingTargets.length === 0) {
@@ -341,15 +507,13 @@ export async function startUpcomingProgramsWorker(concerts, getDetailFn) {
     return;
   }
 
-  console.log(`[Worker] '공연예정' 공연 ${upcomingTargets.length}건에 대해 순차적 AI 프로그램 추출을 시작합니다. (RPM 15 준수)`);
+  console.log(`[Worker] '공연예정' 공연 ${upcomingTargets.length}건에 대해 순차적 AI 프로그램 추출을 시작합니다. (RPM 15 엄격 준수)`);
   isWorkerRunning = true;
 
   try {
     for (const target of upcomingTargets) {
-      // If already processed in the meantime (e.g. by user clicking detail page)
       if (memoryCache[target.id]) continue;
 
-      // Stop if daily limit reached
       if (dailyCallCount >= MAX_CALLS_PER_DAY) {
         console.log(`[Worker] 일일 한도(${MAX_CALLS_PER_DAY}) 도달로 금일 작업 종료.`);
         break;
@@ -361,18 +525,22 @@ export async function startUpcomingProgramsWorker(concerts, getDetailFn) {
           detail = await getDetailFn(target.id);
         }
 
-        const images = (detail.images && detail.images.length > 0)
-          ? detail.images.slice(0, 2)
-          : (detail.poster ? [detail.poster] : []);
+        const allImages = [
+          detail.poster,
+          ...(Array.isArray(detail.images) ? detail.images : []),
+        ].filter((u) => typeof u === "string" && u.trim().startsWith("http"));
 
-        for (const imgUrl of images) {
-          const aiResult = await extractProgramWithGemini(imgUrl, key, detail.story);
+        if (allImages.length > 0) {
+          const aiResult = await extractProgramWithGemini(
+            allImages,
+            key,
+            detail.story
+          );
           if (aiResult && aiResult.length > 0) {
             memoryCache[target.id] = aiResult;
             target.programs = aiResult;
             saveProgramsCache();
-            console.log(`[Worker] '${target.title}' (${target.id}) 프로그램 ${aiResult.length}곡 추출 완료.`);
-            break;
+            console.log(`[Worker] '${target.title}' (${target.id}) 프로그램 ${aiResult.length}곡 추출 완료 (이미지 ${allImages.length}장 분석).`);
           }
         }
       } catch (err) {
@@ -381,5 +549,118 @@ export async function startUpcomingProgramsWorker(concerts, getDetailFn) {
     }
   } finally {
     isWorkerRunning = false;
+  }
+}
+
+/**
+ * 곡명이 빈 문자열("")이거나 누락된 캐시 항목들을 찾아,
+ * 포스터 + 모든 세부 이미지를 일괄 입력하여 15 RPM 준수 하에 재분석·재추출하는 함수
+ */
+let isReextractRunning = false;
+
+export async function reextractEmptyTitlePrograms(kopisApi, apiKey) {
+  if (isReextractRunning) {
+    return { ok: false, message: "이미 재추출 작업이 진행 중입니다." };
+  }
+
+  const key = apiKey || process.env.GEMINI_API_KEY;
+  if (!key) {
+    return { ok: false, message: "GEMINI_API_KEY가 설정되지 않았습니다." };
+  }
+
+  // 1. 캐시 내에서 제목이 빈 곡이 포함된 공연 식별
+  const targetIds = [];
+  for (const [id, progs] of Object.entries(memoryCache)) {
+    if (Array.isArray(progs) && progs.length > 0) {
+      const hasEmpty = progs.some(
+        (p) =>
+          (!p.title || String(p.title).trim().length === 0) &&
+          (!p.titleKo || String(p.titleKo).trim().length === 0)
+      );
+      if (hasEmpty) {
+        targetIds.push(id);
+      }
+    }
+  }
+
+  if (targetIds.length === 0) {
+    console.log("[Reextract] 곡명이 비어있는 캐시 항목이 없습니다.");
+    return { ok: true, total: 0, updated: 0, message: "곡명이 비어있는 공연이 없습니다." };
+  }
+
+  console.log(
+    `[Reextract] 곡명("") 누락 공연 총 ${targetIds.length}건에 대해 다중 세부 이미지 재분석을 시작합니다. (15 RPM 준수)`
+  );
+
+  isReextractRunning = true;
+  let successCount = 0;
+  let emptyRemovedCount = 0;
+
+  try {
+    for (let i = 0; i < targetIds.length; i++) {
+      const id = targetIds[i];
+      console.log(`[Reextract] (${i + 1}/${targetIds.length}) ${id} 공연 정보 조회 및 재분석 시작...`);
+
+      try {
+        let concert = null;
+        if (kopisApi) {
+          const detailRes = await kopisApi.concert(id);
+          concert = detailRes?.concert;
+        }
+
+        if (!concert) {
+          console.warn(`[Reextract] ${id} KOPIS 상세 조회 실패로 건너뜁니다.`);
+          continue;
+        }
+
+        if (!isClassicalConcert(concert)) {
+          console.log(`[Reextract] ${id} '${concert.title}' 클래식 공연이 아니므로 프로그램 캐시를 빈 배열로 정리합니다.`);
+          memoryCache[id] = [];
+          saveProgramsCache();
+          emptyRemovedCount++;
+          continue;
+        }
+
+        const allImages = [
+          concert.poster,
+          ...(Array.isArray(concert.images) ? concert.images : []),
+        ].filter((u) => typeof u === "string" && u.trim().startsWith("http"));
+
+        console.log(
+          `[Reextract] ${id} '${concert.title}' 분석 대상 이미지: 총 ${allImages.length}장 (포스터 + 세부 이미지)`
+        );
+
+        const aiResult = await extractProgramWithGemini(allImages, key, concert.story);
+
+        if (Array.isArray(aiResult) && aiResult.length > 0) {
+          memoryCache[id] = aiResult;
+          saveProgramsCache();
+          successCount++;
+          console.log(`[Reextract] ✓ ${id} '${concert.title}' 유효 곡 ${aiResult.length}곡 재추출 완료.`);
+        } else {
+          // AI 분석 결과 유효한 곡명이 없는 경우, 기존의 잘못된 제목 없는 곡들 제거
+          memoryCache[id] = [];
+          saveProgramsCache();
+          emptyRemovedCount++;
+          console.log(`[Reextract] - ${id} '${concert.title}' 식별 가능한 곡이 없어 빈 배열로 정리했습니다.`);
+        }
+      } catch (err) {
+        console.error(`[Reextract] ${id} 재추출 중 오류:`, err.message);
+      }
+    }
+
+    console.log(
+      `[Reextract 완료] 총 ${targetIds.length}건 중 ${successCount}건 유효 곡 추출 성공, ${emptyRemovedCount}건 정리 완료.`
+    );
+
+    return {
+      ok: true,
+      total: targetIds.length,
+      updated: successCount,
+      cleaned: emptyRemovedCount,
+      message: `총 ${targetIds.length}건 중 ${successCount}건 곡 추출 성공, ${emptyRemovedCount}건 정리 완료.`,
+    };
+  } finally {
+    isReextractRunning = false;
   }
 }

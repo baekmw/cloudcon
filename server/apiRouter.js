@@ -6,6 +6,7 @@ import {
   getConcertProgram,
   getAllProgramsCache,
   updateConcertProgramCache,
+  reextractEmptyTitlePrograms,
 } from "./programExtractor.js";
 import {
   getKstDateString,
@@ -449,6 +450,27 @@ export function createApiRouter(serviceKey) {
       ok: true,
       concertId,
       programs: saved,
+    });
+  });
+
+  /**
+   * 곡명이 빈 문자열("")인 AI 캐시 공연들을 다중 세부 이미지로 재분석·재추출 (POST /api/admin/reextract-empty)
+   * 15 RPM 한도를 엄격 준수하며 백그라운드로 순차 실행
+   */
+  router.post("/admin/reextract-empty", async (req, res) => {
+    // 비동기로 시작하고 즉시 응답 반환
+    reextractEmptyTitlePrograms(api, process.env.GEMINI_API_KEY)
+      .then((result) => {
+        console.log("[Reextract Result]:", result);
+      })
+      .catch((err) => {
+        console.error("[Reextract Error]:", err);
+      });
+
+    return res.status(200).json({
+      ok: true,
+      message:
+        "곡명 누락 공연에 대한 다중 세부 이미지 AI 재분석을 시작했습니다. (15 RPM 준수)",
     });
   });
 

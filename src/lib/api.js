@@ -191,3 +191,10 @@ export function updateAdminCache(concertId, payload) {
     body: JSON.stringify(payload),
   }).then(readJson)
 }
+
+export async function reextractEmptyPrograms() {
+  return fetch('/api/admin/reextract-empty', {
+    method: 'POST',
+    credentials: 'include',
+  }).then(readJson)
+}
