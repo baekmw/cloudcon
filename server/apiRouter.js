@@ -237,6 +237,10 @@ export function createApiRouter(serviceKey) {
       .sort((a, b) => b.count - a.count || a.keyword.localeCompare(b.keyword, "ko"))
       .slice(0, 10);
 
+    // 6. 공연예정 프로그램 캐시 진행률 통계
+    const cache = getAllProgramsCache();
+    const totalCachedCount = Object.keys(cache).length;
+
     return res.status(200).json({
       ok: true,
       today,
@@ -246,6 +250,7 @@ export function createApiRouter(serviceKey) {
       verifiedSubscribers,
       todayEmailSent,
       dailyEmailLimit: 100,
+      totalCachedPrograms: totalCachedCount,
       topSearches,
       topKeywords,
       batchLogs: analytics.batchLogs || [],

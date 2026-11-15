@@ -143,9 +143,11 @@ let dailyCallDate = new Date().toISOString().slice(0, 10);
 const MAX_CALLS_PER_DAY = 480; // 일일 무료 한도 500 RPD 대비 안전선
 
 const GEMINI_MODELS = [
-  process.env.GEMINI_MODEL || "gemini-3.5-flash",
+  process.env.GEMINI_MODEL || "gemini-3.8-flash",
+  "gemini-3.5-flash",
   "gemini-3.5-flash-lite",
-  "gemini-flash-latest",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
 ];
 let globalGeminiQueue = Promise.resolve();
 
@@ -531,10 +533,11 @@ export async function startUpcomingProgramsWorker(concerts, getDetailFn) {
 
   console.log(`[Worker] '공연예정' 공연 ${upcomingTargets.length}건에 대해 순차적 AI 프로그램 추출을 시작합니다. (RPM 15 엄격 준수)`);
   isWorkerRunning = true;
+  let consecutiveFailures = 0;
 
   try {
     for (const target of upcomingTargets) {
-      if (memoryCache[target.id]) continue;
+      if (memoryCache[target.id] !== undefined) continue;
 
       if (dailyCallCount >= MAX_CALLS_PER_DAY) {
         console.log(`[Worker] 일일 한도(${MAX_CALLS_PER_DAY}) 도달로 금일 작업 종료.`);
@@ -558,12 +561,36 @@ export async function startUpcomingProgramsWorker(concerts, getDetailFn) {
             key,
             detail.story
           );
+
           if (aiResult && aiResult.length > 0) {
             memoryCache[target.id] = aiResult;
             target.programs = aiResult;
             saveProgramsCache();
+            consecutiveFailures = 0;
             console.log(`[Worker] '${target.title}' (${target.id}) 프로그램 ${aiResult.length}곡 추출 완료 (이미지 ${allImages.length}장 분석).`);
+          } else if (Array.isArray(aiResult) && aiResult.length === 0) {
+            // 이미지를 분석했으나 곡 정보가 없는 경우 빈 배열로 캐시하여 다음 번 중복 추출 방지
+            memoryCache[target.id] = [];
+            target.programs = [];
+            saveProgramsCache();
+            consecutiveFailures = 0;
+            console.log(`[Worker] '${target.title}' (${target.id}) 곡 정보 없음 확인 -> 빈 프로그램으로 캐시.`);
+          } else {
+            // API 호출 실패 (쿼터 소진 등)
+            consecutiveFailures++;
+            if (consecutiveFailures >= 3) {
+              console.warn(
+                "[Worker] 연속 3회 AI 호출 실패 (API 쿼터 한도 도달 가능성). 10분간 대기합니다..."
+              );
+              await sleep(10 * 60 * 1000);
+              consecutiveFailures = 0;
+            }
           }
+        } else {
+          // 포스터 및 이미지 URL이 전혀 없는 공연
+          memoryCache[target.id] = [];
+          target.programs = [];
+          saveProgramsCache();
         }
       } catch (err) {
         console.warn(`[Worker] ${target.id} 처리 중 오류:`, err.message);
