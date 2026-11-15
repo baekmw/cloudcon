@@ -104,6 +104,18 @@ export function disconnectDevice() {
 }
 
 /**
+ * 구독자 이메일 및 모든 알림 키워드 서버에서 영구 완전 삭제
+ */
+export function unsubscribeAllData(payload = {}) {
+  return fetch('/api/alerts/unsubscribe', {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then(readJson)
+}
+
+/**
  * 공개 트래킹: 방문자 집계 (POST /api/track/visit)
  */
 export function trackVisit() {

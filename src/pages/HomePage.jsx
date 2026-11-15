@@ -171,7 +171,7 @@ function CalmHeroHeading() {
     () => [
       '보고 싶던 모든 무대를 한곳에서',
       '기다린 연주 소식을 가장 먼저',
-      '듣고 싶은 클래식을 직접 무대 위로',
+      '이메일 하나로 간편하게 즐기는 알림',
     ],
     []
   )
@@ -405,8 +405,8 @@ export default function HomePage() {
         {!hasSearch && (
           <div className="text-center mb-8 sm:mb-10 animate-fade-up">
             <CalmHeroHeading />
-            <p className="mt-3 sm:mt-4 text-[14.5px] sm:text-[17px] text-[#6b7684] font-normal leading-relaxed max-w-[560px] mx-auto break-keep">
-              아티스트, 연주곡, 공연장 어디든 편하게 입력해 보세요.<br /> 관련된 모든 클래식 무대를 빠짐없이 찾아드릴게요.
+            <p className="mt-3 sm:mt-4 text-[14.5px] sm:text-[17px] text-[#6b7684] font-normal leading-relaxed max-w-[580px] mx-auto break-keep">
+              복잡한 회원가입 없이 이메일만 입력하면 계속 무료로 이용할 수 있어요.<br /> 관련된 모든 클래식 무대를 빠짐없이 찾아드릴게요.
             </p>
           </div>
         )}
@@ -504,7 +504,7 @@ export default function HomePage() {
                   <div className="text-left min-w-0">
                     <p className="font-bold text-[#191f28] whitespace-nowrap">티켓 오픈일 보기</p>
                     <p className="text-[12px] text-[#8b95a1] truncate">
-                      놀유니버스 오픈 일정
+                      클래식 티켓 오픈 일정
                     </p>
                   </div>
                 </div>
@@ -540,7 +540,7 @@ export default function HomePage() {
                   <div className="text-left min-w-0">
                     <p className="font-bold text-[#191f28] whitespace-nowrap">공연 알림 받기</p>
                     <p className="text-[12px] text-[#8b95a1] truncate">
-                      관심 연주자 새 일정 알림
+                      관심 있는 공연 알림
                     </p>
                   </div>
                 </div>

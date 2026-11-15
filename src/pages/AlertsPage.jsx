@@ -25,8 +25,10 @@ import {
   addMyKeyword,
   deleteMyKeyword,
   disconnectDevice,
+  unsubscribeAllData,
   getConcerts,
 } from '../lib/api.js'
+import { clearLocalAlerts } from '../lib/alerts.js'
 import { matchConcertClassical } from '../lib/classical.js'
 import { formatPeriod } from '../lib/format.js'
 
@@ -73,6 +75,8 @@ export default function AlertsPage() {
   const [deletingKeyword, setDeletingKeyword] = useState('')
   const [manageNotice, setManageNotice] = useState('')
   const [manageError, setManageError] = useState('')
+  const [deletingAll, setDeletingAll] = useState(false)
+  const [deletedSuccessMessage, setDeletedSuccessMessage] = useState('')
   const [concerts, setConcerts] = useState([])
   const [expandedKeyword, setExpandedKeyword] = useState(null)
 
@@ -289,6 +293,36 @@ export default function AlertsPage() {
     setManageError('')
   }
 
+  // Authenticated: 서버에서 이메일 및 모든 알림 키워드 완전 삭제 (DELETE /api/alerts/unsubscribe)
+  async function handleDeleteAllData() {
+    const confirmMsg = `등록된 이메일(${userEmail})과 모든 알림 키워드가 서버에서 즉시 영구 삭제되며, 더 이상 알림 메일이 발송되지 않습니다.\n\n정말로 모든 데이터를 삭제하시겠습니까?`
+    if (!window.confirm(confirmMsg)) {
+      return
+    }
+
+    setDeletingAll(true)
+    setManageError('')
+    setManageNotice('')
+
+    try {
+      const res = await unsubscribeAllData()
+      clearLocalAlerts()
+      setAuthenticated(false)
+      setUserEmail('')
+      setKeywords([])
+      setVerificationSent(false)
+      setInstantAddedMessage('')
+      setDeletedSuccessMessage(
+        res?.message || '이메일과 모든 등록 키워드가 서버에서 완전히 삭제되었습니다.'
+      )
+      setTimeout(() => setDeletedSuccessMessage(''), 6000)
+    } catch (err) {
+      setManageError(err.message || '데이터 삭제에 실패했습니다.')
+    } finally {
+      setDeletingAll(false)
+    }
+  }
+
   return (
     <main className="mx-auto max-w-[840px] px-6 py-10 md:py-12 flex flex-col items-center animate-fade-up">
       <div className="w-full max-w-[800px]">
@@ -317,6 +351,12 @@ export default function AlertsPage() {
            1. Unauthenticated (401): 새 알림 신청하기 / 내 알림 목록 보기 탭
            ========================================================= */
         <div className="space-y-5 animate-fade-up">
+          {deletedSuccessMessage && (
+            <div className="p-4 rounded-2xl bg-[#e8f7ee] border border-[#a6e2be] text-[#03b26c] flex items-center gap-2 text-[13.5px] font-semibold animate-fade-up">
+              <Check className="h-4 w-4 shrink-0" />
+              <span>{deletedSuccessMessage}</span>
+            </div>
+          )}
           {/* 상단 탭 전환: 새 알림 신청 vs 내 알림 목록 보기 */}
           <div className="grid grid-cols-2 gap-2.5">
             <button
@@ -549,14 +589,28 @@ export default function AlertsPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleDisconnect}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#e5e8eb] bg-white text-[12.5px] font-semibold text-[#6b7684] hover:text-[#f04452] hover:border-[#f04452]/40 hover:bg-[#fff0f1]/50 whitespace-nowrap shrink-0 transition-all self-start sm:self-auto cursor-pointer"
-              >
-                <Unplug className="h-3.5 w-3.5 shrink-0" />
-                기기에서 연결 해제
-              </button>
+              <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleDisconnect}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#e5e8eb] bg-white text-[12.5px] font-semibold text-[#6b7684] hover:text-[#191f28] hover:border-[#b0b8c1] whitespace-nowrap transition-all cursor-pointer"
+                  title="현재 브라우저에서만 로그아웃합니다. 이메일 알림은 계속 발송됩니다."
+                >
+                  <Unplug className="h-3.5 w-3.5 shrink-0" />
+                  기기에서 연결 해제
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDeleteAllData}
+                  disabled={deletingAll}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#f04452]/30 bg-[#fff5f5] text-[12.5px] font-semibold text-[#f04452] hover:bg-[#ffebeb] hover:border-[#f04452] whitespace-nowrap transition-all cursor-pointer"
+                  title="서버에 저장된 이메일과 모든 등록 키워드를 영구 삭제합니다."
+                >
+                  <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                  {deletingAll ? '삭제 중...' : '서버에서 완전 삭제'}
+                </button>
+              </div>
             </CardContent>
           </Card>
 

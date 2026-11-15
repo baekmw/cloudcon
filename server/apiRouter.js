@@ -757,6 +757,53 @@ export function createApiRouter(serviceKey) {
     return res.status(200).json({ ok: true });
   });
 
+  /**
+   * 7. DELETE /api/alerts/unsubscribe & POST /api/alerts/unsubscribe
+   * 서버에서 구독자의 이메일 및 모든 등록 키워드 영구 완전 삭제
+   */
+  const handleUnsubscribeAll = (req, res) => {
+    const token = req.cookies?.[COOKIE_NAME] || req.body?.token;
+    const subscribers = loadSubscribers();
+    let found = findSubscriberByToken(subscribers, token);
+
+    if (!found) {
+      const reqEmail = String(req.body?.email || req.query?.email || "").trim().toLowerCase();
+      if (reqEmail && subscribers[reqEmail] && (!token || subscribers[reqEmail].manageToken === token)) {
+        found = { email: reqEmail, subscriber: subscribers[reqEmail] };
+      }
+    }
+
+    if (!found) {
+      return res.status(401).json({
+        ok: false,
+        error: "인증 정보가 유효하지 않습니다. 다시 로그인하거나 인증 메일 링크를 확인해 주세요.",
+      });
+    }
+
+    const { email } = found;
+    delete subscribers[email];
+    saveSubscribers(subscribers);
+
+    res.clearCookie(COOKIE_NAME, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    console.log(`[Subscribers] Completely deleted subscriber ${email} and all registered keywords.`);
+
+    return res.status(200).json({
+      ok: true,
+      deletedEmail: email,
+      message: "이메일과 모든 등록 키워드가 서버에서 완전히 삭제되었습니다.",
+    });
+  };
+
+  router.delete("/alerts/unsubscribe", handleUnsubscribeAll);
+  router.post("/alerts/unsubscribe", handleUnsubscribeAll);
+  router.delete("/unsubscribe", handleUnsubscribeAll);
+  router.post("/unsubscribe", handleUnsubscribeAll);
+
   // =========================================================================
   // 기존 KOPIS 공연 조회 및 AI 프로그램 추출 API 엔드포인트
   // =========================================================================

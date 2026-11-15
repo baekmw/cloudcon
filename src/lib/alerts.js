@@ -92,6 +92,13 @@ export function markAllRead() {
   })
 }
 
+export function clearLocalAlerts() {
+  emit(initial)
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {}
+}
+
 function notify(item) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
   try {
