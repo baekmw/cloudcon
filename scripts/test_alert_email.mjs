@@ -72,9 +72,10 @@ async function main() {
 
   // 1. 임시 데이터 yes24_concerts.json에 주입
   console.log(`\n=== [3] yes24_concerts.json에 가짜 공연 임시 주입 ===`);
-  const yes24List = loadYes24Concerts();
-  yes24List.unshift(fakeConcert);
-  saveYes24Concerts(yes24List);
+  const yes24Data = loadYes24Concerts();
+  yes24Data.concerts.unshift(fakeConcert);
+  yes24Data.totalCount = yes24Data.concerts.length;
+  saveYes24Concerts(yes24Data);
   console.log(`가짜 공연 주입 완료 (ID: ${fakeConcertId})`);
 
   try {
@@ -110,9 +111,10 @@ async function main() {
   } finally {
     // 3. 임시 데이터 완벽 삭제
     console.log(`\n=== [5] 가짜 테스트용 데이터 정리 및 삭제 ===`);
-    const currentList = loadYes24Concerts();
-    const cleanedList = currentList.filter((c) => c.id !== fakeConcertId);
-    saveYes24Concerts(cleanedList);
+    const currentData = loadYes24Concerts();
+    currentData.concerts = currentData.concerts.filter((c) => c.id !== fakeConcertId);
+    currentData.totalCount = currentData.concerts.length;
+    saveYes24Concerts(currentData);
     console.log(`yes24_concerts.json에서 가짜 공연(${fakeConcertId}) 완전 삭제 완료.`);
 
     // notifiedIds에서도 가짜 ID 정리
