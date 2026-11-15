@@ -142,7 +142,11 @@ let dailyCallCount = 0;
 let dailyCallDate = new Date().toISOString().slice(0, 10);
 const MAX_CALLS_PER_DAY = 480; // 일일 무료 한도 500 RPD 대비 안전선
 
-// 모든 Gemini 호출을 1개씩 순차 실행하는 글로벌 직렬화 큐
+const GEMINI_MODELS = [
+  process.env.GEMINI_MODEL || "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-flash-latest",
+];
 let globalGeminiQueue = Promise.resolve();
 
 function sleep(ms) {
@@ -335,19 +339,37 @@ export async function extractProgramWithGemini(
           prompt += `\n\n[참고용 공연 상세 소개글]\n${cleanStory}\n\n위 소개글과 이미지들을 함께 대조하여 누락 없는 정확한 프로그램 목록을 작성하세요.`;
         }
 
-        console.log(
-          `[Gemini AI] Calling gemini-3.5-flash-lite (이미지 ${imageParts.length}장 일괄 입력, 오늘 ${dailyCallCount}회차)`
-        );
-
         const ai = new GoogleGenAI({ apiKey: key });
-        const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash-lite",
-          contents: [...imageParts, prompt],
-          config: {
-            responseMimeType: "application/json",
-            temperature: 0.1,
-          },
-        });
+        let response = null;
+        let usedModel = GEMINI_MODELS[0];
+
+        for (const candidateModel of GEMINI_MODELS) {
+          try {
+            console.log(
+              `[Gemini AI] Calling ${candidateModel} (이미지 ${imageParts.length}장 일괄 입력, 오늘 ${dailyCallCount}회차)`
+            );
+            response = await ai.models.generateContent({
+              model: candidateModel,
+              contents: [...imageParts, prompt],
+              config: {
+                responseMimeType: "application/json",
+                temperature: 0.1,
+              },
+            });
+            usedModel = candidateModel;
+            break;
+          } catch (modelErr) {
+            const isQuotaExceeded =
+              modelErr.status === 429 ||
+              modelErr.message?.includes("429") ||
+              modelErr.message?.includes("RESOURCE_EXHAUSTED");
+            if (isQuotaExceeded && candidateModel !== GEMINI_MODELS[GEMINI_MODELS.length - 1]) {
+              console.warn(`[Gemini AI] ${candidateModel} 쿼터 초과. 다음 후보 모델로 대체 시도합니다...`);
+              continue;
+            }
+            throw modelErr;
+          }
+        }
 
         let rawText = response.text;
         if (!rawText) return [];
