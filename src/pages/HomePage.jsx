@@ -171,7 +171,7 @@ function CalmHeroHeading() {
     () => [
       '보고 싶던 모든 무대를 한곳에서',
       '기다린 연주 소식을 가장 먼저',
-      '이메일 하나로 간편하게 즐기는 알림',
+      '좋아하는 클래식을 놓치지 않게',
     ],
     []
   )
@@ -406,7 +406,7 @@ export default function HomePage() {
           <div className="text-center mb-8 sm:mb-10 animate-fade-up">
             <CalmHeroHeading />
             <p className="mt-3 sm:mt-4 text-[14.5px] sm:text-[17px] text-[#6b7684] font-normal leading-relaxed max-w-[580px] mx-auto break-keep">
-              복잡한 회원가입 없이 이메일만 입력하면 계속 무료로 이용할 수 있어요.<br /> 관련된 모든 클래식 무대를 빠짐없이 찾아드릴게요.
+              공연 관련 정보(작곡가, 연주자, 곡명)를 입력하시면 관련된 무대를 빠짐없이 찾아드려요.
             </p>
           </div>
         )}

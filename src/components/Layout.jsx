@@ -158,11 +158,14 @@ export default function Layout() {
         <div className="relative mx-auto flex max-w-[960px] items-center justify-between gap-4 px-5 sm:px-6 h-12 sm:h-13">
           <NavLink
             to="/"
-            className="flex items-center gap-1.5 group shrink-0 whitespace-nowrap"
+            className="flex items-center gap-1 group shrink-0 whitespace-nowrap"
           >
-            <div className="flex h-7 w-7 items-center justify-center bg-transparent transition-transform group-hover:scale-105 shrink-0">
-              <TicketLogo className="h-6 w-6" filled={false} whiteBg={false} />
-            </div>
+            <img
+              src="/pwa-192x192.png"
+              alt="cloudcon"
+              className="h-6 w-6 rounded-[6px] border border-[#e5e8eb] shadow-xs object-cover transition-transform group-hover:scale-105 shrink-0 select-none"
+              draggable={false}
+            />
             <span className="text-[16px] font-bold tracking-tight text-[#191f28]">
               cloudcon
             </span>
@@ -308,7 +311,7 @@ export default function Layout() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[#e5e8eb] overflow-hidden">
-                  <TicketLogo className="h-9 w-9" filled={false} whiteBg={true} />
+                  <img src="/pwa-192x192.png" alt="cloudcon" className="h-full w-full object-cover select-none" />
                 </div>
                 <div>
                   <h3 className="text-[16px] font-bold text-[#191f28]">cloudcon 앱 설치</h3>
@@ -361,7 +364,6 @@ export default function Layout() {
               >
                 개인정보 처리방침
               </Link>
-              <span>·</span>
               <p>출처: (재)예술경영지원센터 공연예술통합전산망(KOPIS)</p>
             </div>
           </div>

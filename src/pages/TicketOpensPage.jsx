@@ -138,7 +138,7 @@ export default function TicketOpensPage() {
           티켓 오픈일 보기
         </h1>
         <p className="mt-2 text-[14.5px] sm:text-[15.5px] text-[#6b7684] leading-relaxed break-keep">
-          좋아하는 클래식 공연의 티켓 예매 오픈 시각을 놓치지 않도록 놀유니버스 티켓 예매 오픈 일정을 한곳에 모았습니다. 사전에 알림 키워드를 등록해 두시면 티켓 오픈 예정 시 이메일로 즉시 알려드려요.
+          주요 예매처의 클래식 공연 티켓 오픈 일정을 한곳에서 확인하세요.
         </p>
       </div>
 
@@ -387,20 +387,30 @@ export default function TicketOpensPage() {
         </div>
       )}
 
-      {/* Bottom Alert Banner */}
-      <div className="mt-10 rounded-2xl bg-gradient-to-r from-[#e8f3ff] to-[#f0f7ff] border border-[#d0e4ff] p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* 하단 sticky 그라데이션 페이드 영역 */}
+      {!loading && !error && filteredItems.length > 0 && (
+        <div
+          aria-hidden="true"
+          className="sticky bottom-0 z-20 -mx-4 sm:-mx-6 h-16 sm:h-12 pointer-events-none relative"
+        >
+          <div className="absolute inset-x-0 top-0 -bottom-10 bg-[linear-gradient(to_top,rgba(249,250,251,1)_0%,rgba(249,250,251,0.92)_45%,rgba(249,250,251,0.48)_75%,rgba(249,250,251,0)_100%)] pointer-events-none" />
+        </div>
+      )}
+
+      {/* Bottom Alert Banner (Sticky with subtle blur) */}
+      <div className="sticky bottom-4 z-30 mt-8 rounded-2xl bg-[#e8f3ff]/85 backdrop-blur-md border border-[#3182f6]/30 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 shadow-[0_8px_30px_rgba(49,130,246,0.12)]">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-[14px] font-bold text-[#3182f6] mb-1">
             <Bell className="h-4 w-4 shrink-0" />
             <span>원하는 공연의 티켓 오픈 일정을 놓치지 마세요</span>
           </div>
-          <p className="text-[13px] text-[#4e5968] leading-relaxed break-keep">
+          <p className="text-[12.5px] sm:text-[13px] text-[#4e5968] leading-relaxed break-keep">
             좋아하는 연주자나 오케스트라 키워드를 등록하면, 티켓 오픈 일정이 발표되는 즉시 무료로 이메일 알림을 보내드립니다.
           </p>
         </div>
         <Link
           to="/alerts"
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#191f28] text-white text-[13px] font-bold hover:bg-[#333d4b] transition-colors shrink-0 whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#191f28] text-white text-[13px] font-bold hover:bg-[#333d4b] transition-colors shrink-0 whitespace-nowrap shadow-xs"
         >
           <span>키워드 알림 등록하기</span>
           <ChevronRight className="h-3.5 w-3.5" />
