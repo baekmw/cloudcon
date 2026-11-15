@@ -21,11 +21,20 @@ import {
   Users,
   X,
   Ticket,
+  Globe,
+  Smartphone,
+  Monitor,
+  Tablet,
+  Compass,
+  Clock,
+  BarChart3,
+  ArrowUpRight,
 } from 'lucide-react'
 import {
   adminLogin,
   adminLogout,
   crawlNolUpcoming,
+  crawlTicketOpens,
   deleteAdminSubscriber,
   getAdminCache,
   getAdminDashboard,
@@ -170,20 +179,23 @@ export default function AdminPage() {
     }
   }
 
-  const [isCrawlingNol, setIsCrawlingNol] = useState(false)
+  const [isCrawlingOpens, setIsCrawlingOpens] = useState(false)
 
-  async function handleCrawlNol() {
-    if (isCrawlingNol) return
-    setIsCrawlingNol(true)
+  async function handleCrawlTicketOpens() {
+    if (isCrawlingOpens) return
+    setIsCrawlingOpens(true)
     try {
-      const res = await crawlNolUpcoming()
-      showToast(res?.message || '놀유니버스 클래식 티켓오픈 수집이 완료되었습니다.', 'success')
+      const res = await crawlTicketOpens()
+      showToast(
+        res?.message || '티켓 오픈 예정 공연(전체 대상) 수집이 완료되었습니다.',
+        'success'
+      )
       const updated = await getAdminDashboard()
       setDashboard(updated)
     } catch (err) {
-      showToast(err?.message || '놀유니버스 티켓오픈 수집에 실패했습니다.', 'error')
+      showToast(err?.message || '티켓 오픈 수집에 실패했습니다.', 'error')
     } finally {
-      setIsCrawlingNol(false)
+      setIsCrawlingOpens(false)
     }
   }
 
@@ -673,24 +685,24 @@ export default function AdminPage() {
               </button>
               <button
                 type="button"
-                onClick={handleCrawlNol}
-                disabled={isCrawlingNol}
+                onClick={handleCrawlTicketOpens}
+                disabled={isCrawlingOpens}
                 className="w-full h-9 rounded-xl border border-[#3182f6] bg-white hover:bg-[#e8f3ff] disabled:bg-[#f2f4f6] text-[#3182f6] text-[12.5px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
-                {isCrawlingNol ? (
+                {isCrawlingOpens ? (
                   <>
                     <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                    <span>놀유니버스 티켓오픈 수집 중...</span>
+                    <span>티켓 오픈 예정 수집 중...</span>
                   </>
                 ) : (
                   <>
                     <Ticket className="h-3.5 w-3.5" />
-                    <span>놀유니버스 티켓오픈 즉시 수집</span>
+                    <span>티켓 오픈 예정 즉시 수집</span>
                   </>
                 )}
               </button>
               <p className="text-[11px] text-[#8b95a1] text-center">
-                놀유니버스 티켓오픈 + KOPIS 수집 + AI 추출 + 알림
+                놀유니버스 + YES24 티켓 오픈 예정 수집
               </p>
             </div>
           </div>
@@ -790,6 +802,10 @@ export default function AdminPage() {
               {
                 id: 'cache',
                 label: `공연 AI 캐시 수정 (${Object.keys(cacheData).length})`,
+              },
+              {
+                id: 'visitors',
+                label: `방문자 상세 분석 (${dashboard?.visitorStats?.recentLogs?.length || 0})`,
               },
             ].map((tab) => {
               const active = activeTab === tab.id
@@ -1328,6 +1344,388 @@ export default function AdminPage() {
                       <p className="text-[12.5px] mt-1">
                         AI가 추출한 프로그램 곡 정보를 수동으로 편집하거나 추가·삭제할 수 있습니다.
                       </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 탭 4: 방문자 상세 분석 */}
+          {activeTab === 'visitors' && (
+            <div className="space-y-6">
+              {/* 1. 방문 통계 요약 카드 4종 */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="rounded-xl border border-[#e5e8eb] bg-[#f9fafb] p-4">
+                  <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#8b95a1] mb-1">
+                    <BarChart3 className="h-3.5 w-3.5 text-[#3182f6]" />
+                    <span>누적 페이지뷰 (PV)</span>
+                  </div>
+                  <div className="text-[20px] font-extrabold text-[#191f28]">
+                    {Object.values(dashboard?.visitorStats?.pages || {}).reduce((sum, n) => sum + Number(n || 0), 0).toLocaleString()}회
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#e5e8eb] bg-[#f9fafb] p-4">
+                  <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#8b95a1] mb-1">
+                    <Smartphone className="h-3.5 w-3.5 text-[#3182f6]" />
+                    <span>모바일 기기 점유율</span>
+                  </div>
+                  <div className="text-[20px] font-extrabold text-[#191f28]">
+                    {(() => {
+                      const devs = dashboard?.visitorStats?.devices || {}
+                      const total = Object.values(devs).reduce((sum, n) => sum + Number(n || 0), 0)
+                      const mobile = Number(devs['모바일'] || 0)
+                      return total > 0 ? `${((mobile / total) * 100).toFixed(1)}%` : '0%'
+                    })()}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#e5e8eb] bg-[#f9fafb] p-4">
+                  <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#8b95a1] mb-1">
+                    <Compass className="h-3.5 w-3.5 text-[#3182f6]" />
+                    <span>최다 유입 경로</span>
+                  </div>
+                  <div className="text-[17px] font-extrabold text-[#191f28] truncate">
+                    {(() => {
+                      const refs = Object.entries(dashboard?.visitorStats?.referrers || {}).sort((a, b) => b[1] - a[1])
+                      return refs.length > 0 ? `${refs[0][0]} (${refs[0][1]}회)` : '직접 접속'
+                    })()}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#e5e8eb] bg-[#f9fafb] p-4">
+                  <div className="flex items-center gap-1.5 text-[12px] font-semibold text-[#8b95a1] mb-1">
+                    <Globe className="h-3.5 w-3.5 text-[#3182f6]" />
+                    <span>최다 브라우저</span>
+                  </div>
+                  <div className="text-[17px] font-extrabold text-[#191f28] truncate">
+                    {(() => {
+                      const brows = Object.entries(dashboard?.visitorStats?.browsers || {}).sort((a, b) => b[1] - a[1])
+                      return brows.length > 0 ? `${brows[0][0]} (${brows[0][1]}회)` : '-'
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. 기기/OS 점유율 및 브라우저/유입경로 점유율 (2단 컬럼) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 2-1. 접속 기기 및 운영체제 (OS) */}
+                <div className="rounded-xl border border-[#e5e8eb] p-4 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#f2f4f6]">
+                    <div className="flex items-center gap-1.5">
+                      <Monitor className="h-4 w-4 text-[#3182f6]" />
+                      <h3 className="text-[14px] font-bold text-[#191f28]">접속 기기 및 운영체제</h3>
+                    </div>
+                    <span className="text-[11.5px] text-[#8b95a1]">User-Agent 기반</span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[12.5px] font-semibold text-[#6b7684] mb-2">기기 유형 (Device)</h4>
+                    <div className="space-y-2">
+                      {(() => {
+                        const devs = dashboard?.visitorStats?.devices || {}
+                        const total = Object.values(devs).reduce((sum, n) => sum + Number(n || 0), 0) || 1
+                        const items = Object.entries(devs).sort((a, b) => b[1] - a[1])
+                        if (items.length === 0) {
+                          return <div className="text-[12px] text-[#8b95a1] py-2">수집된 기기 정보가 없습니다.</div>
+                        }
+                        return items.map(([device, count]) => {
+                          const pct = ((count / total) * 100).toFixed(1)
+                          return (
+                            <div key={device} className="space-y-1">
+                              <div className="flex justify-between text-[12px]">
+                                <span className="font-medium text-[#333d4b]">{device}</span>
+                                <span className="text-[#8b95a1] font-semibold">{count}명 ({pct}%)</span>
+                              </div>
+                              <div className="h-2 w-full rounded-full bg-[#f2f4f6] overflow-hidden">
+                                <div className="h-full rounded-full bg-[#3182f6]" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <h4 className="text-[12.5px] font-semibold text-[#6b7684] mb-2">운영체제 (OS)</h4>
+                    <div className="space-y-2">
+                      {(() => {
+                        const oss = dashboard?.visitorStats?.os || {}
+                        const total = Object.values(oss).reduce((sum, n) => sum + Number(n || 0), 0) || 1
+                        const items = Object.entries(oss).sort((a, b) => b[1] - a[1])
+                        if (items.length === 0) {
+                          return <div className="text-[12px] text-[#8b95a1] py-2">수집된 OS 정보가 없습니다.</div>
+                        }
+                        return items.map(([osName, count]) => {
+                          const pct = ((count / total) * 100).toFixed(1)
+                          return (
+                            <div key={osName} className="space-y-1">
+                              <div className="flex justify-between text-[12px]">
+                                <span className="font-medium text-[#333d4b]">{osName}</span>
+                                <span className="text-[#8b95a1] font-semibold">{count}명 ({pct}%)</span>
+                              </div>
+                              <div className="h-2 w-full rounded-full bg-[#f2f4f6] overflow-hidden">
+                                <div className="h-full rounded-full bg-[#4e5968]" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2-2. 브라우저 및 유입 경로 */}
+                <div className="rounded-xl border border-[#e5e8eb] p-4 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#f2f4f6]">
+                    <div className="flex items-center gap-1.5">
+                      <Compass className="h-4 w-4 text-[#3182f6]" />
+                      <h3 className="text-[14px] font-bold text-[#191f28]">브라우저 및 유입 경로</h3>
+                    </div>
+                    <span className="text-[11.5px] text-[#8b95a1]">Referrer & In-App 감지</span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[12.5px] font-semibold text-[#6b7684] mb-2">브라우저 점유율</h4>
+                    <div className="space-y-2">
+                      {(() => {
+                        const brows = dashboard?.visitorStats?.browsers || {}
+                        const total = Object.values(brows).reduce((sum, n) => sum + Number(n || 0), 0) || 1
+                        const items = Object.entries(brows).sort((a, b) => b[1] - a[1])
+                        if (items.length === 0) {
+                          return <div className="text-[12px] text-[#8b95a1] py-2">수집된 브라우저 정보가 없습니다.</div>
+                        }
+                        return items.map(([browserName, count]) => {
+                          const pct = ((count / total) * 100).toFixed(1)
+                          return (
+                            <div key={browserName} className="space-y-1">
+                              <div className="flex justify-between text-[12px]">
+                                <span className="font-medium text-[#333d4b]">{browserName}</span>
+                                <span className="text-[#8b95a1] font-semibold">{count}명 ({pct}%)</span>
+                              </div>
+                              <div className="h-2 w-full rounded-full bg-[#f2f4f6] overflow-hidden">
+                                <div className="h-full rounded-full bg-[#00b06f]" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <h4 className="text-[12.5px] font-semibold text-[#6b7684] mb-2">유입 경로 (Referrer)</h4>
+                    <div className="space-y-2">
+                      {(() => {
+                        const refs = dashboard?.visitorStats?.referrers || {}
+                        const total = Object.values(refs).reduce((sum, n) => sum + Number(n || 0), 0) || 1
+                        const items = Object.entries(refs).sort((a, b) => b[1] - a[1])
+                        if (items.length === 0) {
+                          return <div className="text-[12px] text-[#8b95a1] py-2">수집된 유입 경로가 없습니다.</div>
+                        }
+                        return items.map(([source, count]) => {
+                          const pct = ((count / total) * 100).toFixed(1)
+                          return (
+                            <div key={source} className="space-y-1">
+                              <div className="flex justify-between text-[12px]">
+                                <span className="font-medium text-[#333d4b]">{source}</span>
+                                <span className="text-[#8b95a1] font-semibold">{count}회 ({pct}%)</span>
+                              </div>
+                              <div className="h-2 w-full rounded-full bg-[#f2f4f6] overflow-hidden">
+                                <div className="h-full rounded-full bg-[#f59e0b]" style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. 24시간 시간대별 방문 분포 바 차트 */}
+              <div className="rounded-xl border border-[#e5e8eb] p-4 space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#f2f4f6]">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-[#3182f6]" />
+                    <h3 className="text-[14px] font-bold text-[#191f28]">24시간 시간대별 방문 분포</h3>
+                  </div>
+                  <span className="text-[11.5px] text-[#8b95a1]">한국 표준시(KST) 기준</span>
+                </div>
+
+                {(() => {
+                  const hourlyData = dashboard?.visitorStats?.hourly || {}
+                  const hours = Array.from({ length: 24 }, (_, i) => {
+                    const key = String(i).padStart(2, '0') + '시'
+                    return { hour: key, count: Number(hourlyData[key] || 0) }
+                  })
+                  const maxCount = Math.max(...hours.map((h) => h.count), 1)
+                  const currentHourStr =
+                    String(new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCHours()).padStart(2, '0') + '시'
+
+                  return (
+                    <div className="pt-2">
+                      <div className="grid grid-cols-12 sm:grid-cols-24 gap-1 items-end h-32 px-1">
+                        {hours.map((item) => {
+                          const heightPct = Math.max((item.count / maxCount) * 100, 4)
+                          const isCurrent = item.hour === currentHourStr
+                          return (
+                            <div key={item.hour} className="flex flex-col items-center h-full justify-end group relative">
+                              <div
+                                className="text-[10px] text-[#4e5968] font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5 whitespace-nowrap bg-white px-1 rounded shadow-sm border border-[#e5e8eb]"
+                              >
+                                {item.count}명
+                              </div>
+                              <div
+                                style={{ height: `${heightPct}%` }}
+                                className={`w-full rounded-t transition-all ${
+                                  isCurrent
+                                    ? 'bg-[#3182f6]'
+                                    : item.count > 0
+                                    ? 'bg-[#90c2ff] hover:bg-[#3182f6]'
+                                    : 'bg-[#f2f4f6]'
+                                }`}
+                              />
+                              <span className="text-[9.5px] text-[#8b95a1] mt-1.5 leading-none">
+                                {item.hour.slice(0, 2)}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-[#8b95a1] mt-2 pt-2 border-t border-[#f2f4f6]">
+                        <span>00시 (자정)</span>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#3182f6]" /> 현재 시간</span>
+                          <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#90c2ff]" /> 방문 시간대</span>
+                        </div>
+                        <span>23시</span>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
+
+              {/* 4. 인기 방문 페이지 순위 & 최근 30건 실시간 방문 로그 */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* 4-1. 페이지별 조회수 Top (1컬럼) */}
+                <div className="rounded-xl border border-[#e5e8eb] p-4 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#f2f4f6]">
+                    <div className="flex items-center gap-1.5">
+                      <BarChart3 className="h-4 w-4 text-[#3182f6]" />
+                      <h3 className="text-[14px] font-bold text-[#191f28]">페이지별 조회수</h3>
+                    </div>
+                    <span className="text-[11.5px] text-[#8b95a1]">누적 PV</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {(() => {
+                      const pagesData = dashboard?.visitorStats?.pages || {}
+                      const totalPV = Object.values(pagesData).reduce((sum, n) => sum + Number(n || 0), 0) || 1
+                      const items = Object.entries(pagesData).sort((a, b) => b[1] - a[1])
+                      if (items.length === 0) {
+                        return <div className="text-[12px] text-[#8b95a1] py-4 text-center">페이지 방문 이력이 없습니다.</div>
+                      }
+
+                      const pageLabels = {
+                        '/': '홈 (티켓 오픈 & 알림 등록)',
+                        '/tickets': '티켓 오픈일 모아보기',
+                        '/explore': '클래식 공연 탐색',
+                        '/alerts': '내 알림 & 키워드 관리',
+                        '/privacy': '개인정보 처리방침',
+                      }
+
+                      return items.map(([p, count]) => {
+                        const pct = ((count / totalPV) * 100).toFixed(1)
+                        const label = pageLabels[p] || p
+                        return (
+                          <div key={p} className="p-2.5 rounded-lg bg-[#f9fafb] border border-[#f2f4f6] text-[12.5px]">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-semibold text-[#191f28]">{label}</span>
+                              <span className="font-bold text-[#3182f6]">{count}회</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-[#8b95a1]">
+                              <span className="font-mono">{p}</span>
+                              <span>{pct}%</span>
+                            </div>
+                          </div>
+                        )
+                      })
+                    })()}
+                  </div>
+                </div>
+
+                {/* 4-2. 최근 실시간 방문 로그 (2컬럼) */}
+                <div className="lg:col-span-2 rounded-xl border border-[#e5e8eb] p-4 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#f2f4f6]">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-4 w-4 text-[#3182f6]" />
+                      <h3 className="text-[14px] font-bold text-[#191f28]">최근 실시간 방문 로그</h3>
+                    </div>
+                    <span className="text-[11.5px] text-[#8b95a1]">최근 30건 (IP 마스킹)</span>
+                  </div>
+
+                  {dashboard?.visitorStats?.recentLogs?.length > 0 ? (
+                    <div className="overflow-x-auto max-h-[360px]">
+                      <table className="w-full text-left border-collapse">
+                        <thead className="sticky top-0 bg-[#f9fafb]">
+                          <tr className="border-b border-[#e5e8eb] text-[11.5px] text-[#8b95a1]">
+                            <th className="py-2 px-2.5 font-semibold">시각 (KST)</th>
+                            <th className="py-2 px-2.5 font-semibold">페이지</th>
+                            <th className="py-2 px-2.5 font-semibold">기기/OS</th>
+                            <th className="py-2 px-2.5 font-semibold">브라우저</th>
+                            <th className="py-2 px-2.5 font-semibold">유입 경로</th>
+                            <th className="py-2 px-2.5 font-semibold">IP</th>
+                            <th className="py-2 px-2.5 font-semibold text-center">구분</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#f2f4f6] text-[12px]">
+                          {dashboard.visitorStats.recentLogs.map((log, idx) => (
+                            <tr key={`${log.timestamp}-${idx}`} className="hover:bg-[#f9fafb]">
+                              <td className="py-2.5 px-2.5 font-mono text-[11px] text-[#6b7684] whitespace-nowrap">
+                                {log.timestamp?.slice(5)}
+                              </td>
+                              <td className="py-2.5 px-2.5 font-medium text-[#191f28] whitespace-nowrap">
+                                {log.path || '/'}
+                              </td>
+                              <td className="py-2.5 px-2.5 text-[#4e5968] whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1">
+                                  <span className="text-[11px] px-1.5 py-0.5 rounded bg-[#f2f4f6] font-semibold">
+                                    {log.device}
+                                  </span>
+                                  <span className="text-[11px] text-[#8b95a1]">{log.os}</span>
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-2.5 text-[#4e5968] whitespace-nowrap">
+                                {log.browser}
+                              </td>
+                              <td className="py-2.5 px-2.5 text-[#6b7684] whitespace-nowrap">
+                                {log.referrer}
+                              </td>
+                              <td className="py-2.5 px-2.5 font-mono text-[11px] text-[#8b95a1] whitespace-nowrap">
+                                {log.ipMasked}
+                              </td>
+                              <td className="py-2.5 px-2.5 text-center whitespace-nowrap">
+                                <span
+                                  className={`inline-block px-1.5 py-0.5 rounded text-[10.5px] font-bold ${
+                                    log.isNew
+                                      ? 'bg-[#e8f3ff] text-[#3182f6]'
+                                      : 'bg-[#f2f4f6] text-[#8b95a1]'
+                                  }`}
+                                >
+                                  {log.isNew ? '오늘 첫방문' : '재방문'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-[12.5px] text-[#8b95a1]">
+                      최근 기록된 방문자 로그가 없습니다.
                     </div>
                   )}
                 </div>

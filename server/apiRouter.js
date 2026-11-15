@@ -18,7 +18,11 @@ import {
   saveSubscribers,
 } from "./storage.js";
 import { getBatchQuotaState, sendVerificationEmail } from "./emailService.js";
-import { getBatchRunningStatus, runBatchJob } from "./batchCron.js";
+import {
+  getBatchRunningStatus,
+  preseedExistingConcertsForKeyword,
+  runBatchJob,
+} from "./batchCron.js";
 import { fetchNolUpcomingClassical } from "./nolCrawler.js";
 import { fetchYes24Classical } from "./yes24Crawler.js";
 
@@ -87,6 +91,7 @@ export function createApiRouter(serviceKey) {
   /**
    * 중복 없는 방문자 집계 (POST /api/track/visit)
    * SHA-256(req.ip + req.headers['user-agent'] + KST_오늘날짜)
+   * 상세 유입 기기, OS, 브라우저, 유입 출처, 페이지 조회수 집계
    */
   router.post("/track/visit", (req, res) => {
     try {
@@ -95,8 +100,10 @@ export function createApiRouter(serviceKey) {
         .trim();
       const ip = forwarded || req.ip || req.socket?.remoteAddress || "unknown";
       const ua = String(req.headers["user-agent"] || "unknown");
+      const path = String(req.body?.path || "").trim() || "/";
+      const referrer = String(req.body?.referrer || "").trim();
 
-      const result = recordDailyVisit(ip, ua);
+      const result = recordDailyVisit(ip, ua, { path, referrer });
       return res.status(200).json({ ok: true, ...result });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
@@ -269,6 +276,15 @@ export function createApiRouter(serviceKey) {
       topKeywords,
       topSubscriberKeywords: topKeywords,
       batchLogs: analytics.batchLogs || [],
+      visitorStats: analytics.visitorStats || {
+        devices: {},
+        os: {},
+        browsers: {},
+        referrers: {},
+        hourly: {},
+        pages: {},
+        recentLogs: [],
+      },
       isBatchRunning: getBatchRunningStatus(),
     });
   });
@@ -505,6 +521,45 @@ export function createApiRouter(serviceKey) {
   });
 
   /**
+   * 전체 대상(NOL + YES24) 클래식 티켓 오픈 예정 공연 크롤러 수동 실행 (POST /api/admin/crawl-ticket-opens)
+   * 티켓 오픈 예정 공연만 크롤링 및 즉시 동기화
+   */
+  router.post("/admin/crawl-ticket-opens", async (req, res) => {
+    try {
+      console.log("[Admin] 전체 티켓 오픈 예정 공연 수집 시작 (놀유니버스 + YES24)...");
+      const [nolItems, yes24Items] = await Promise.all([
+        fetchNolUpcomingClassical().catch((err) => {
+          console.warn("[Admin] 놀유니버스 크롤링 오류:", err.message);
+          return [];
+        }),
+        fetchYes24Classical().catch((err) => {
+          console.warn("[Admin] YES24 크롤링 오류:", err.message);
+          return [];
+        }),
+      ]);
+
+      const yes24OpenCount = Array.isArray(yes24Items)
+        ? yes24Items.filter((c) => c.ticketOpen?.openAt).length
+        : 0;
+      const totalOpenCount = (nolItems?.length || 0) + yes24OpenCount;
+
+      // 최신 티켓 오픈 데이터를 반영하기 위해 인메모리 캐시 갱신
+      await api.concerts(true);
+
+      return res.status(200).json({
+        ok: true,
+        nolCount: nolItems?.length || 0,
+        yes24OpenCount,
+        totalOpenCount,
+        message: `티켓 오픈 예정 수집 완료: 놀유니버스 ${nolItems?.length || 0}건, YES24 ${yes24OpenCount}건 (총 ${totalOpenCount}건)`,
+      });
+    } catch (err) {
+      console.error("[Admin] 전체 티켓 오픈 수집 실패:", err.message);
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  /**
    * NOL 티켓오픈 일정 크롤러 수동 실행 (POST /api/admin/crawl-nol)
    */
   router.post("/admin/crawl-nol", async (req, res) => {
@@ -586,6 +641,13 @@ export function createApiRouter(serviceKey) {
         // Atomic Write (subscribers.json.tmp -> subscribers.json)
         saveSubscribers(subscribers);
 
+        // 신규 키워드에 대해 기존 DB에 존재하는 공연들을 notifiedIds에 사전 등록(pre-seed)하여 오발송 방지
+        if (keyword) {
+          preseedExistingConcertsForKeyword(api, email, keyword).catch((err) => {
+            console.warn("[Subscribe Preseed Error]:", err.message);
+          });
+        }
+
         await sendVerificationEmail(email, manageToken, keyword);
 
         return res.status(200).json({
@@ -615,6 +677,13 @@ export function createApiRouter(serviceKey) {
       subscribers[email] = existing;
       // Atomic Write
       saveSubscribers(subscribers);
+
+      // 신규 키워드에 대해 기존 DB에 존재하는 공연들을 notifiedIds에 사전 등록(pre-seed)하여 오발송 방지
+      if (keyword) {
+        preseedExistingConcertsForKeyword(api, email, keyword).catch((err) => {
+          console.warn("[Subscribe Preseed Error]:", err.message);
+        });
+      }
 
       // 미인증 상태이거나 기기 연결 링크 발송을 명시 요청한 경우 인증 메일 발송
       if (!existing.verified || sendMagicLink) {
@@ -673,6 +742,13 @@ export function createApiRouter(serviceKey) {
 
     // Atomic Write
     saveSubscribers(subscribers);
+
+    // 인증 완료 시 등록된 키워드들에 대해 기존 공연들을 notifiedIds에 사전 등록
+    if (Array.isArray(subscriber.keywords)) {
+      for (const kw of subscriber.keywords) {
+        preseedExistingConcertsForKeyword(api, email, kw).catch(() => {});
+      }
+    }
 
     const isSecure =
       process.env.NODE_ENV === "production" ||
@@ -746,6 +822,11 @@ export function createApiRouter(serviceKey) {
       subscribers[email] = subscriber;
       // Atomic Write
       saveSubscribers(subscribers);
+
+      // 신규 키워드에 대해 기존 DB 공연 사전 등록(preseed)하여 기존 공연 오발송 방지
+      preseedExistingConcertsForKeyword(api, email, keyword).catch((err) => {
+        console.warn("[MyKeywords Preseed Error]:", err.message);
+      });
     }
 
     return res.status(200).json({

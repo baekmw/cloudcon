@@ -118,10 +118,14 @@ export function unsubscribeAllData(payload = {}) {
 /**
  * 공개 트래킹: 방문자 집계 (POST /api/track/visit)
  */
-export function trackVisit() {
+export function trackVisit(
+  path = typeof window !== 'undefined' ? window.location.pathname : '/',
+  referrer = typeof document !== 'undefined' ? document.referrer : ''
+) {
   return fetch('/api/track/visit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, referrer }),
   }).catch(() => {})
 }
 
@@ -220,6 +224,13 @@ export async function reextractEmptyPrograms() {
 
 export function crawlNolUpcoming() {
   return fetch('/api/admin/crawl-nol', {
+    method: 'POST',
+    credentials: 'include',
+  }).then(readJson)
+}
+
+export function crawlTicketOpens() {
+  return fetch('/api/admin/crawl-ticket-opens', {
     method: 'POST',
     credentials: 'include',
   }).then(readJson)

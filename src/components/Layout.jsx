@@ -66,12 +66,12 @@ export default function Layout() {
     setMobileMenuOpen(false)
   }, [location.pathname, location.search])
 
-  // 일반 사용자 메인 레이아웃 마운트 시 1회 방문 집계 (/admin 제외)
+  // 일반 사용자 페이지 방문 및 라우트 이동 시 방문 집계 (/admin 제외)
   useEffect(() => {
-    if (!window.location.pathname.startsWith('/admin')) {
-      trackVisit()
+    if (!location.pathname.startsWith('/admin')) {
+      trackVisit(location.pathname, document.referrer)
     }
-  }, [])
+  }, [location.pathname])
 
   // PWA 설치 프롬프트 및 iOS 홈 화면 추가 감지
   useEffect(() => {

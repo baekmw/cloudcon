@@ -7,7 +7,9 @@ import {
 import {
   appendBatchLog,
   getKstTimestampString,
+  loadKnownConcertIds,
   loadSubscribers,
+  saveKnownConcertIds,
   saveSubscribers,
 } from "./storage.js";
 import {
@@ -82,6 +84,46 @@ export function doesConcertMatchKeyword(concert, programs, keyword) {
   }
   const pool = buildConcertSearchPool(concert, programs);
   return pool.includes(cleanKw);
+}
+
+/**
+ * 사용자가 새로운 키워드를 등록했을 때, 현재 DB에 이미 존재하는 기존 매칭 공연들을
+ * 미리 notifiedIds에 사전 등록(preseed)하여 알림 메일 발송 대상에서 제외
+ */
+export async function preseedExistingConcertsForKeyword(kopisApi, email, keyword) {
+  const cleanKw = normalizeCompact(keyword);
+  if (!email || !cleanKw) return;
+
+  try {
+    const subscribers = loadSubscribers();
+    const sub = subscribers[email];
+    if (!sub) return;
+
+    const listRes = await kopisApi.concerts(false);
+    const activeConcerts = (listRes?.concerts || []).filter((c) => c.state !== "공연완료");
+    const programsCache = getAllProgramsCache();
+
+    const notifiedSet = new Set(Array.isArray(sub.notifiedIds) ? sub.notifiedIds : []);
+
+    for (const concert of activeConcerts) {
+      const programs = programsCache[concert.id] || concert.programs || [];
+      if (doesConcertMatchKeyword(concert, programs, cleanKw)) {
+        notifiedSet.add(concert.id);
+        if (concert.ticketOpen && concert.ticketOpen.openAt) {
+          notifiedSet.add(`ticketopen-${concert.id}`);
+        }
+      }
+    }
+
+    sub.notifiedIds = [...notifiedSet];
+    subscribers[email] = sub;
+    saveSubscribers(subscribers);
+    console.log(
+      `[Preseed] ${email}에 키워드 '${keyword}' 관련 기존 공연 ${notifiedSet.size}건 사전 등록 완료 (발송 제외)`
+    );
+  } catch (err) {
+    console.warn(`[Preseed] 기존 공연 사전 등록 실패 (${email}, ${keyword}):`, err.message);
+  }
 }
 
 /**
@@ -197,15 +239,59 @@ export async function runBatchJob(kopisApi, { trigger = "cron" } = {}) {
         sub.keywords.length > 0
     );
 
-    if (verifiedEntries.length > 0) {
-      // 매칭 정확도를 위해 활성 공연의 상세 정보(cast, venue 등) 확보
-      const enrichedConcerts = [];
+    // 3-0. known_concerts.json 로드 및 신규 추가된 공연/티켓오픈 판별
+    // (기존 공연은 절대 발송하지 않고, 배치에서 새로 추가된 공연에 한해서만 발송)
+    const knownConcertIds = loadKnownConcertIds();
+    const isFirstKnownRun = knownConcertIds.size === 0;
+
+    if (isFirstKnownRun) {
       for (const c of activeConcerts) {
+        knownConcertIds.add(c.id);
+        if (c.ticketOpen && c.ticketOpen.openAt) {
+          knownConcertIds.add(`ticketopen-${c.id}`);
+        }
+      }
+      saveKnownConcertIds(knownConcertIds);
+      console.log(
+        `[BatchCron] known_concerts 초기화 완료: 기존 공연 ${knownConcertIds.size}건 등록 (기존 공연 발송 제외)`
+      );
+    }
+
+    // 신규 추가된 공연 및 신규 티켓 오픈 필터링
+    const newlyAddedConcerts = isFirstKnownRun
+      ? []
+      : activeConcerts.filter((c) => !knownConcertIds.has(c.id));
+
+    const newlyAnnouncedTicketOpens = isFirstKnownRun
+      ? []
+      : activeConcerts.filter(
+          (c) =>
+            c.ticketOpen &&
+            c.ticketOpen.openAt &&
+            c.ticketOpen.isUpcoming !== false &&
+            !knownConcertIds.has(`ticketopen-${c.id}`)
+        );
+
+    console.log(
+      `[BatchCron] 신규 추가 공연: ${newlyAddedConcerts.length}건, 신규 오픈 티켓: ${newlyAnnouncedTicketOpens.length}건`
+    );
+
+    if (
+      verifiedEntries.length > 0 &&
+      (newlyAddedConcerts.length > 0 || newlyAnnouncedTicketOpens.length > 0)
+    ) {
+      // 신규 공연들에 대한 상세 정보 확보 (캐스팅, 프로그램 등)
+      const targetConcerts = [
+        ...new Set([...newlyAddedConcerts, ...newlyAnnouncedTicketOpens]),
+      ];
+      const enrichedMap = new Map();
+
+      for (const c of targetConcerts) {
         try {
           const detailRes = await kopisApi.concert(c.id);
-          enrichedConcerts.push(detailRes?.concert || c);
+          enrichedMap.set(c.id, detailRes?.concert || c);
         } catch {
-          enrichedConcerts.push(c);
+          enrichedMap.set(c.id, c);
         }
       }
 
@@ -221,13 +307,10 @@ export async function runBatchJob(kopisApi, { trigger = "cron" } = {}) {
           Array.isArray(sub.notifiedIds) ? sub.notifiedIds : []
         );
 
-        // 3-1. 티켓 오픈 예정 공연 우선 매칭 및 알림 발송
-        const ticketOpenConcerts = enrichedConcerts.filter(
-          (c) => c.ticketOpen && c.ticketOpen.openAt && c.ticketOpen.isUpcoming !== false
-        );
-
+        // 3-1. 신규 티켓 오픈 예정 공연 우선 매칭 및 알림 발송
         const matchedTicketOpens = [];
-        for (const concert of ticketOpenConcerts) {
+        for (const rawConcert of newlyAnnouncedTicketOpens) {
+          const concert = enrichedMap.get(rawConcert.id) || rawConcert;
           if (
             notifiedSet.has(`ticketopen-${concert.id}`) ||
             notifiedSet.has(concert.id)
@@ -282,7 +365,8 @@ export async function runBatchJob(kopisApi, { trigger = "cron" } = {}) {
         // 3-2. 일반 신규 공연 매칭 및 알림 발송
         const matchedItems = [];
 
-        for (const concert of enrichedConcerts) {
+        for (const rawConcert of newlyAddedConcerts) {
+          const concert = enrichedMap.get(rawConcert.id) || rawConcert;
           // 이미 발송된 공연(notifiedIds)은 제외
           if (notifiedSet.has(concert.id)) continue;
 
@@ -333,6 +417,15 @@ export async function runBatchJob(kopisApi, { trigger = "cron" } = {}) {
         }
       }
     }
+
+    // 4. 배치 완료 후 모든 현재 활성 공연 및 티켓 오픈을 knownConcertIds에 등록하여 최신 상태 동기화
+    for (const c of activeConcerts) {
+      knownConcertIds.add(c.id);
+      if (c.ticketOpen && c.ticketOpen.openAt) {
+        knownConcertIds.add(`ticketopen-${c.id}`);
+      }
+    }
+    saveKnownConcertIds(knownConcertIds);
 
     const logEntry = appendBatchLog({
       timestamp,
