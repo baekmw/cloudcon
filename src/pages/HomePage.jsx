@@ -406,7 +406,7 @@ export default function HomePage() {
           <div className="text-center mb-8 sm:mb-10 animate-fade-up">
             <CalmHeroHeading />
             <p className="mt-3 sm:mt-4 text-[14.5px] sm:text-[17px] text-[#6b7684] font-normal leading-relaxed max-w-[580px] mx-auto break-keep">
-              공연 관련 정보(작곡가, 연주자, 곡명)를 입력하시면 관련된 무대를 빠짐없이 찾아드려요.
+              공연 관련 정보를 입력하시면 관련된 무대를 빠짐없이 찾아드려요.
             </p>
           </div>
         )}

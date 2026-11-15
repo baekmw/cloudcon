@@ -105,8 +105,6 @@ export default function TicketOpensPage() {
           item.ticketOpen.dDay >= 0 &&
           item.ticketOpen.dDay <= 7
       )
-    } else if (filterTab === 'upcoming') {
-      list = list.filter((item) => !item.ticketOpen?.isPast)
     }
 
     // 검색어 필터링
@@ -150,7 +148,6 @@ export default function TicketOpensPage() {
             ['all', '전체 일정'],
             ['today_tomorrow', '오늘/내일 오픈'],
             ['this_week', '이번 주 오픈'],
-            ['upcoming', '오픈 예정만'],
           ].map(([key, label]) => (
             <button
               key={key}
