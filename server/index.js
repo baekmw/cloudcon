@@ -26,6 +26,12 @@ app.use(express.json());
 const { router, kopisApi } = createApiRouter(serviceKey);
 app.use("/api", router);
 
+// Top-level /unsubscribe direct link support
+app.get("/unsubscribe", (req, res) => {
+  const queryStr = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
+  return res.redirect(302, `/api/alerts/unsubscribe-direct${queryStr}`);
+});
+
 // Dynamic XML Sitemap for Google Search indexing
 app.get("/sitemap.xml", async (req, res) => {
   const baseUrl = (process.env.APP_BASE_URL || "https://cloudcon.app").replace(/\/+$/, "");

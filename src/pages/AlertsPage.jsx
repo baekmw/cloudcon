@@ -62,6 +62,7 @@ export default function AlertsPage() {
   // Unauthenticated form state
   const [emailInput, setEmailInput] = useState('')
   const [keywordInput, setKeywordInput] = useState(initialQuery)
+  const [agreedPrivacy, setAgreedPrivacy] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState(
     verifyError ? '유효하지 않거나 만료된 인증 링크입니다. 다시 신청해 주세요.' : ''
@@ -166,6 +167,10 @@ export default function AlertsPage() {
     }
     if (unauthTab === 'subscribe' && !keyword) {
       setFormError('알림을 받을 아티스트, 곡명 또는 공연장 키워드를 입력해 주세요.')
+      return
+    }
+    if (unauthTab === 'subscribe' && !agreedPrivacy) {
+      setFormError('개인정보 수집 및 알림 수신 동의가 필요합니다.')
       return
     }
 
@@ -502,6 +507,41 @@ export default function AlertsPage() {
                   </div>
                 )}
 
+                {unauthTab === 'subscribe' && (
+                  <div className="pt-0.5">
+                    <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[#f9fafb] border border-[#e5e8eb] hover:border-[#b0b8c1] transition-all cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={agreedPrivacy}
+                        onChange={(e) => setAgreedPrivacy(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-[#d1d6db] text-[#3182f6] focus:ring-[#3182f6] cursor-pointer shrink-0"
+                      />
+                      <div className="min-w-0 flex-1 text-[12.5px] leading-snug break-keep text-[#4e5968]">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-[#191f28]">
+                            <span className="text-[#3182f6] mr-0.5">[필수]</span>
+                            개인정보 수집 및 공연 알림 수신에 동의합니다
+                          </span>
+                          <Link
+                            to="/privacy"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#3182f6] underline hover:text-[#1b64da] text-[11.5px] font-semibold"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            [전문 보기]
+                          </Link>
+                        </div>
+                        <p className="mt-1 text-[11px] text-[#8b95a1] leading-normal">
+                          · 수집 항목: 이메일 주소, 알림 키워드<br />
+                          · 목적: 클래식 공연 및 티켓 오픈 알림 메일 발송<br />
+                          · 보유 기간: 알림 수신 거부(삭제) 시까지 즉시 파기
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                )}
+
                 {formError && (
                   <div className="p-3.5 rounded-xl bg-[#fff0f1] border border-[#f04452]/20 text-[#f04452] text-[13px] font-medium flex items-center gap-2 break-keep">
                     <AlertCircle className="h-4 w-4 shrink-0" />
@@ -645,29 +685,31 @@ export default function AlertsPage() {
 
                     return (
                       <li key={kw} className="transition-colors">
-                        <div className="flex items-center justify-between gap-2 px-4 py-3.5 hover:bg-[#f9fafb]">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 px-4 py-3.5 hover:bg-[#f9fafb]">
                           <button
                             type="button"
                             onClick={() =>
                               setExpandedKeyword(isExpanded ? null : kw)
                             }
-                            className="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer"
+                            className="flex items-start sm:items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer group"
                           >
-                            <span className="h-2 w-2 rounded-full bg-[#3182f6] shrink-0" />
-                            <span className="text-[15px] font-bold text-[#191f28] truncate">
-                              {kw}
-                            </span>
-                            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11.5px] font-semibold bg-[#e8f3ff] text-[#3182f6] shrink-0 whitespace-nowrap">
-                              공연 {matchedConcerts.length}건
-                              <ChevronDown
-                                className={`h-3 w-3 transition-transform ${
-                                  isExpanded ? 'rotate-180' : ''
-                                }`}
-                              />
-                            </span>
+                            <span className="h-2 w-2 rounded-full bg-[#3182f6] shrink-0 mt-1.5 sm:mt-0" />
+                            <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+                              <span className="text-[15px] font-bold text-[#191f28] group-hover:text-[#3182f6] transition-colors break-words break-keep leading-snug">
+                                {kw}
+                              </span>
+                              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11.5px] font-semibold bg-[#e8f3ff] text-[#3182f6] shrink-0 whitespace-nowrap">
+                                공연 {matchedConcerts.length}건
+                                <ChevronDown
+                                  className={`h-3 w-3 transition-transform ${
+                                    isExpanded ? 'rotate-180' : ''
+                                  }`}
+                                />
+                              </span>
+                            </div>
                           </button>
 
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center pl-4.5 sm:pl-0">
                             <Link
                               to={`/?q=${encodeURIComponent(kw)}`}
                               className="inline-flex items-center gap-0.5 px-2.5 py-1.5 rounded-xl text-[12px] font-semibold text-[#4e5968] hover:text-[#3182f6] hover:bg-[#e8f3ff]/60 whitespace-nowrap transition-colors"

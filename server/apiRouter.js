@@ -804,6 +804,110 @@ export function createApiRouter(serviceKey) {
   router.delete("/unsubscribe", handleUnsubscribeAll);
   router.post("/unsubscribe", handleUnsubscribeAll);
 
+  /**
+   * 8. GET /api/alerts/unsubscribe-direct & GET /api/unsubscribe
+   * 이메일 내 원클릭 수신 거부 링크를 통한 즉시 데이터 완전 삭제 및 브라우저 안내 페이지 렌더링
+   */
+  const handleDirectUnsubscribe = (req, res) => {
+    const token = String(req.query?.token || req.cookies?.[COOKIE_NAME] || "").trim();
+    const subscribers = loadSubscribers();
+    let found = token ? findSubscriberByToken(subscribers, token) : null;
+
+    if (!found) {
+      const reqEmail = String(req.query?.email || "").trim().toLowerCase();
+      if (reqEmail && subscribers[reqEmail] && (!token || subscribers[reqEmail].manageToken === token)) {
+        found = { email: reqEmail, subscriber: subscribers[reqEmail] };
+      }
+    }
+
+    const escapeHtml = (str) =>
+      String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+    if (!found) {
+      return res.status(200).send(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>알림 수신 거부 - cloudcon</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; background: #f9fafb; margin: 0; padding: 32px 16px; display: flex; justify-content: center; align-items: center; min-height: 80vh; color: #191f28; }
+            .card { background: #fff; border: 1px solid #e5e8eb; border-radius: 20px; padding: 40px 28px; max-width: 460px; width: 100%; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
+            .icon-box { width: 56px; height: 56px; border-radius: 50%; background: #e8f3ff; color: #3182f6; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 26px; font-weight: 800; }
+            h1 { font-size: 21px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.4; }
+            p { font-size: 14.5px; color: #4e5968; line-height: 1.6; margin: 0 0 28px 0; word-break: keep-all; }
+            .btn { display: block; width: 100%; background: #3182f6; color: #fff; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 20px; border-radius: 12px; }
+            .btn:hover { background: #1b64da; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="icon-box">i</div>
+            <h1>이미 처리되었거나 유효하지 않은 링크입니다</h1>
+            <p>해당 이메일의 알림은 이미 수신 거부(삭제) 처리되었거나 유효기간이 만료되었습니다.<br/><br/>더 이상 알림 메일이 발송되지 않으니 안심하셔도 됩니다.</p>
+            <a href="/" class="btn">클라우드콘 홈으로 이동</a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    const { email } = found;
+    delete subscribers[email];
+    saveSubscribers(subscribers);
+
+    res.clearCookie(COOKIE_NAME, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    console.log(`[Subscribers] Direct unsubscribe via email link: deleted subscriber ${email}.`);
+
+    return res.status(200).send(`
+      <!DOCTYPE html>
+      <html lang="ko">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>수신 거부 완료 - cloudcon</title>
+        <style>
+          * { box-sizing: border-box; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif; background: #f9fafb; margin: 0; padding: 32px 16px; display: flex; justify-content: center; align-items: center; min-height: 80vh; color: #191f28; }
+          .card { background: #fff; border: 1px solid #e5e8eb; border-radius: 20px; padding: 40px 28px; max-width: 460px; width: 100%; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.04); }
+          .icon-box { width: 56px; height: 56px; border-radius: 50%; background: #e8faf3; color: #03b26c; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 26px; font-weight: 800; }
+          .badge { display: inline-block; background: #f2f4f6; color: #333d4b; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 8px; margin-bottom: 14px; word-break: break-all; }
+          h1 { font-size: 21px; font-weight: 800; margin: 0 0 12px 0; line-height: 1.4; }
+          p { font-size: 14.5px; color: #4e5968; line-height: 1.6; margin: 0 0 28px 0; word-break: keep-all; }
+          .btn { display: block; width: 100%; background: #3182f6; color: #fff; text-decoration: none; font-weight: 700; font-size: 15px; padding: 14px 20px; border-radius: 12px; }
+          .btn:hover { background: #1b64da; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon-box">✓</div>
+          <div class="badge">${escapeHtml(email)}</div>
+          <h1>알림 수신 거부 처리가 완료되었습니다</h1>
+          <p>
+            등록되어 있던 이메일과 모든 알림 키워드가 서버에서 안전하게 영구 삭제되었습니다.<br/><br/>
+            앞으로 어떠한 공연 알림 메일도 발송되지 않습니다. 그동안 클라우드콘을 이용해 주셔서 감사합니다.
+          </p>
+          <a href="/" class="btn">클라우드콘 홈으로 이동</a>
+        </div>
+      </body>
+      </html>
+    `);
+  };
+
+  router.get("/alerts/unsubscribe-direct", handleDirectUnsubscribe);
+  router.get("/unsubscribe", handleDirectUnsubscribe);
+
   // =========================================================================
   // 기존 KOPIS 공연 조회 및 AI 프로그램 추출 API 엔드포인트
   // =========================================================================

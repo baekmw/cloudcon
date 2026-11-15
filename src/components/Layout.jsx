@@ -354,7 +354,16 @@ export default function Layout() {
             <p className="font-medium text-[#6b7684]">
               © {new Date().getFullYear()} cloudcon (클라우드콘 · Cloudcon). All rights reserved.
             </p>
-            <p>출처: (재)예술경영지원센터 공연예술통합전산망(KOPIS)</p>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <Link
+                to="/privacy"
+                className="font-semibold text-[#4e5968] hover:text-[#3182f6] underline underline-offset-2 transition-colors"
+              >
+                개인정보 처리방침
+              </Link>
+              <span>·</span>
+              <p>출처: (재)예술경영지원센터 공연예술통합전산망(KOPIS)</p>
+            </div>
           </div>
 
           <div className="text-[11px] leading-relaxed text-[#b0b8c1] space-y-0.5 break-keep">

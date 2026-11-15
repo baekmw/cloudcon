@@ -161,6 +161,7 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
 
   const baseUrl = getAppBaseUrl();
   const manageUrl = `${baseUrl}/api/verify?token=${encodeURIComponent(manageToken)}`;
+  const unsubUrl = `${baseUrl}/api/alerts/unsubscribe-direct?token=${encodeURIComponent(manageToken)}`;
   const resend = getResendClient();
 
   const firstItem = matchedItems[0];
@@ -221,8 +222,18 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
         등록해 두신 알림 키워드와 일치하는 공연입니다.
       </p>
       ${cardsHtml}
-      <div style="margin-top: 28px; padding-top: 18px; border-top: 1px solid #f2f4f6; font-size: 12px; color: #8b95a1; line-height: 1.6;">
-        알림 키워드를 추가하거나 더 이상 받지 않으시려면 <a href="${manageUrl}" style="color: #3182f6; font-weight: 600; text-decoration: underline;">알림 키워드 관리하기</a>를 눌러 설정을 변경하실 수 있습니다.
+      <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #f2f4f6; font-size: 12px; color: #8b95a1; line-height: 1.8;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+          <span style="font-weight: 600; color: #4e5968;">클라우드콘 공연 알림</span>
+          <div>
+            <a href="${manageUrl}" style="color: #3182f6; font-weight: 600; text-decoration: underline; margin-right: 14px;">알림 키워드 관리</a>
+            <a href="${unsubUrl}" style="color: #f04452; font-weight: 700; text-decoration: underline;">수신 거부 (데이터 영구 삭제)</a>
+          </div>
+        </div>
+        <p style="margin: 0; font-size: 11px; color: #8b95a1; word-break: keep-all;">
+          본 메일은 클라우드콘 웹사이트에서 클래식 공연 알림을 신청하신 분께 발송되었습니다.<br/>
+          더 이상 알림을 받지 않으시려면 <a href="${unsubUrl}" style="color: #f04452; text-decoration: underline;">수신 거부</a>를 눌러주세요. 등록된 이메일과 모든 키워드가 서버에서 즉시 안전하게 파기됩니다.
+        </p>
       </div>
     </div>
   `;
@@ -241,6 +252,10 @@ export async function sendConcertAlertEmail(email, manageToken, matchedItems) {
     to: [email],
     subject,
     html,
+    headers: {
+      "List-Unsubscribe": `<${unsubUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 
   if (error) {
@@ -273,6 +288,7 @@ export async function sendTicketOpenAlertEmail(email, manageToken, matchedItems)
 
   const baseUrl = getAppBaseUrl();
   const manageUrl = `${baseUrl}/api/verify?token=${encodeURIComponent(manageToken)}`;
+  const unsubUrl = `${baseUrl}/api/alerts/unsubscribe-direct?token=${encodeURIComponent(manageToken)}`;
   const resend = getResendClient();
 
   const firstItem = matchedItems[0];
@@ -372,8 +388,18 @@ export async function sendTicketOpenAlertEmail(email, manageToken, matchedItems)
         티켓 오픈 시각을 놓치지 않고 원하는 좌석을 예매하실 수 있도록 미리 알려드립니다.
       </p>
       ${cardsHtml}
-      <div style="margin-top: 28px; padding-top: 18px; border-top: 1px solid #f2f4f6; font-size: 12px; color: #8b95a1; line-height: 1.6;">
-        알림 키워드를 관리하거나 설정을 변경하시려면 <a href="${manageUrl}" style="color: #3182f6; font-weight: 600; text-decoration: underline;">알림 키워드 관리하기</a>를 눌러주세요.
+      <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #f2f4f6; font-size: 12px; color: #8b95a1; line-height: 1.8;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+          <span style="font-weight: 600; color: #4e5968;">클라우드콘 티켓 오픈 알림</span>
+          <div>
+            <a href="${manageUrl}" style="color: #3182f6; font-weight: 600; text-decoration: underline; margin-right: 14px;">알림 키워드 관리</a>
+            <a href="${unsubUrl}" style="color: #f04452; font-weight: 700; text-decoration: underline;">수신 거부 (데이터 영구 삭제)</a>
+          </div>
+        </div>
+        <p style="margin: 0; font-size: 11px; color: #8b95a1; word-break: keep-all;">
+          본 메일은 클라우드콘 웹사이트에서 클래식 공연 알림을 신청하신 분께 발송되었습니다.<br/>
+          더 이상 알림을 받지 않으시려면 <a href="${unsubUrl}" style="color: #f04452; text-decoration: underline;">수신 거부</a>를 눌러주세요. 등록된 이메일과 모든 키워드가 서버에서 즉시 안전하게 파기됩니다.
+        </p>
       </div>
     </div>
   `;
@@ -392,6 +418,10 @@ export async function sendTicketOpenAlertEmail(email, manageToken, matchedItems)
     to: [email],
     subject,
     html,
+    headers: {
+      "List-Unsubscribe": `<${unsubUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 
   if (error) {
